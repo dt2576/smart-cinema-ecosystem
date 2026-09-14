@@ -45,6 +45,24 @@ Use PASS, PARTIAL, FAIL, or NOT APPLICABLE.
 
 ## 10. Deviations / Conflicts
 
+Include Existing Convention Conflicts and any explicitly approved exceptions, with scope and approval evidence. Do not treat legacy naming as authorization for new violations.
+
+## Convention Compliance
+
+Validate against [project conventions](../../development/project-conventions.md).
+
+| Area | Result | Notes |
+|---|---|---|
+| Folder naming | PASS / FAIL / N/A | |
+| File naming | PASS / FAIL / N/A | |
+| Code naming | PASS / FAIL / N/A | |
+| Domain terminology | PASS / FAIL / N/A | |
+| API convention | PASS / FAIL / N/A | |
+| Database convention | PASS / FAIL / N/A | |
+| Documentation convention | PASS / FAIL / N/A | |
+
+Only relevant areas need substantive checking. N/A means NOT APPLICABLE; PARTIAL may be used with a stated gap, consistent with the development workflow. Include route/import/status checks where relevant and check the report filename. Fix every FAIL before completion unless an exception is explicitly approved and documented. When copying this template into `docs/reports/`, adjust its convention link to `../development/project-conventions.md`.
+
 ## 11. Known Limitations
 
 ## 12. Next Recommended Step

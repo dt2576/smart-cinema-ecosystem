@@ -1,5 +1,7 @@
 # Document Rules
 
+Follow [project conventions](../../docs/development/project-conventions.md) for document naming, language, terminology, reports, and convention changes. Do not maintain a parallel naming standard here.
+
 - `docs/` contains project truth and design documentation.
 - `.agent/` contains AI operating instructions only, not application requirements.
 - Reports document evidence and do not replace BRD/SRS.
