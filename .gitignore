@@ -1,0 +1,6 @@
+# Generated dependencies and build output, at any depth.
+node_modules/
+.next/
+target/
+dist/
+build/

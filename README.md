@@ -48,3 +48,14 @@ Checkout
 Payment
       ↓
 Digital Ticket / QR
+```
+
+## Repository Structure
+
+- `docs/`: Project requirements, analysis, design, reports, and planning. Historical document versions are preserved; the latest version is the current baseline unless an explicit approval record states otherwise.
+- `frontend/`: Next.js frontend application.
+- `backend/`: Reserved for the backend application; no implementation exists yet.
+- `.agent/`: AI rules and development workflows. Start with [.agent/workflows/DEVELOPMENT_WORKFLOW.md](.agent/workflows/DEVELOPMENT_WORKFLOW.md).
+- `test/`: Cross-module testing and acceptance artifacts; framework-specific tests stay in their conventional locations.
+
+System analysis documentation is in [docs/system-analysis/](docs/system-analysis/). Implementation evidence belongs in [docs/reports/](docs/reports/), separate from requirements.
