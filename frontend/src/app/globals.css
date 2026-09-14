@@ -15,6 +15,7 @@
   --color-on-action: #2a1700;
   --color-success: #4edea3;
   --color-outline: #534434;
+  --color-error: #ffb4ab;
   --font-sans: var(--font-jakarta);
   --font-heading: var(--font-space);
 }

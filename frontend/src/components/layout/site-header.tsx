@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 
@@ -19,11 +20,11 @@ export function SiteHeader({ onPreview }: { onPreview: (title: string) => void }
       <a href="#home" aria-label="Smart Cinema home"><CinemaBrand /></a>
       <nav aria-label="Main navigation" className="hidden items-center xl:flex">{navigation}</nav>
       <div className="flex items-center gap-3">
-        <Button variant="secondary" className="hidden sm:inline-flex" onClick={() => onPreview("Sign In")}>Sign In</Button>
+        <Link href="/login" className="hidden min-h-11 items-center justify-center rounded-lg bg-panel-high px-4 py-2.5 font-heading text-sm font-semibold text-foreground transition-colors hover:bg-panel-hover sm:inline-flex">Sign In</Link>
         <button aria-label="Your account" onClick={() => onPreview("Your account")} className="flex size-11 items-center justify-center rounded-full text-accent"><span className="flex size-8 items-center justify-center rounded-full bg-accent text-on-action"><Icon name="user" width={18} height={18} /></span></button>
         <Button variant="secondary" className="px-3 xl:hidden" aria-label={menuOpen ? "Close navigation" : "Open navigation"} aria-expanded={menuOpen} aria-controls="mobile-navigation" onClick={() => setMenuOpen(!menuOpen)}><Icon name={menuOpen ? "close" : "menu"} /></Button>
       </div>
     </div>
-    {menuOpen && <nav id="mobile-navigation" aria-label="Mobile navigation" className="grid border-t border-outline/30 px-4 pb-4 xl:hidden">{navigation}<Button variant="secondary" onClick={() => { setMenuOpen(false); onPreview("Sign In"); }}>Sign In</Button></nav>}
+    {menuOpen && <nav id="mobile-navigation" aria-label="Mobile navigation" className="grid border-t border-outline/30 px-4 pb-4 xl:hidden">{navigation}<Link href="/login" onClick={() => setMenuOpen(false)} className="inline-flex min-h-11 items-center justify-center rounded-lg bg-panel-high px-4 py-2.5 font-heading text-sm font-semibold text-foreground transition-colors hover:bg-panel-hover">Sign In</Link></nav>}
   </header>;
 }
