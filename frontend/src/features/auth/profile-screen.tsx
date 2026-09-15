@@ -7,6 +7,7 @@ import { CinemaBrand } from "@/components/layout/site-header";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { AuthApiError, getCustomerProfile, updateCustomerProfile } from "@/features/auth/auth-api";
+import { CustomerAccountMenu } from "@/features/auth/customer-account-menu";
 import { useAuth } from "@/features/auth/auth-context";
 import type { CustomerProfile } from "@/features/auth/auth.types";
 
@@ -159,7 +160,7 @@ export function ProfileScreen() {
 
 function ProfileShell({ children }: { children: ReactNode }) {
   return <div className="min-h-screen bg-[radial-gradient(circle_at_80%_10%,rgba(245,158,11,0.07),transparent_28%),linear-gradient(180deg,#0a0e16_0%,#0f131c_45%,#0a0e16_100%)]">
-    <header className="fixed inset-x-0 top-0 z-40 border-b border-outline/20 bg-canvas/90 backdrop-blur-xl"><div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-10"><Link href="/" aria-label="Smart Cinema home"><CinemaBrand /></Link><nav aria-label="Account navigation" className="flex items-center gap-4"><Link href="/" className="hidden text-sm text-muted hover:text-accent sm:block">Back to movies</Link><span className="flex size-10 items-center justify-center rounded-full bg-accent text-on-action"><Icon name="user" /></span></nav></div></header>
+    <header className="fixed inset-x-0 top-0 z-40 border-b border-outline/20 bg-canvas/90 backdrop-blur-xl"><div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-10"><Link href="/" aria-label="Smart Cinema home"><CinemaBrand /></Link><nav aria-label="Account navigation" className="flex items-center gap-4"><Link href="/" className="hidden text-sm text-muted hover:text-accent sm:block">Back to movies</Link><CustomerAccountMenu /></nav></div></header>
     {children}
     <footer className="border-t border-outline/20 bg-canvas px-4 py-8 text-center text-sm text-muted">© 2026 Smart Cinema. Premium cinema, thoughtfully delivered.</footer>
   </div>;
