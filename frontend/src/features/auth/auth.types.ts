@@ -1,4 +1,5 @@
 export type UserRole = "CUSTOMER" | "STAFF" | "MANAGER" | "ADMIN";
+export type AccountStatus = "ACTIVE" | "BLOCKED";
 
 export type AuthenticatedUser = {
   id: number;
@@ -25,3 +26,13 @@ export type RegistrationDetails = {
   phone: string;
   password: string;
 };
+
+export type CustomerProfile = {
+  fullName: string;
+  email: string;
+  phone: string;
+  role: UserRole;
+  status: AccountStatus;
+};
+
+export type UpdateCustomerProfile = Pick<CustomerProfile, "fullName" | "phone">;

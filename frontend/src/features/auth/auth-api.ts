@@ -1,4 +1,4 @@
-import type { AuthSession, LoginCredentials, RegistrationDetails, UserRole } from "@/features/auth/auth.types";
+import type { AuthSession, CustomerProfile, LoginCredentials, RegistrationDetails, UpdateCustomerProfile, UserRole } from "@/features/auth/auth.types";
 
 type ProblemDetail = {
   title?: string;
@@ -27,14 +27,18 @@ export class AuthApiError extends Error {
   }
 }
 
-async function request<T>(path: string, body: unknown): Promise<T> {
+async function request<T>(path: string, options: { method?: "GET" | "POST" | "PATCH"; body?: unknown; accessToken?: string }): Promise<T> {
   let response: Response;
 
   try {
     response = await fetch(path, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      method: options.method ?? "GET",
+      headers: {
+        ...(options.body === undefined ? {} : { "Content-Type": "application/json" }),
+        ...(options.accessToken ? { Authorization: `Bearer ${options.accessToken}` } : {}),
+      },
+      body: options.body === undefined ? undefined : JSON.stringify(options.body),
+      cache: "no-store",
     });
   } catch {
     throw new AuthApiError("Unable to reach Smart Cinema. Check your connection and try again.", 0);
@@ -62,11 +66,11 @@ async function readProblemDetail(response: Response): Promise<Required<Pick<Prob
 }
 
 export async function registerCustomer(details: RegistrationDetails): Promise<void> {
-  await request("/api/v1/users", details);
+  await request("/api/v1/users", { method: "POST", body: details });
 }
 
 export async function login(credentials: LoginCredentials): Promise<AuthSession> {
-  const response = await request<LoginApiResponse>("/api/v1/auth/tokens", credentials);
+  const response = await request<LoginApiResponse>("/api/v1/auth/tokens", { method: "POST", body: credentials });
   return {
     accessToken: response.accessToken,
     tokenType: response.tokenType,
@@ -78,4 +82,12 @@ export async function login(credentials: LoginCredentials): Promise<AuthSession>
       role: response.role,
     },
   };
+}
+
+export function getCustomerProfile(accessToken: string): Promise<CustomerProfile> {
+  return request("/api/v1/profile", { accessToken });
+}
+
+export function updateCustomerProfile(accessToken: string, details: UpdateCustomerProfile): Promise<CustomerProfile> {
+  return request("/api/v1/profile", { method: "PATCH", body: details, accessToken });
 }
