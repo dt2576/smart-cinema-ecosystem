@@ -1,8 +1,11 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
+import { AuthApiError, login } from "@/features/auth/auth-api";
+import { useAuth } from "@/features/auth/auth-context";
 
 type LoginErrors = {
   email?: string;
@@ -12,11 +15,14 @@ type LoginErrors = {
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function LoginForm() {
+  const router = useRouter();
+  const { establishSession } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<LoginErrors>({});
   const [status, setStatus] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const email = String(formData.get("email") ?? "").trim();
@@ -28,13 +34,34 @@ export function LoginForm() {
     if (!password) nextErrors.password = "Enter your password.";
 
     setErrors(nextErrors);
-    setStatus(Object.keys(nextErrors).length === 0
-      ? "Your details are ready. Account authentication will be available when the secure login service is connected."
-      : "Check the highlighted fields and try again.");
+    if (Object.keys(nextErrors).length > 0) {
+      setStatus("Check the highlighted fields and try again.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setStatus("");
+    try {
+      const session = await login({ email, password });
+      establishSession(session);
+      router.replace("/");
+    } catch (error) {
+      if (error instanceof AuthApiError) {
+        setErrors({
+          email: error.fieldErrors.email,
+          password: error.fieldErrors.password,
+        });
+        setStatus(error.message);
+      } else {
+        setStatus("Something went wrong. Please try again.");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
-    <form noValidate onSubmit={handleSubmit} className="space-y-5">
+    <form noValidate onSubmit={handleSubmit} aria-busy={isSubmitting} className="space-y-5">
       <div className="space-y-2">
         <label htmlFor="email" className="block font-heading text-xs font-semibold uppercase tracking-wider text-muted">Email Address</label>
         <input
@@ -80,7 +107,7 @@ export function LoginForm() {
         Remember me
       </label>
 
-      <Button type="submit" className="w-full py-3 uppercase tracking-wider shadow-lg shadow-action/20">Sign In <Icon name="arrow" /></Button>
+      <Button type="submit" disabled={isSubmitting} className="w-full py-3 uppercase tracking-wider shadow-lg shadow-action/20">{isSubmitting ? "Signing In..." : "Sign In"} <Icon name="arrow" /></Button>
       {status && <p role="status" className="text-center text-sm leading-6 text-muted">{status}</p>}
     </form>
   );

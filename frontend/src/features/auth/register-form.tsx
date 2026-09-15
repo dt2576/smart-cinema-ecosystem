@@ -1,8 +1,10 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
+import { AuthApiError, registerCustomer } from "@/features/auth/auth-api";
 
 type RegisterField = "fullName" | "email" | "phone" | "password" | "confirmPassword";
 type RegisterErrors = Partial<Record<RegisterField, string>>;
@@ -13,16 +15,18 @@ const VIETNAM_PHONE_PATTERN = /^(?:0\d{9}|\d{9}|\+84\d{9})$/;
 const INPUT_CLASS_NAME = "h-12 w-full rounded-lg bg-panel-high px-4 text-foreground outline-none transition focus:bg-panel-hover focus:ring-2 focus:ring-action aria-[invalid=true]:ring-2 aria-[invalid=true]:ring-error";
 
 export function RegisterForm() {
+  const router = useRouter();
   const [visiblePasswords, setVisiblePasswords] = useState({ password: false, confirmPassword: false });
   const [errors, setErrors] = useState<RegisterErrors>({});
   const [status, setStatus] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   function clearFieldError(field: RegisterField) {
     if (errors[field]) setErrors(current => ({ ...current, [field]: undefined }));
     setStatus("");
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     const fullName = String(formData.get("fullName") ?? "").trim();
@@ -43,9 +47,28 @@ export function RegisterForm() {
     else if (password !== confirmPassword) nextErrors.confirmPassword = "Passwords do not match.";
 
     setErrors(nextErrors);
-    setStatus(Object.keys(nextErrors).length === 0
-      ? "Your details are ready. Account creation will be available when the secure registration service is connected."
-      : "Check the highlighted fields and try again.");
+    if (Object.keys(nextErrors).length > 0) {
+      setStatus("Check the highlighted fields and try again.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setStatus("");
+    try {
+      await registerCustomer({ fullName, email, phone, password });
+      router.push("/login");
+    } catch (error) {
+      if (error instanceof AuthApiError) {
+        const backendErrors = error.fieldErrors as RegisterErrors;
+        setErrors(backendErrors);
+        setStatus(error.status === 409 ? "An account with this email already exists. Sign in or use another email." : error.message);
+        if (error.status === 409) setErrors({ email: "This email is already registered." });
+      } else {
+        setStatus("Something went wrong. Please try again.");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   function renderPasswordField({ field, label, autoComplete }: { field: "password" | "confirmPassword"; label: string; autoComplete: string }) {
@@ -63,7 +86,7 @@ export function RegisterForm() {
   }
 
   return (
-    <form noValidate onSubmit={handleSubmit} className="space-y-5">
+    <form noValidate onSubmit={handleSubmit} aria-busy={isSubmitting} className="space-y-5">
       <div className="space-y-2">
         <label htmlFor="fullName" className="block font-heading text-sm font-semibold text-foreground">Full Name</label>
         <input id="fullName" name="fullName" type="text" autoComplete="name" aria-invalid={Boolean(errors.fullName)} aria-describedby={errors.fullName ? "fullName-error" : undefined} onChange={() => clearFieldError("fullName")} placeholder="Nguyen Van A" className={INPUT_CLASS_NAME} />
@@ -88,7 +111,7 @@ export function RegisterForm() {
       {renderPasswordField({ field: "password", label: "Password", autoComplete: "new-password" })}
       {renderPasswordField({ field: "confirmPassword", label: "Confirm Password", autoComplete: "new-password" })}
 
-      <Button type="submit" className="w-full py-3 uppercase tracking-wider shadow-lg shadow-action/20">Create Account <Icon name="arrow" /></Button>
+      <Button type="submit" disabled={isSubmitting} className="w-full py-3 uppercase tracking-wider shadow-lg shadow-action/20">{isSubmitting ? "Creating Account..." : "Create Account"} <Icon name="arrow" /></Button>
       {status && <p role="status" className="text-center text-sm leading-6 text-muted">{status}</p>}
     </form>
   );
