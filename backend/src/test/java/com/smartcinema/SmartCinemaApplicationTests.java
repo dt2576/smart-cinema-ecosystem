@@ -16,7 +16,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.smartcinema.user.User;
 import com.smartcinema.user.UserRepository;
 
-@SpringBootTest(properties = "spring.autoconfigure.exclude=org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration")
+@SpringBootTest(properties = {
+		"spring.autoconfigure.exclude=org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration",
+		"auth.jwt.secret=test-secret-with-at-least-thirty-two-bytes"
+})
 @AutoConfigureMockMvc
 class SmartCinemaApplicationTests {
 
@@ -46,6 +49,19 @@ class SmartCinemaApplicationTests {
 						}
 						"""))
 				.andExpect(status().isCreated());
+	}
+
+	@Test
+	void loginEndpointAllowsAnonymousPostWithoutCsrfToken() throws Exception {
+		mockMvc.perform(post("/api/v1/auth/tokens")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+						{
+						  "email": "invalid@example.com",
+						  "password": "wrong-password"
+						}
+						"""))
+				.andExpect(status().isUnauthorized());
 	}
 
 }

@@ -8,10 +8,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.time.OffsetDateTime;
-
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -21,19 +19,18 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.validation.beanvalidation.SpringValidatorAdapter;
 
-import com.smartcinema.auth.dto.RegisterUserRequest;
-import com.smartcinema.auth.dto.RegisterUserResponse;
-import com.smartcinema.user.AccountStatus;
+import com.smartcinema.auth.dto.LoginRequest;
+import com.smartcinema.auth.dto.LoginResponse;
 import com.smartcinema.user.UserRole;
 
 import jakarta.validation.Validation;
 import jakarta.validation.ValidatorFactory;
 
 @ExtendWith(MockitoExtension.class)
-class RegistrationControllerTests {
+class LoginControllerTests {
 
 	@Mock
-	private RegistrationService registrationService;
+	private LoginService loginService;
 
 	private MockMvc mockMvc;
 	private ValidatorFactory validatorFactory;
@@ -41,7 +38,7 @@ class RegistrationControllerTests {
 	@BeforeEach
 	void setUp() {
 		validatorFactory = Validation.buildDefaultValidatorFactory();
-		mockMvc = MockMvcBuilders.standaloneSetup(new RegistrationController(registrationService))
+		mockMvc = MockMvcBuilders.standaloneSetup(new LoginController(loginService))
 				.setControllerAdvice(new AuthExceptionHandler())
 				.setValidator(new SpringValidatorAdapter(validatorFactory.getValidator()))
 				.build();
@@ -53,78 +50,55 @@ class RegistrationControllerTests {
 	}
 
 	@Test
-	void createsCustomerWithoutExposingPassword() throws Exception {
-		OffsetDateTime now = OffsetDateTime.parse("2026-09-15T10:00:00+07:00");
-		when(registrationService.register(any(RegisterUserRequest.class))).thenReturn(new RegisterUserResponse(
-				1L,
-				"customer@example.com",
-				"Nguyen Van A",
-				"+84912345678",
-				UserRole.CUSTOMER,
-				AccountStatus.ACTIVE,
-				now,
-				now));
+	void returnsAccessTokenAndUserSummaryForValidCredentials() throws Exception {
+		when(loginService.login(any(LoginRequest.class))).thenReturn(new LoginResponse(
+				"signed-token", "Bearer", 900, 1L, "customer@example.com", "Nguyen Van A", UserRole.CUSTOMER));
 
-		mockMvc.perform(post("/api/v1/users")
+		mockMvc.perform(post("/api/v1/auth/tokens")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("""
-						{
-						  "fullName": "Nguyen Van A",
-						  "email": "customer@example.com",
-						  "phone": "0912 345 678",
-						  "password": "securePassword"
-						}
+						{"email":"customer@example.com","password":"securePassword"}
 						"""))
-				.andExpect(status().isCreated())
+				.andExpect(status().isOk())
 				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-				.andExpect(jsonPath("$.id").value(1))
+				.andExpect(jsonPath("$.accessToken").value("signed-token"))
+				.andExpect(jsonPath("$.tokenType").value("Bearer"))
+				.andExpect(jsonPath("$.expiresIn").value(900))
 				.andExpect(jsonPath("$.email").value("customer@example.com"))
 				.andExpect(jsonPath("$.role").value("CUSTOMER"))
-				.andExpect(jsonPath("$.status").value("ACTIVE"))
 				.andExpect(jsonPath("$.password").doesNotExist())
 				.andExpect(jsonPath("$.passwordHash").doesNotExist());
 	}
 
 	@Test
-	void rejectsInvalidRegistrationRequest() throws Exception {
-		mockMvc.perform(post("/api/v1/users")
+	void rejectsInvalidLoginRequest() throws Exception {
+		mockMvc.perform(post("/api/v1/auth/tokens")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("""
-						{
-						  "fullName": "",
-						  "email": "invalid-email",
-						  "phone": "123",
-						  "password": "short"
-						}
+						{"email":"invalid","password":""}
 						"""))
 				.andExpect(status().isBadRequest())
 				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
 				.andExpect(jsonPath("$.title").value("Invalid request"))
-				.andExpect(jsonPath("$.errors.fullName").exists())
 				.andExpect(jsonPath("$.errors.email").exists())
-				.andExpect(jsonPath("$.errors.phone").exists())
 				.andExpect(jsonPath("$.errors.password").exists());
 
-		verifyNoInteractions(registrationService);
+		verifyNoInteractions(loginService);
 	}
 
 	@Test
-	void returnsConflictForDuplicateEmail() throws Exception {
-		when(registrationService.register(any(RegisterUserRequest.class))).thenThrow(new DuplicateEmailException());
+	void returnsStandardizedUnauthorizedError() throws Exception {
+		when(loginService.login(any(LoginRequest.class))).thenThrow(new AuthenticationFailedException());
 
-		mockMvc.perform(post("/api/v1/users")
+		mockMvc.perform(post("/api/v1/auth/tokens")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content("""
-						{
-						  "fullName": "Nguyen Van A",
-						  "email": "customer@example.com",
-						  "phone": "+84912345678",
-						  "password": "securePassword"
-						}
+						{"email":"customer@example.com","password":"wrong-password"}
 						"""))
-				.andExpect(status().isConflict())
+				.andExpect(status().isUnauthorized())
 				.andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
-				.andExpect(jsonPath("$.title").value("Email already registered"))
-				.andExpect(jsonPath("$.detail").value("An account with this email already exists."));
+				.andExpect(jsonPath("$.title").value("Authentication failed"))
+				.andExpect(jsonPath("$.detail")
+						.value("Email or password is invalid, or the account is unavailable."));
 	}
 }

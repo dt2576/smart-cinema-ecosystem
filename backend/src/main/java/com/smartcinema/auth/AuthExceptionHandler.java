@@ -22,8 +22,8 @@ public class AuthExceptionHandler {
 
 		ProblemDetail problem = ProblemDetail.forStatusAndDetail(
 				HttpStatus.BAD_REQUEST,
-				"Registration request validation failed.");
-		problem.setTitle("Invalid registration request");
+				"Request validation failed.");
+		problem.setTitle("Invalid request");
 		problem.setProperty("errors", errors);
 		return problem;
 	}
@@ -32,6 +32,13 @@ public class AuthExceptionHandler {
 	ProblemDetail handleDuplicateEmail(DuplicateEmailException exception) {
 		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
 		problem.setTitle("Email already registered");
+		return problem;
+	}
+
+	@ExceptionHandler(AuthenticationFailedException.class)
+	ProblemDetail handleAuthenticationFailed(AuthenticationFailedException exception) {
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, exception.getMessage());
+		problem.setTitle("Authentication failed");
 		return problem;
 	}
 }

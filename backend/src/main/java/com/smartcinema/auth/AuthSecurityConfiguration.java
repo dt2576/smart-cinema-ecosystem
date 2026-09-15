@@ -1,11 +1,23 @@
 package com.smartcinema.auth;
 
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtEncoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
@@ -22,12 +34,44 @@ public class AuthSecurityConfiguration {
 	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		RequestMatcher registrationEndpoint =
 				PathPatternRequestMatcher.pathPattern(HttpMethod.POST, "/api/v1/users");
+		RequestMatcher loginEndpoint =
+				PathPatternRequestMatcher.pathPattern(HttpMethod.POST, "/api/v1/auth/tokens");
 
 		return http
-				.csrf(csrf -> csrf.ignoringRequestMatchers(registrationEndpoint))
+				.csrf(csrf -> csrf.ignoringRequestMatchers(registrationEndpoint, loginEndpoint))
 				.authorizeHttpRequests(authorize -> authorize
-						.requestMatchers(registrationEndpoint).permitAll()
+						.requestMatchers(registrationEndpoint, loginEndpoint).permitAll()
 						.anyRequest().authenticated())
+				.oauth2ResourceServer(resourceServer -> resourceServer.jwt(jwt -> { }))
 				.build();
+	}
+
+	@Bean
+	JwtEncoder jwtEncoder(@Value("${auth.jwt.secret}") String secret) {
+		return NimbusJwtEncoder.withSecretKey(jwtSecretKey(secret))
+				.build();
+	}
+
+	@Bean
+	JwtDecoder jwtDecoder(@Value("${auth.jwt.secret}") String secret) {
+		return NimbusJwtDecoder.withSecretKey(jwtSecretKey(secret))
+				.macAlgorithm(MacAlgorithm.HS256)
+				.build();
+	}
+
+	@Bean
+	Duration accessTokenTtl(@Value("${auth.jwt.access-token-ttl}") Duration accessTokenTtl) {
+		if (accessTokenTtl.isZero() || accessTokenTtl.isNegative()) {
+			throw new IllegalArgumentException("Access token TTL must be positive.");
+		}
+		return accessTokenTtl;
+	}
+
+	private SecretKey jwtSecretKey(String secret) {
+		byte[] secretBytes = secret.getBytes(StandardCharsets.UTF_8);
+		if (secretBytes.length < 32) {
+			throw new IllegalArgumentException("AUTH_JWT_SECRET must contain at least 32 UTF-8 bytes.");
+		}
+		return new SecretKeySpec(secretBytes, "HmacSHA256");
 	}
 }
