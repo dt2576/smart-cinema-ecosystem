@@ -18,6 +18,8 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
@@ -31,19 +33,37 @@ public class AuthSecurityConfiguration {
 	}
 
 	@Bean
-	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+	SecurityFilterChain securityFilterChain(HttpSecurity http, SecurityProblemHandler securityProblemHandler)
+			throws Exception {
 		RequestMatcher registrationEndpoint =
 				PathPatternRequestMatcher.pathPattern(HttpMethod.POST, "/api/v1/users");
 		RequestMatcher loginEndpoint =
 				PathPatternRequestMatcher.pathPattern(HttpMethod.POST, "/api/v1/auth/tokens");
+		RequestMatcher profileEndpoint = PathPatternRequestMatcher.pathPattern("/api/v1/profile");
 
 		return http
-				.csrf(csrf -> csrf.ignoringRequestMatchers(registrationEndpoint, loginEndpoint))
+				.csrf(csrf -> csrf.ignoringRequestMatchers(registrationEndpoint, loginEndpoint, profileEndpoint))
 				.authorizeHttpRequests(authorize -> authorize
 						.requestMatchers(registrationEndpoint, loginEndpoint).permitAll()
+						.requestMatchers(profileEndpoint).hasRole("CUSTOMER")
 						.anyRequest().authenticated())
-				.oauth2ResourceServer(resourceServer -> resourceServer.jwt(jwt -> { }))
+				.exceptionHandling(exceptions -> exceptions
+						.authenticationEntryPoint(securityProblemHandler)
+						.accessDeniedHandler(securityProblemHandler))
+				.oauth2ResourceServer(resourceServer -> resourceServer
+						.authenticationEntryPoint(securityProblemHandler)
+						.accessDeniedHandler(securityProblemHandler)
+						.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())))
 				.build();
+	}
+
+	private JwtAuthenticationConverter jwtAuthenticationConverter() {
+		JwtGrantedAuthoritiesConverter authoritiesConverter = new JwtGrantedAuthoritiesConverter();
+		authoritiesConverter.setAuthoritiesClaimName("role");
+		authoritiesConverter.setAuthorityPrefix("ROLE_");
+		JwtAuthenticationConverter authenticationConverter = new JwtAuthenticationConverter();
+		authenticationConverter.setJwtGrantedAuthoritiesConverter(authoritiesConverter);
+		return authenticationConverter;
 	}
 
 	@Bean

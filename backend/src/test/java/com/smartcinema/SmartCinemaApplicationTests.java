@@ -2,14 +2,21 @@ package com.smartcinema;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -62,6 +69,83 @@ class SmartCinemaApplicationTests {
 						}
 						"""))
 				.andExpect(status().isUnauthorized());
+	}
+
+	@Test
+	void profileEndpointRequiresAuthentication() throws Exception {
+		mockMvc.perform(get("/api/v1/profile"))
+				.andExpect(status().isUnauthorized())
+				.andExpect(jsonPath("$.title").value("Authentication required"))
+				.andExpect(jsonPath("$.detail").value("A valid access token is required."));
+	}
+
+	@Test
+	void profileEndpointUsesAuthenticatedTokenSubject() throws Exception {
+		User user = User.registeredCustomer(
+				"customer@example.com", "stored-hash", "Nguyen Van A", "+84912345678");
+		when(userRepository.findById(42L)).thenReturn(Optional.of(user));
+
+		mockMvc.perform(get("/api/v1/profile")
+				.with(jwt().jwt(token -> token.subject("42").claim("role", "CUSTOMER"))
+						.authorities(new SimpleGrantedAuthority("ROLE_CUSTOMER"))))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.email").value("customer@example.com"))
+				.andExpect(jsonPath("$.role").value("CUSTOMER"))
+				.andExpect(jsonPath("$.status").value("ACTIVE"))
+				.andExpect(jsonPath("$.passwordHash").doesNotExist());
+	}
+
+	@Test
+	void profileUpdateUsesTokenSubjectAndDoesNotRequireCsrf() throws Exception {
+		User user = User.registeredCustomer(
+				"customer@example.com", "stored-hash", "Nguyen Van A", "+84912345678");
+		when(userRepository.findById(42L)).thenReturn(Optional.of(user));
+
+		mockMvc.perform(patch("/api/v1/profile")
+				.with(jwt().jwt(token -> token.subject("42").claim("role", "CUSTOMER"))
+						.authorities(new SimpleGrantedAuthority("ROLE_CUSTOMER")))
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+						{
+						  "fullName": "Tran Thi B",
+						  "phone": "0987 654 321",
+						  "role": "ADMIN",
+						  "status": "BLOCKED",
+						  "email": "changed@example.com"
+						}
+						"""))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.fullName").value("Tran Thi B"))
+				.andExpect(jsonPath("$.phone").value("+84987654321"))
+				.andExpect(jsonPath("$.email").value("customer@example.com"))
+				.andExpect(jsonPath("$.role").value("CUSTOMER"))
+				.andExpect(jsonPath("$.status").value("ACTIVE"));
+	}
+
+	@Test
+	void profileEndpointRejectsNonCustomerRole() throws Exception {
+		mockMvc.perform(get("/api/v1/profile")
+				.with(jwt().jwt(token -> token.subject("42").claim("role", "STAFF"))
+						.authorities(new SimpleGrantedAuthority("ROLE_STAFF"))))
+				.andExpect(status().isForbidden())
+				.andExpect(jsonPath("$.title").value("Access denied"))
+				.andExpect(jsonPath("$.detail")
+						.value("The authenticated account cannot access this resource."));
+	}
+
+	@Test
+	void profileUpdateRejectsInvalidFields() throws Exception {
+		mockMvc.perform(patch("/api/v1/profile")
+				.with(jwt().jwt(token -> token.subject("42").claim("role", "CUSTOMER"))
+						.authorities(new SimpleGrantedAuthority("ROLE_CUSTOMER")))
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+						{"fullName":"","phone":"123"}
+						"""))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.title").value("Invalid request"))
+				.andExpect(jsonPath("$.errors.fullName").exists())
+				.andExpect(jsonPath("$.errors.phone").exists());
 	}
 
 }
