@@ -12,6 +12,8 @@ export type AuthSession = {
   accessToken: string;
   tokenType: "Bearer";
   expiresAt: number;
+  refreshToken: string;
+  refreshExpiresAt: number;
   user: AuthenticatedUser;
 };
 

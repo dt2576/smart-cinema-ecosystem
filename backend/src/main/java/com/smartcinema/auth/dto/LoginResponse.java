@@ -2,21 +2,27 @@ package com.smartcinema.auth.dto;
 
 import com.smartcinema.user.User;
 import com.smartcinema.user.UserRole;
+import com.smartcinema.auth.AccessTokenService.IssuedAccessToken;
+import com.smartcinema.auth.RefreshTokenService.IssuedRefreshToken;
 
 public record LoginResponse(
 		String accessToken,
 		String tokenType,
 		long expiresIn,
+		String refreshToken,
+		long refreshExpiresIn,
 		Long userId,
 		String email,
 		String fullName,
 		UserRole role) {
 
-	public static LoginResponse from(User user, String accessToken, long expiresIn) {
+	public static LoginResponse from(User user, IssuedAccessToken accessToken, IssuedRefreshToken refreshToken) {
 		return new LoginResponse(
-				accessToken,
+				accessToken.value(),
 				"Bearer",
-				expiresIn,
+				accessToken.expiresIn(),
+				refreshToken.value(),
+				refreshToken.expiresIn(),
 				user.getId(),
 				user.getEmail(),
 				user.getFullName(),
@@ -25,7 +31,7 @@ public record LoginResponse(
 
 	@Override
 	public String toString() {
-		return "LoginResponse[accessToken=[REDACTED], tokenType=" + tokenType
+		return "LoginResponse[accessToken=[REDACTED], refreshToken=[REDACTED], tokenType=" + tokenType
 				+ ", expiresIn=" + expiresIn
 				+ ", userId=" + userId
 				+ ", email=" + email

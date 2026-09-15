@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.smartcinema.auth.AccessTokenService.IssuedAccessToken;
+import com.smartcinema.auth.RefreshTokenService.IssuedRefreshToken;
 import com.smartcinema.auth.dto.LoginRequest;
 import com.smartcinema.auth.dto.LoginResponse;
 import com.smartcinema.user.AccountStatus;
@@ -22,15 +23,17 @@ public class LoginService {
 	private final UserRepository userRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final AccessTokenService accessTokenService;
+	private final RefreshTokenService refreshTokenService;
 
 	public LoginService(UserRepository userRepository, PasswordEncoder passwordEncoder,
-			AccessTokenService accessTokenService) {
+			AccessTokenService accessTokenService, RefreshTokenService refreshTokenService) {
 		this.userRepository = userRepository;
 		this.passwordEncoder = passwordEncoder;
 		this.accessTokenService = accessTokenService;
+		this.refreshTokenService = refreshTokenService;
 	}
 
-	@Transactional(readOnly = true)
+	@Transactional
 	public LoginResponse login(LoginRequest request) {
 		String normalizedEmail = request.email().trim().toLowerCase(Locale.ROOT);
 		User user = userRepository.findByEmail(normalizedEmail).orElse(null);
@@ -43,6 +46,7 @@ public class LoginService {
 		}
 
 		IssuedAccessToken accessToken = accessTokenService.issue(user);
-		return LoginResponse.from(user, accessToken.value(), accessToken.expiresIn());
+		IssuedRefreshToken refreshToken = refreshTokenService.issue(user);
+		return LoginResponse.from(user, accessToken, refreshToken);
 	}
 }

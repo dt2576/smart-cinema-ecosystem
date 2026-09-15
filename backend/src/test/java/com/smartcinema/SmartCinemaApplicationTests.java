@@ -22,6 +22,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import com.smartcinema.user.User;
 import com.smartcinema.user.UserRepository;
+import com.smartcinema.auth.RefreshTokenRepository;
 
 @SpringBootTest(properties = {
 		"spring.autoconfigure.exclude=org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration",
@@ -32,6 +33,9 @@ class SmartCinemaApplicationTests {
 
 	@MockitoBean
 	private UserRepository userRepository;
+
+	@MockitoBean
+	private RefreshTokenRepository refreshTokenRepository;
 
 	@Autowired
 	private MockMvc mockMvc;
@@ -69,6 +73,52 @@ class SmartCinemaApplicationTests {
 						}
 						"""))
 				.andExpect(status().isUnauthorized());
+	}
+
+	@Test
+	void tokenRenewalEndpointAllowsAnonymousPostWithoutCsrfToken() throws Exception {
+		when(refreshTokenRepository.findForUpdateByTokenHash(any(String.class)))
+				.thenReturn(Optional.empty());
+
+		mockMvc.perform(post("/api/v1/auth/token-renewals")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+						{"refreshToken":"invalid-refresh-token"}
+						"""))
+				.andExpect(status().isUnauthorized())
+				.andExpect(jsonPath("$.title").value("Token renewal failed"));
+	}
+
+	@Test
+	void tokenRevocationEndpointRequiresAuthentication() throws Exception {
+		mockMvc.perform(post("/api/v1/auth/token-revocations")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"refreshToken\":\"current-refresh-token\"}"))
+				.andExpect(status().isUnauthorized());
+	}
+
+	@Test
+	void tokenRevocationEndpointAcceptsAuthenticatedPostWithoutCsrfToken() throws Exception {
+		when(refreshTokenRepository.findForUpdateByTokenHash(any(String.class)))
+				.thenReturn(Optional.empty());
+
+		mockMvc.perform(post("/api/v1/auth/token-revocations")
+				.with(jwt().jwt(token -> token.subject("42").claim("role", "CUSTOMER"))
+						.authorities(new SimpleGrantedAuthority("ROLE_CUSTOMER")))
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"refreshToken\":\"already-revoked-token\"}"))
+				.andExpect(status().isNoContent());
+	}
+
+	@Test
+	void tokenRevocationEndpointValidatesRefreshCredential() throws Exception {
+		mockMvc.perform(post("/api/v1/auth/token-revocations")
+				.with(jwt().jwt(token -> token.subject("42").claim("role", "CUSTOMER"))
+						.authorities(new SimpleGrantedAuthority("ROLE_CUSTOMER")))
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"refreshToken\":\"\"}"))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.errors.refreshToken").exists());
 	}
 
 	@Test

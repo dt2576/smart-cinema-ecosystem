@@ -52,7 +52,8 @@ class LoginControllerTests {
 	@Test
 	void returnsAccessTokenAndUserSummaryForValidCredentials() throws Exception {
 		when(loginService.login(any(LoginRequest.class))).thenReturn(new LoginResponse(
-				"signed-token", "Bearer", 900, 1L, "customer@example.com", "Nguyen Van A", UserRole.CUSTOMER));
+				"signed-token", "Bearer", 900, "refresh-token", 2592000,
+				1L, "customer@example.com", "Nguyen Van A", UserRole.CUSTOMER));
 
 		mockMvc.perform(post("/api/v1/auth/tokens")
 				.contentType(MediaType.APPLICATION_JSON)
@@ -64,6 +65,8 @@ class LoginControllerTests {
 				.andExpect(jsonPath("$.accessToken").value("signed-token"))
 				.andExpect(jsonPath("$.tokenType").value("Bearer"))
 				.andExpect(jsonPath("$.expiresIn").value(900))
+				.andExpect(jsonPath("$.refreshToken").value("refresh-token"))
+				.andExpect(jsonPath("$.refreshExpiresIn").value(2592000))
 				.andExpect(jsonPath("$.email").value("customer@example.com"))
 				.andExpect(jsonPath("$.role").value("CUSTOMER"))
 				.andExpect(jsonPath("$.password").doesNotExist())

@@ -3,11 +3,13 @@ package com.smartcinema.auth;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.UUID;
 
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import com.smartcinema.user.User;
@@ -22,7 +24,7 @@ public class AccessTokenService {
 	private final Clock clock;
 
 	@Autowired
-	public AccessTokenService(JwtEncoder jwtEncoder, Duration accessTokenTtl) {
+	public AccessTokenService(JwtEncoder jwtEncoder, @Qualifier("accessTokenTtl") Duration accessTokenTtl) {
 		this(jwtEncoder, accessTokenTtl, Clock.systemUTC());
 	}
 
@@ -40,6 +42,7 @@ public class AccessTokenService {
 				.subject(user.getId().toString())
 				.issuedAt(issuedAt)
 				.expiresAt(expiresAt)
+				.id(UUID.randomUUID().toString())
 				.claim("email", user.getEmail())
 				.claim("role", user.getRole().name())
 				.build();

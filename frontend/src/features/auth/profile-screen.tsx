@@ -66,6 +66,7 @@ export function ProfileScreen() {
       router.replace("/login");
       return;
     }
+    if (session.expiresAt <= Date.now()) return;
     const timeout = window.setTimeout(() => void loadProfile(), 0);
     return () => window.clearTimeout(timeout);
   }, [isHydrated, loadProfile, router, session]);

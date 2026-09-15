@@ -39,12 +39,19 @@ public class AuthSecurityConfiguration {
 				PathPatternRequestMatcher.pathPattern(HttpMethod.POST, "/api/v1/users");
 		RequestMatcher loginEndpoint =
 				PathPatternRequestMatcher.pathPattern(HttpMethod.POST, "/api/v1/auth/tokens");
+		RequestMatcher tokenRenewalEndpoint =
+				PathPatternRequestMatcher.pathPattern(HttpMethod.POST, "/api/v1/auth/token-renewals");
+		RequestMatcher tokenRevocationEndpoint =
+				PathPatternRequestMatcher.pathPattern(HttpMethod.POST, "/api/v1/auth/token-revocations");
 		RequestMatcher profileEndpoint = PathPatternRequestMatcher.pathPattern("/api/v1/profile");
 
 		return http
-				.csrf(csrf -> csrf.ignoringRequestMatchers(registrationEndpoint, loginEndpoint, profileEndpoint))
+				.csrf(csrf -> csrf.ignoringRequestMatchers(
+						registrationEndpoint, loginEndpoint, tokenRenewalEndpoint,
+						tokenRevocationEndpoint, profileEndpoint))
 				.authorizeHttpRequests(authorize -> authorize
-						.requestMatchers(registrationEndpoint, loginEndpoint).permitAll()
+						.requestMatchers(registrationEndpoint, loginEndpoint, tokenRenewalEndpoint).permitAll()
+						.requestMatchers(tokenRevocationEndpoint).authenticated()
 						.requestMatchers(profileEndpoint).hasRole("CUSTOMER")
 						.anyRequest().authenticated())
 				.exceptionHandling(exceptions -> exceptions
@@ -85,6 +92,14 @@ public class AuthSecurityConfiguration {
 			throw new IllegalArgumentException("Access token TTL must be positive.");
 		}
 		return accessTokenTtl;
+	}
+
+	@Bean
+	Duration refreshTokenTtl(@Value("${auth.jwt.refresh-token-ttl}") Duration refreshTokenTtl) {
+		if (refreshTokenTtl.isZero() || refreshTokenTtl.isNegative()) {
+			throw new IllegalArgumentException("Refresh token TTL must be positive.");
+		}
+		return refreshTokenTtl;
 	}
 
 	private SecretKey jwtSecretKey(String secret) {

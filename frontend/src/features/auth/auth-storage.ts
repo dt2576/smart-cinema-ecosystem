@@ -34,7 +34,7 @@ function parseAuthSession(storedValue: string | null): AuthSession | null {
     if (!storedValue) return null;
 
     const session = JSON.parse(storedValue) as Partial<AuthSession>;
-    if (!isAuthSession(session) || session.expiresAt <= Date.now()) {
+    if (!isAuthSession(session) || session.refreshExpiresAt <= Date.now()) {
       window.localStorage.removeItem(AUTH_SESSION_KEY);
       cachedStorageValue = null;
       return null;
@@ -61,11 +61,22 @@ export function removeAuthSession() {
   listeners.forEach(listener => listener());
 }
 
+export async function clearAuthSessionAfterLogout(revoke: () => Promise<void>) {
+  try {
+    await revoke();
+  } finally {
+    removeAuthSession();
+  }
+}
+
 function isAuthSession(session: Partial<AuthSession>): session is AuthSession {
   return typeof session.accessToken === "string"
     && session.accessToken.length > 0
     && session.tokenType === "Bearer"
     && typeof session.expiresAt === "number"
+    && typeof session.refreshToken === "string"
+    && session.refreshToken.length > 0
+    && typeof session.refreshExpiresAt === "number"
     && typeof session.user?.id === "number"
     && typeof session.user.email === "string"
     && typeof session.user.fullName === "string"

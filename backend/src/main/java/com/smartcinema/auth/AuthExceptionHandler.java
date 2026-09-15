@@ -41,4 +41,11 @@ public class AuthExceptionHandler {
 		problem.setTitle("Authentication failed");
 		return problem;
 	}
+
+	@ExceptionHandler(RefreshTokenRejectedException.class)
+	ProblemDetail handleRefreshTokenRejected(RefreshTokenRejectedException exception) {
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, exception.getMessage());
+		problem.setTitle("Token renewal failed");
+		return problem;
+	}
 }

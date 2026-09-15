@@ -8,14 +8,14 @@ import { useAuth } from "@/features/auth/auth-context";
 export function CustomerAccountMenu() {
   const router = useRouter();
   const menuRef = useRef<HTMLDetailsElement>(null);
-  const { session, clearSession } = useAuth();
+  const { session, logoutSession } = useAuth();
   const user = session?.user;
 
   if (!user) return null;
 
-  function logout() {
+  async function logout() {
     menuRef.current?.removeAttribute("open");
-    clearSession();
+    await logoutSession();
     router.replace("/");
   }
 
@@ -28,22 +28,22 @@ export function CustomerAccountMenu() {
     <div className="absolute right-0 top-[calc(100%+0.5rem)] z-50 min-w-52 overflow-hidden rounded-lg border border-outline/40 bg-panel p-2 shadow-2xl shadow-black/40">
       <p className="truncate px-3 py-2 text-xs text-muted sm:hidden">{user.fullName}</p>
       <Link href="/profile" onClick={() => menuRef.current?.removeAttribute("open")} className="flex min-h-11 items-center rounded-md px-3 font-heading text-sm font-semibold text-foreground hover:bg-panel-high">My Profile</Link>
-      <button type="button" onClick={logout} className="flex min-h-11 w-full items-center rounded-md px-3 text-left font-heading text-sm font-semibold text-error hover:bg-panel-high">Logout</button>
+      <button type="button" onClick={() => void logout()} className="flex min-h-11 w-full items-center rounded-md px-3 text-left font-heading text-sm font-semibold text-error hover:bg-panel-high">Logout</button>
     </div>
   </details>;
 }
 
 export function CustomerLogoutButton({ onLogout, className = "" }: { onLogout?: () => void; className?: string }) {
   const router = useRouter();
-  const { clearSession } = useAuth();
+  const { logoutSession } = useAuth();
 
-  function logout() {
-    clearSession();
+  async function logout() {
+    await logoutSession();
     onLogout?.();
     router.replace("/");
   }
 
-  return <button type="button" onClick={logout} className={className}>Logout</button>;
+  return <button type="button" onClick={() => void logout()} className={className}>Logout</button>;
 }
 
 function getInitials(fullName: string) {

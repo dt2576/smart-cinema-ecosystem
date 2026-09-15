@@ -19,6 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import com.smartcinema.auth.AccessTokenService.IssuedAccessToken;
+import com.smartcinema.auth.RefreshTokenService.IssuedRefreshToken;
 import com.smartcinema.auth.dto.LoginRequest;
 import com.smartcinema.auth.dto.LoginResponse;
 import com.smartcinema.user.AccountStatus;
@@ -37,12 +38,14 @@ class LoginServiceTests {
 
 	@Mock
 	private AccessTokenService accessTokenService;
+	@Mock
+	private RefreshTokenService refreshTokenService;
 
 	private LoginService loginService;
 
 	@BeforeEach
 	void setUp() {
-		loginService = new LoginService(userRepository, passwordEncoder, accessTokenService);
+		loginService = new LoginService(userRepository, passwordEncoder, accessTokenService, refreshTokenService);
 	}
 
 	@Test
@@ -51,6 +54,7 @@ class LoginServiceTests {
 		when(userRepository.findByEmail("customer@example.com")).thenReturn(Optional.of(user));
 		when(passwordEncoder.matches("securePassword", "stored-hash")).thenReturn(true);
 		when(accessTokenService.issue(user)).thenReturn(new IssuedAccessToken("signed-token", 900));
+		when(refreshTokenService.issue(user)).thenReturn(new IssuedRefreshToken("refresh-token", 2592000));
 
 		LoginResponse response = loginService.login(
 				new LoginRequest("  Customer@Example.COM  ", "securePassword"));
@@ -58,6 +62,8 @@ class LoginServiceTests {
 		assertThat(response.accessToken()).isEqualTo("signed-token");
 		assertThat(response.tokenType()).isEqualTo("Bearer");
 		assertThat(response.expiresIn()).isEqualTo(900);
+		assertThat(response.refreshToken()).isEqualTo("refresh-token");
+		assertThat(response.refreshExpiresIn()).isEqualTo(2592000);
 		assertThat(response.email()).isEqualTo("customer@example.com");
 		assertThat(response.role()).isEqualTo(UserRole.CUSTOMER);
 	}
@@ -102,9 +108,11 @@ class LoginServiceTests {
 	@Test
 	void redactsAccessTokenFromResponseString() {
 		LoginResponse response = new LoginResponse(
-				"secret-token", "Bearer", 900, 1L, "customer@example.com", "Nguyen Van A", UserRole.CUSTOMER);
+				"secret-token", "Bearer", 900, "secret-refresh", 2592000,
+				1L, "customer@example.com", "Nguyen Van A", UserRole.CUSTOMER);
 
-		assertThat(response.toString()).doesNotContain("secret-token").contains("accessToken=[REDACTED]");
+		assertThat(response.toString()).doesNotContain("secret-token").doesNotContain("secret-refresh")
+				.contains("accessToken=[REDACTED]").contains("refreshToken=[REDACTED]");
 	}
 
 	@Test
@@ -114,7 +122,9 @@ class LoginServiceTests {
 		when(user.getPasswordHash()).thenReturn(bcrypt.encode("securePassword"));
 		when(userRepository.findByEmail("customer@example.com")).thenReturn(Optional.of(user));
 		when(accessTokenService.issue(user)).thenReturn(new IssuedAccessToken("signed-token", 900));
-		LoginService bcryptLoginService = new LoginService(userRepository, bcrypt, accessTokenService);
+		when(refreshTokenService.issue(user)).thenReturn(new IssuedRefreshToken("refresh-token", 2592000));
+		LoginService bcryptLoginService = new LoginService(
+				userRepository, bcrypt, accessTokenService, refreshTokenService);
 
 		LoginResponse response = bcryptLoginService.login(
 				new LoginRequest("customer@example.com", "securePassword"));

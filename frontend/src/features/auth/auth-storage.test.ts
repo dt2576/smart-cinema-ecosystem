@@ -4,6 +4,7 @@ import type { AuthSession } from "./auth.types";
 
 const {
   getAuthSessionSnapshot,
+  clearAuthSessionAfterLogout,
   removeAuthSession,
   saveAuthSession,
   subscribeToAuthSession,
@@ -36,6 +37,8 @@ const session: AuthSession = {
   accessToken: "test-access-token",
   tokenType: "Bearer",
   expiresAt: Date.now() + 60_000,
+  refreshToken: "test-refresh-token",
+  refreshExpiresAt: Date.now() + 3_600_000,
   user: { id: 1, email: "customer@example.com", fullName: "Nguyen Van A", role: "CUSTOMER" },
 };
 
@@ -53,11 +56,23 @@ test("logout clears the complete stored session and notifies AuthProvider subscr
   unsubscribe();
 });
 
-test("a valid stored session is restored and an expired session is discarded", () => {
+test("logout clears the local session when server revocation fails", async () => {
+  saveAuthSession(session);
+
+  await assert.rejects(
+    clearAuthSessionAfterLogout(() => Promise.reject(new Error("network unavailable"))),
+    /network unavailable/,
+  );
+
+  assert.equal(getAuthSessionSnapshot(), null);
+  assert.equal(storage.getItem("smart-cinema.auth-session"), null);
+});
+
+test("a valid stored session is restored and an expired refresh session is discarded", () => {
   storage.setItem("smart-cinema.auth-session", JSON.stringify(session));
   assert.deepEqual(getAuthSessionSnapshot(), session);
 
-  storage.setItem("smart-cinema.auth-session", JSON.stringify({ ...session, expiresAt: Date.now() - 1 }));
+  storage.setItem("smart-cinema.auth-session", JSON.stringify({ ...session, refreshExpiresAt: Date.now() - 1 }));
   assert.equal(getAuthSessionSnapshot(), null);
   assert.equal(storage.getItem("smart-cinema.auth-session"), null);
 });
