@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { CustomerAccountMenu, CustomerLogoutButton } from "@/features/auth/customer-account-menu";
@@ -13,11 +14,12 @@ export function CinemaBrand() {
 
 export function SiteHeader({ onPreview }: { onPreview?: (title: string) => void }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const pathname = usePathname();
   const { isAuthenticated, isHydrated, session } = useAuth();
   const authenticatedUser = isHydrated && isAuthenticated ? session?.user : null;
-  const links = [{ label: "Movies", href: "/movies" }, ...(onPreview ? [{ label: "Showtimes" }, { label: "Cinemas", href: "/#cinemas" }, { label: "Promotions", href: "/#promotions" }, { label: "My Bookings" }] : [])];
+  const links = [{ label: "Movies", href: "/movies" }, ...(onPreview ? [{ label: "Showtimes" }, { label: "Cinemas", href: "/#cinemas" }, { label: "Promotions", href: "/#promotions" }] : []), { label: "My Bookings", href: "/my-bookings" }];
   const navigation = links.map(link => link.href
-    ? <Link key={link.label} href={link.href} onClick={() => setMenuOpen(false)} className={`rounded-lg px-4 py-3 font-heading text-sm hover:bg-panel-high ${link.label === "Movies" ? "bg-panel-high text-accent" : "text-muted"}`}>{link.label}</Link>
+    ? <Link key={link.label} href={link.href} onClick={() => setMenuOpen(false)} aria-current={pathname === link.href || pathname.startsWith(`${link.href}/`) ? "page" : undefined} className={`rounded-lg px-4 py-3 font-heading text-sm hover:bg-panel-high ${pathname === link.href || pathname.startsWith(`${link.href}/`) ? "bg-panel-high text-accent" : "text-muted"}`}>{link.label}</Link>
     : <button key={link.label} onClick={() => { setMenuOpen(false); onPreview?.(link.label); }} className="rounded-lg px-4 py-3 text-left font-heading text-sm text-muted hover:bg-panel-high">{link.label}</button>);
   return <header className="fixed inset-x-0 top-0 z-40 bg-canvas/85 shadow-md backdrop-blur-xl">
     <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-3 px-4 lg:px-10">
