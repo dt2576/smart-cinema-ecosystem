@@ -46,12 +46,16 @@ public class AuthSecurityConfiguration {
 		RequestMatcher profileEndpoint = PathPatternRequestMatcher.pathPattern("/api/v1/profile");
 		RequestMatcher holdAcquire = PathPatternRequestMatcher.pathPattern(HttpMethod.POST, "/api/v1/showtimes/{showtimeId}/seat-holds");
 		RequestMatcher holdRelease = PathPatternRequestMatcher.pathPattern(HttpMethod.DELETE, "/api/v1/showtimes/{showtimeId}/seat-holds/{holdId}");
+		RequestMatcher bookingCreate = PathPatternRequestMatcher.pathPattern(HttpMethod.POST, "/api/v1/bookings");
+		RequestMatcher bookingCancel = PathPatternRequestMatcher.pathPattern(HttpMethod.DELETE, "/api/v1/bookings/{bookingId}");
 
 		return http
 				.csrf(csrf -> csrf.ignoringRequestMatchers(
 						registrationEndpoint, loginEndpoint, tokenRenewalEndpoint,
-						tokenRevocationEndpoint, profileEndpoint, holdAcquire, holdRelease))
+						tokenRevocationEndpoint, profileEndpoint, holdAcquire, holdRelease, bookingCreate, bookingCancel))
 				.authorizeHttpRequests(authorize -> authorize
+						.requestMatchers(bookingCreate, bookingCancel,
+								PathPatternRequestMatcher.pathPattern(HttpMethod.GET, "/api/v1/bookings/{bookingId}")).hasRole("CUSTOMER")
 						.requestMatchers(PathPatternRequestMatcher.pathPattern(HttpMethod.GET, "/api/v1/showtimes/{showtimeId}/seats")).permitAll()
 						.requestMatchers(holdAcquire, holdRelease,
 								PathPatternRequestMatcher.pathPattern(HttpMethod.GET, "/api/v1/showtimes/{showtimeId}/seat-holds")).hasRole("CUSTOMER")

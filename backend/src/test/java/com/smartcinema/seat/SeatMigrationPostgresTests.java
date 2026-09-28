@@ -22,7 +22,7 @@ class SeatMigrationPostgresTests {
     @Test
     void freshAndV4UpgradePreserveHistoryAndStageBookingLinkSafely() throws Exception {
         flyway.validate();
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("5");
+        assertThat(Integer.parseInt(flyway.info().current().getVersion().getVersion())).isGreaterThanOrEqualTo(5);
         String schema="seat_upgrade_"+UUID.randomUUID().toString().replace("-","");
         try {
             var old=Flyway.configure().dataSource(dataSource).defaultSchema(schema).schemas(schema,"public")
@@ -33,7 +33,7 @@ class SeatMigrationPostgresTests {
             try(Connection connection=dataSource.getConnection();var sql=connection.createStatement()) {
                 sql.execute("INSERT INTO "+schema+".cinemas(id,name,address,status) VALUES (71,'Preserved','Address','ACTIVE')");
             }
-            var upgrade=Flyway.configure().dataSource(dataSource).defaultSchema(schema).schemas(schema,"public").load();
+            var upgrade=Flyway.configure().dataSource(dataSource).defaultSchema(schema).schemas(schema,"public").target(MigrationVersion.fromVersion("5")).load();
             assertThat(upgrade.migrate().migrationsExecuted).isEqualTo(1);
             upgrade.validate();
             assertThat(upgrade.migrate().migrationsExecuted).isZero();

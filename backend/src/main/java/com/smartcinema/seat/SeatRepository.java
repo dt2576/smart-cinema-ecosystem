@@ -41,9 +41,12 @@ public class SeatRepository {
         parameters.addValue("hall", Long.parseLong(parent[2]));
         var units = jdbc.query("""
                 SELECT seat.id,seat.row,seat.number,seat.seat_type,
-                    CASE WHEN ss.id IS NULL OR NOT ss.is_sellable OR seat.physical_status<>'ACTIVE' THEN 'UNAVAILABLE'
+                    CASE WHEN EXISTS(SELECT 1 FROM booking_seats bs WHERE bs.showtime_id=:id AND bs.seat_id=seat.id
+                             AND bs.sold_at IS NOT NULL) THEN 'BOOKED'
+                         WHEN ss.id IS NULL OR NOT ss.is_sellable OR seat.physical_status<>'ACTIVE' THEN 'UNAVAILABLE'
                          WHEN EXISTS(SELECT 1 FROM seat_holds sh WHERE sh.showtime_id=:id AND sh.seat_id=seat.id
-                             AND sh.status='ACTIVE' AND sh.expires_at>:now) THEN 'HELD'
+                             AND sh.status='ACTIVE' AND sh.expires_at>:now AND (sh.booking_id IS NULL OR EXISTS(
+                                 SELECT 1 FROM bookings b WHERE b.id=sh.booking_id AND b.status='PENDING' AND b.expires_at>:now))) THEN 'HELD'
                          ELSE 'AVAILABLE' END AS availability
                 FROM seats seat LEFT JOIN showtime_seats ss ON ss.showtime_id=:id AND ss.seat_id=seat.id
                 WHERE seat.hall_id=:hall ORDER BY seat.row COLLATE "C",seat.number COLLATE "C",seat.id
@@ -72,6 +75,7 @@ public class SeatRepository {
                 JOIN showtime_seats ss ON ss.showtime_id=sh.showtime_id AND ss.seat_id=sh.seat_id
                 JOIN seats seat ON seat.id=sh.seat_id
                 WHERE sh.showtime_id=:showtime AND sh.user_id=:user AND sh.status='ACTIVE' AND sh.expires_at>:now
+                AND sh.booking_id IS NULL
                 AND m.status='PUBLISHED' AND c.status='ACTIVE' AND h.status='ACTIVE' AND s.status='OPEN_FOR_BOOKING'
                 AND s.start_time>:now AND s.booking_cut_off>:now AND ss.is_sellable AND seat.physical_status='ACTIVE'
                 ORDER BY sh.seat_id
