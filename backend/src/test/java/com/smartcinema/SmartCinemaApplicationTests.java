@@ -23,6 +23,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.smartcinema.user.User;
 import com.smartcinema.user.UserRepository;
 import com.smartcinema.auth.RefreshTokenRepository;
+import com.smartcinema.movie.GenreRepository;
+import com.smartcinema.movie.MovieRepository;
 
 @SpringBootTest(properties = {
 		"spring.autoconfigure.exclude=org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration",
@@ -30,6 +32,12 @@ import com.smartcinema.auth.RefreshTokenRepository;
 })
 @AutoConfigureMockMvc
 class SmartCinemaApplicationTests {
+
+	@MockitoBean
+	private MovieRepository movieRepository;
+
+	@MockitoBean
+	private GenreRepository genreRepository;
 
 	@MockitoBean
 	private UserRepository userRepository;
@@ -42,6 +50,28 @@ class SmartCinemaApplicationTests {
 
 	@Test
 	void contextLoads() {
+	}
+
+	@Test
+	void genreOptionsAllowsAnonymousRead() throws Exception {
+		mockMvc.perform(get("/api/v1/genres"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.length()").value(0));
+	}
+
+	@Test
+	void movieCatalogAllowsAnonymousRead() throws Exception {
+		mockMvc.perform(get("/api/v1/movies"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.totalElements").value(0));
+	}
+
+	@Test
+	void movieDetailMissingIsPublicNotAnAuthenticationError() throws Exception {
+		when(movieRepository.findPublishedById(42L)).thenReturn(Optional.empty());
+		mockMvc.perform(get("/api/v1/movies/42"))
+				.andExpect(status().isNotFound())
+				.andExpect(jsonPath("$.title").value("Movie unavailable"));
 	}
 
 	@Test

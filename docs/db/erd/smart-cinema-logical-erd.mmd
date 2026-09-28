@@ -1,0 +1,202 @@
+erDiagram
+    users {
+        identifier id PK "IMPLEMENTED V1"
+        text email UK
+        text password_hash
+        text full_name
+        text phone
+        text role
+        text status
+        instant created_at
+        instant updated_at
+    }
+    refresh_tokens {
+        identifier id PK "IMPLEMENTED V2"
+        identifier user_id FK
+        text token_hash UK
+        instant expires_at
+        instant revoked_at "Optional"
+        instant created_at
+    }
+    cinema_assignments {
+        identifier id PK "PROPOSED"
+        identifier user_id FK
+        identifier cinema_id FK
+        text assignment_type
+        text status
+        instant effective_at
+    }
+    movies {
+        identifier id PK "PROPOSED"
+        text title
+        integer duration
+        text status
+    }
+    genres {
+        identifier id PK "PROPOSED"
+        text name
+    }
+    movie_genres {
+        identifier id PK "PROPOSED"
+        identifier movie_id FK "Unique with genre_id"
+        identifier genre_id FK
+    }
+    cinemas {
+        identifier id PK "PROPOSED"
+        text name
+        text status
+    }
+    halls {
+        identifier id PK "PROPOSED"
+        identifier cinema_id FK
+        text name
+        integer capacity
+        text type
+        text status
+    }
+    seats {
+        identifier id PK "PROPOSED"
+        identifier hall_id FK
+        text row
+        text number
+        text seat_type "COUPLE is one unit"
+        text physical_status
+    }
+    showtimes {
+        identifier id PK "PROPOSED"
+        identifier movie_id FK
+        identifier hall_id FK
+        instant start_time
+        instant end_time
+        money base_price
+        text status
+        instant booking_cut_off
+    }
+    showtime_seats {
+        identifier id PK "PROPOSED"
+        identifier showtime_id FK "Unique with seat_id"
+        identifier seat_id FK
+        boolean is_sellable "Eligibility only"
+    }
+    seat_holds {
+        identifier id PK "PROPOSED - PostgreSQL authority"
+        identifier showtime_id FK "Pair reference to showtime_seats"
+        identifier seat_id FK "Same pair reference"
+        identifier user_id FK
+        identifier booking_id FK "Optional until attached"
+        instant created_at
+        instant expires_at
+        text status
+    }
+    bookings {
+        identifier id PK "PROPOSED"
+        text booking_code UK
+        text booking_qr_token UK "Optional before paid issuance"
+        identifier customer_id FK
+        identifier showtime_id FK
+        identifier promotion_id FK "Optional"
+        text status
+        money seat_amount
+        money concession_amount
+        money subtotal
+        money discount
+        money final_amount
+        instant created_at
+        instant expires_at
+        instant payment_started_at "Optional - permanent freeze when set"
+        instant paid_at "Optional before payment"
+    }
+    booking_seats {
+        identifier id PK "PROPOSED"
+        identifier booking_id FK
+        identifier showtime_id FK "Pair reference and matches Booking"
+        identifier seat_id FK "Same pair reference"
+        text seat_type_snapshot
+        money unit_price_snapshot
+        money final_price
+    }
+    concession_items {
+        identifier id PK "PROPOSED"
+        text name
+        text category
+        money selling_price
+        text status
+    }
+    booking_concessions {
+        identifier id PK "PROPOSED"
+        identifier booking_id FK
+        identifier concession_item_id FK
+        text item_name_snapshot
+        text category_snapshot
+        integer quantity
+        money unit_price_snapshot
+        money total_price
+    }
+    promotions {
+        identifier id PK "PROPOSED"
+        text code UK
+        text discount_type
+        number discount_value
+        instant valid_from
+        instant valid_until
+        money minimum_order
+        integer usage_limit
+        text status
+    }
+    payment_transactions {
+        identifier id PK "PROPOSED"
+        identifier booking_id FK
+        text provider
+        text internal_reference UK
+        text external_reference "Optional until assigned"
+        money amount
+        text currency
+        text status
+        instant initiated_at
+        instant completed_at "Optional"
+        data provider_metadata
+    }
+    tickets {
+        identifier id PK "PROPOSED"
+        identifier booking_seat_id FK, UK
+        text ticket_code UK
+        text status
+        instant issued_at
+        instant checked_in_at "Optional before check-in"
+        identifier checked_in_by_user_id FK "Optional before check-in"
+    }
+    audit_records {
+        identifier id PK "PROPOSED"
+        identifier actor_user_id FK "Optional for system event"
+        text action
+        text resource_type
+        identifier resource_id "Logical target - not a polymorphic FK"
+        instant occurred_at
+        data metadata
+    }
+
+    users ||..o{ refresh_tokens : "owns - implemented"
+    users ||..o{ cinema_assignments : "receives"
+    cinemas ||..o{ cinema_assignments : "scopes"
+    cinemas ||..o{ halls : "contains"
+    halls ||..o{ seats : "contains units"
+    movies ||..o{ movie_genres : "classified by"
+    genres ||..o{ movie_genres : "classifies"
+    movies ||..o{ showtimes : "screened in"
+    halls ||..o{ showtimes : "hosts"
+    showtimes ||..o{ showtime_seats : "configures"
+    seats ||..o{ showtime_seats : "participates in"
+    showtime_seats ||..o{ seat_holds : "pair has Hold history"
+    users ||..o{ seat_holds : "owns as Customer"
+    bookings |o..|{ seat_holds : "attaches origin Holds"
+    users ||..o{ bookings : "owns as Customer"
+    showtimes ||..o{ bookings : "booked through"
+    promotions |o..o{ bookings : "optionally discounts"
+    bookings ||..|{ booking_seats : "contains units"
+    showtime_seats ||..o{ booking_seats : "pair has booking history"
+    bookings ||..o{ booking_concessions : "includes add-ons"
+    concession_items ||..o{ booking_concessions : "referenced by"
+    bookings ||..o{ payment_transactions : "has attempts"
+    booking_seats ||..o| tickets : "issues after verified payment"
+    users |o..o{ tickets : "checks in"
+    users |o..o{ audit_records : "acts in"

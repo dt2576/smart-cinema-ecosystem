@@ -50,6 +50,9 @@ public class AuthSecurityConfiguration {
 						registrationEndpoint, loginEndpoint, tokenRenewalEndpoint,
 						tokenRevocationEndpoint, profileEndpoint))
 				.authorizeHttpRequests(authorize -> authorize
+						.requestMatchers(PathPatternRequestMatcher.pathPattern(HttpMethod.GET, "/api/v1/genres")).permitAll()
+						.requestMatchers(PathPatternRequestMatcher.pathPattern(HttpMethod.GET, "/api/v1/movies"),
+								PathPatternRequestMatcher.pathPattern(HttpMethod.GET, "/api/v1/movies/{id}")).permitAll()
 						.requestMatchers(registrationEndpoint, loginEndpoint, tokenRenewalEndpoint).permitAll()
 						.requestMatchers(tokenRevocationEndpoint).authenticated()
 						.requestMatchers(profileEndpoint).hasRole("CUSTOMER")

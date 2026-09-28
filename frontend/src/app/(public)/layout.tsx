@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
+import { ConcessionPreviewProvider } from "@/features/concession/concession-preview-provider";
 
 export default function PublicLayout({ children }: { children: ReactNode }) {
-  return children;
+  return <ConcessionPreviewProvider>{children}</ConcessionPreviewProvider>;
 }

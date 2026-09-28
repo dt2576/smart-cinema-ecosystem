@@ -1,25 +1,19 @@
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import type { Movie } from "@/features/movie/movie.types";
+import Link from "next/link";
+import { Icon } from "@/components/ui/icon";
+import { MoviePoster } from "@/features/movie/movie-poster";
+import type { MovieSummary } from "@/features/movie/movie.types";
 
-export function MovieCard({ movie, onDetails, onShowtimes }: { movie: Movie; onDetails: (movie: Movie) => void; onShowtimes: (movie: Movie) => void }) {
-  return (
-    <article className={`group flex min-w-0 flex-col overflow-hidden rounded-xl ${movie.opening ? "bg-panel-low" : "bg-panel"}`}>
-      <div className="relative aspect-[2/3] overflow-hidden bg-panel-high">
-        <Image src={movie.posterUrl} alt={`${movie.title} poster`} fill sizes={movie.opening ? "(min-width: 1024px) 280px, (min-width: 640px) 45vw, 90vw" : "(min-width: 1280px) 220px, (min-width: 768px) 30vw, 45vw"} className="object-cover transition-transform duration-500 group-hover:scale-105" />
-        <span className={`absolute left-2 rounded bg-canvas/90 px-2 py-1 font-heading text-[10px] font-bold text-accent ${movie.opening ? "bottom-2" : "top-2"}`}>{movie.ageRating}</span>
+export function MovieCard({ movie, href = `/movies/${movie.id}`, headingLevel = 2 }: { movie: MovieSummary; href?: string; headingLevel?: 2 | 3 }) {
+  const Heading = headingLevel === 3 ? "h3" : "h2";
+  return <article className="group flex min-w-0 flex-col rounded-xl bg-panel">
+    <Link href={href} className="flex h-full flex-col rounded-xl" aria-label={`View details for ${movie.title}`}>
+      <div className="relative"><MoviePoster url={movie.posterUrl} title={movie.title} />{movie.ageRating && <span className="absolute left-2 top-2 rounded bg-action px-2 py-1 font-heading text-xs font-bold text-on-action">{movie.ageRating}</span>}</div>
+      <div className="flex flex-1 flex-col gap-2 p-3 sm:p-4">
+        <p className="flex items-center gap-1 text-xs text-muted"><Icon name="film" width={13} height={13} />{movie.duration} min</p>
+        <Heading className="break-words text-base font-semibold leading-snug group-hover:text-accent">{movie.title}</Heading>
+        <p className="text-xs leading-5 text-muted">{movie.genres.map(genre => genre.name).join(" · ")}</p>
+        <span className="mt-auto flex min-h-11 items-center justify-center gap-2 rounded-lg bg-action px-2 text-center font-heading text-xs font-bold text-on-action group-hover:bg-action-hover">View Details <Icon name="arrow" width={16} height={16} /></span>
       </div>
-      <div className="flex flex-1 flex-col justify-between gap-3 p-4">
-        <div>
-          {movie.opening && <p className="text-xs font-semibold uppercase text-accent">Opening {movie.opening}</p>}
-          <h3 title={movie.title} className={`text-lg font-semibold group-hover:text-accent ${movie.opening ? "mt-1" : "truncate"}`}>{movie.title}</h3>
-          {movie.metadata && <p title={movie.metadata} className="mt-1 truncate text-xs leading-5 text-muted">{movie.metadata}</p>}
-        </div>
-        <div className="flex flex-col gap-1">
-          {!movie.opening && <Button className="w-full px-2 text-xs" onClick={() => onShowtimes(movie)} aria-label={`View showtimes for ${movie.title}`}>View Showtimes</Button>}
-          <Button variant="secondary" className="w-full px-2 text-xs" onClick={() => onDetails(movie)} aria-label={`View details for ${movie.title}`}>View Details</Button>
-        </div>
-      </div>
-    </article>
-  );
+    </Link>
+  </article>;
 }

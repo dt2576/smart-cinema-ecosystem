@@ -1,0 +1,129 @@
+"use client";
+
+import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Icon } from "@/components/ui/icon";
+import { createMockCinemaService } from "@/features/cinema/cinema-service";
+import type { CinemaOption } from "@/features/cinema/cinema.types";
+import { getMovie, MovieApiError } from "@/features/movie/movie-api";
+import { MovieFeedback, MovieLoading } from "@/features/movie/movie-feedback";
+import { MoviePoster } from "@/features/movie/movie-poster";
+import { isMovieId } from "@/features/movie/movie-query";
+import type { MovieDetail } from "@/features/movie/movie.types";
+import { useMovieRequest } from "@/features/movie/use-movie-request";
+import { canSelectShowtime, createMockShowtimeService, createSeatSelectionHandoff, formatShowtimeDate, formatShowtimeTime, parseShowtimePreviewState, showtimeDate } from "@/features/showtime/showtime-service";
+
+export function ShowtimeSelectionScreen({ movieId, cinemaId }: { movieId: string; cinemaId: string }) {
+  if (!isMovieId(movieId) || !isMovieId(cinemaId)) return <><MovieFeedback title="Invalid selection link" message="Choose a Movie and Cinema to continue." /><Link href="/movies" className="mt-6 inline-flex min-h-11 items-center text-accent">Browse Movies</Link></>;
+  return <ShowtimeContext key={`${movieId}/${cinemaId}`} movieId={movieId} cinemaId={cinemaId} />;
+}
+
+function ShowtimeContext({ movieId, cinemaId }: { movieId: string; cinemaId: string }) {
+  const search = useSearchParams();
+  const service = useMemo(() => createMockCinemaService(), []);
+  const load = useCallback(async (signal: AbortSignal) => {
+    const [movie, cinemas] = await Promise.all([getMovie(movieId, signal), service.listForMovie(movieId, signal)]);
+    return { movie, cinema: cinemas.find(cinema => cinema.id === cinemaId && cinema.selectionState === "AVAILABLE") };
+  }, [movieId, cinemaId, service]);
+  const { data, error, loading, retry } = useMovieRequest(load);
+  const from = search.get("from");
+  const back = `/movies/${movieId}/cinemas${from ? `?from=${encodeURIComponent(from)}` : ""}`;
+  if (loading) return <MovieLoading detail />;
+  if (error) return <><MovieFeedback title={error instanceof MovieApiError && error.status === 404 ? "Movie unavailable" : "Selection couldn’t load"} message={error.message} retry={error instanceof MovieApiError && [400, 404].includes(error.status) ? undefined : retry} /><Link href="/movies" className="mt-6 inline-flex min-h-11 items-center text-accent">Browse Movies</Link></>;
+  if (!data?.cinema) return <><MovieFeedback title="Cinema unavailable" message="This branch cannot be selected. Choose an available Cinema." /><Link href={back} className="mt-6 inline-flex min-h-11 items-center text-accent">Choose Cinema</Link></>;
+  return <ShowtimeOptions movie={data.movie} cinema={data.cinema} />;
+}
+
+function ShowtimeOptions({ movie, cinema }: { movie: MovieDetail; cinema: CinemaOption }) {
+  const search = useSearchParams();
+  const router = useRouter();
+  const scenario = parseShowtimePreviewState(search.get("previewState"));
+  const service = useMemo(() => createMockShowtimeService(scenario), [scenario]);
+  const load = useCallback((signal: AbortSignal) => service.list(movie.id, cinema.id, signal), [service, movie.id, cinema.id]);
+  const { data, error, loading, retry } = useMovieRequest(load);
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const refresh = () => setNow(Date.now());
+    const timer = setInterval(refresh, 1000);
+    window.addEventListener("focus", refresh);
+    return () => { clearInterval(timer); window.removeEventListener("focus", refresh); };
+  }, []);
+  const date = search.getAll("date").length > 1 ? "" : search.get("date") ?? data?.dates[0] ?? "";
+  const validDate = data?.dates.includes(date) ?? false;
+  const url = search.toString();
+  const urlId = search.getAll("showtimeId").length === 1 ? search.get("showtimeId") : null;
+  const [selection, setSelection] = useState({ url, id: urlId });
+  if (selection.url !== url) setSelection({ url, id: urlId });
+  const selectedId = selection.url === url ? selection.id : urlId;
+  const items = validDate ? data?.items.filter(item => item.movieId === movie.id && item.cinemaId === cinema.id && showtimeDate(item.startsAt) === date) ?? [] : [];
+  const selected = items.find(item => item.id === selectedId && canSelectShowtime(item, movie.id, cinema.id, date, now));
+  const halls = [...new Map(items.map(item => [item.hall.id, item.hall])).values()];
+  const [continuationError, setContinuationError] = useState(false);
+  const from = search.get("from");
+  const backParams = new URLSearchParams({ cinemaId: cinema.id });
+  if (from) backParams.set("from", from);
+  const cinemaHref = `/movies/${movie.id}/cinemas?${backParams}`;
+  const movieHref = `/movies/${movie.id}${from ? `?from=${encodeURIComponent(from)}` : ""}`;
+
+  function navigate(nextDate: string, id?: string) {
+    const params = new URLSearchParams({ date: nextDate });
+    if (from) params.set("from", from);
+    if (scenario !== "default") params.set("previewState", scenario);
+    if (id) params.set("showtimeId", id);
+    const href = `/movies/${movie.id}/cinemas/${cinema.id}/showtimes?${params}`;
+    router.push(href, { scroll: false });
+  }
+
+  function continueToSeats(currentTime: number) {
+    const handoff = selected && createSeatSelectionHandoff(selected, movie.id, cinema.id, date, currentTime);
+    setNow(currentTime);
+    setContinuationError(!handoff);
+    if (handoff) {
+      const params = new URLSearchParams({ movieId: handoff.movieId, cinemaId: handoff.cinemaId, date });
+      if (from) params.set("from", from);
+      router.push(`${handoff.seatPath}?${params}`);
+    }
+  }
+
+  return <>
+    <nav aria-label="Selection progress" className="mb-6 flex flex-wrap items-center gap-3 font-heading text-xs uppercase tracking-wide text-muted">
+      <Link href={movieHref} className="inline-flex min-h-11 items-center text-accent">1. Movie</Link><span aria-hidden="true">→</span><Link href={cinemaHref} className="inline-flex min-h-11 items-center text-accent">2. Cinema</Link><span aria-hidden="true">→</span><span aria-current="step" className="text-accent">3. Showtime</span><span aria-hidden="true">→</span><span>4. Seats</span>
+    </nav>
+    <section aria-label="Selected Movie and Cinema" className="mb-8 flex flex-wrap items-center gap-4 rounded-2xl bg-linear-to-r from-panel to-action/10 p-5">
+      <div className="w-16 shrink-0"><MoviePoster url={movie.posterUrl} title={movie.title} /></div>
+      <div className="min-w-0 flex-1"><p className="text-xs text-muted">{movie.ageRating && `${movie.ageRating} · `}{movie.duration} min</p><h2 className="mt-1 break-words text-xl font-bold">{movie.title}</h2><p className="mt-2 text-sm text-accent">{cinema.name}</p><p className="mt-1 text-xs text-muted">{cinema.address}</p></div>
+      <Link href={cinemaHref} className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-panel-high px-4 font-heading text-xs font-semibold hover:bg-panel-hover sm:w-auto">Change Cinema</Link>
+    </section>
+    <h1 className="text-3xl font-bold sm:text-4xl">Select Showtime</h1>
+    <p className="mb-6 mt-4 rounded-lg border border-outline/40 bg-panel-low px-4 py-3 text-sm leading-6 text-muted">Preview · Showtimes and availability are sample data. Times are shown in Vietnam time (UTC+07:00).</p>
+    {loading && <p role="status" className="rounded-xl bg-panel-low p-10 text-center text-muted">Loading Showtimes…</p>}
+    {error && <MovieFeedback title="Showtimes couldn’t load" message={error.message} retry={retry} />}
+    {data && <>
+      <section aria-label="Select date" className="mb-8">
+        <h2 className="mb-4 font-heading text-sm font-semibold uppercase tracking-wide">Select date</h2>
+        <div className="flex flex-wrap gap-3">{data.dates.map(value => <button key={value} type="button" aria-pressed={date === value} onClick={() => { setSelection({ url, id: null }); setContinuationError(false); navigate(value); }} className={`min-h-16 rounded-lg border px-4 py-3 font-heading text-sm font-semibold ${date === value ? "border-action bg-action text-on-action" : "border-outline/40 bg-panel-high hover:bg-panel-hover"}`}>{formatShowtimeDate(value)}</button>)}</div>
+      </section>
+      {!validDate ? <MovieFeedback title="Choose a preview date" message="This date is outside the sample schedule. Select one of the dates above." /> : items.length === 0 ? <MovieFeedback title="No Showtimes on this date" message="Choose another date or try again." retry={retry} /> : <>
+        <p className="mb-4 text-sm text-muted">Available · Sold out · Started / past</p>
+        <fieldset><legend className="sr-only">Choose a Showtime</legend><div className="space-y-5">{halls.map(hall => <section key={hall.id} aria-label={hall.name} className="rounded-xl border border-outline/30 bg-panel-low p-5 sm:p-6">
+          <h2 className="mb-5 text-lg font-bold">{hall.name}</h2>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">{items.filter(item => item.hall.id === hall.id).map(item => {
+            const available = canSelectShowtime(item, movie.id, cinema.id, date, now);
+            const active = selected?.id === item.id;
+            const label = Date.parse(item.startsAt) <= now ? "Started / past" : item.hasAvailableSeats ? "Available" : "Sold out";
+            return <label key={item.id} className={`flex min-h-28 flex-col items-center justify-center gap-2 rounded-lg border p-3 text-center ${active ? "border-action bg-action/10 ring-1 ring-action" : "border-outline/40 bg-panel"} ${available ? "cursor-pointer hover:bg-panel-hover" : "cursor-not-allowed text-muted"}`}>
+              <span className="font-heading text-lg font-bold tabular-nums">{formatShowtimeTime(item.startsAt)}</span><span className={`text-xs ${available ? "text-success" : "text-muted"}`}>{active ? "Selected" : label}</span>
+              <input type="radio" name="showtime" aria-label={`${hall.name} ${formatShowtimeTime(item.startsAt)} ${label}`} checked={active} disabled={!available} onChange={() => { setSelection({ url, id: item.id }); setContinuationError(false); navigate(date, item.id); }} className="size-4 accent-action" />
+            </label>;
+          })}</div>
+        </section>)}</div></fieldset>
+      </>}
+    </>}
+    <aside aria-label="Showtime selection summary" className="sticky bottom-3 z-20 mt-8 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-outline/50 bg-panel p-5 shadow-xl">
+      <div className="min-w-0 flex-1" aria-live="polite"><p className="font-heading text-xs uppercase tracking-wider text-accent">Selected Showtime</p><p className="mt-2 break-words font-semibold">{selected ? `${formatShowtimeDate(date)} · ${formatShowtimeTime(selected.startsAt)} · ${selected.hall.name}` : "Choose an available future Showtime"}</p>{((selectedId && data && !selected) || continuationError) && <p className="mt-2 text-sm text-error">Your choice is no longer available. Choose another Showtime.</p>}</div>
+      <Button disabled={!selected} onClick={() => continueToSeats(Date.now())} className="w-full sm:w-auto">Continue to Seat Selection<Icon name="arrow" /></Button>
+    </aside>
+  </>;
+}
