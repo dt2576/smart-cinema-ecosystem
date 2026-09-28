@@ -26,14 +26,16 @@ function SectionHeading({ title, eyebrow, description, action, icon = "arrow", o
 
 export function HomeScreen() {
   const [preview, setPreview] = useState<Preview | null>(null);
-  const unavailable = (title: string) => setPreview({ title, content: <p className="leading-7 text-muted">This section is a design preview. {title} is not available yet. No booking, payment or account changes have been made.</p> });
+  const unavailable = (title: string) => setPreview({ title, content: title.startsWith("Showtimes")
+    ? <div className="space-y-4 text-sm leading-7 text-muted"><p>Choose a Movie first, then a Cinema and Showtime in the local selection preview. Sample Home locations do not establish real screening availability.</p><Link href="/movies" className="inline-flex min-h-11 items-center rounded-lg bg-action px-5 font-semibold text-on-action">Choose a Movie</Link></div>
+    : <p className="leading-7 text-muted">This section is a design preview. {title} is not available yet. No booking, payment or account changes have been made.</p> });
   return <>
     <a href="#main-content" className="fixed left-4 top-4 z-50 -translate-y-24 rounded-lg bg-action p-3 text-on-action focus:translate-y-0">Skip to content</a>
     <SiteHeader onPreview={unavailable} />
     <main id="main-content">
       <HomeMovies />
       <section id="cinemas" aria-label="Cinemas" className={`${CONTAINER} py-10`}>
-        <SectionHeading title="Find a Smart Cinema" eyebrow="Destinations" description="Experience cinematic luxury across our flagship architectural locations." action="All Locations" icon="pin" onAction={() => setPreview({ title: "Smart Cinema locations", content: <ul className="space-y-5 text-muted">{CINEMAS.map(cinema => <li key={cinema.image}><strong className="block text-foreground">{cinema.name}</strong>{cinema.address}</li>)}</ul> })} />
+        <SectionHeading title="Find a Smart Cinema" eyebrow="Destinations" description="Sample locations for this design preview. Choose a Movie to explore the selection flow." action="All Locations" icon="pin" onAction={() => setPreview({ title: "Smart Cinema locations", content: <ul className="space-y-5 text-muted">{CINEMAS.map(cinema => <li key={cinema.image}><strong className="block text-foreground">{cinema.name}</strong>{cinema.address}</li>)}</ul> })} />
         <div className="grid gap-6 md:grid-cols-3">{CINEMAS.map(cinema => <article key={cinema.image} className="group overflow-hidden rounded-xl bg-panel">
           <div className="relative h-48 overflow-hidden"><Image src={`/images/home/${cinema.image}.jpg`} alt={`${cinema.name} interior`} fill sizes="(min-width: 768px) 380px, 100vw" className="object-cover transition-transform duration-500 group-hover:scale-105" /><div className="absolute inset-0 bg-linear-to-t from-panel via-panel/40 to-transparent" /></div>
           <div className="flex flex-col gap-4 p-6"><h3 className="text-[22px] font-bold">{cinema.name}</h3><p className="flex gap-2 text-xs leading-5 text-muted"><Icon name="pin" className="shrink-0 text-accent" />{cinema.address}</p><div className="grid grid-cols-2 gap-2"><Button variant="secondary" className="px-2 text-xs" onClick={() => setPreview({ title: cinema.name, content: <p className="leading-7 text-muted">{cinema.address}<br />Sample cinema location.</p> })}>View Cinema</Button><Button className="px-2 text-xs" onClick={() => unavailable(`Showtimes — ${cinema.name}`)}>View Showtimes</Button></div></div>
@@ -41,7 +43,7 @@ export function HomeScreen() {
       </section>
       <section id="promotions" aria-label="Offers and promotions" className="bg-canvas py-10">
         <div className={CONTAINER}>
-          <SectionHeading title="Offers & Promotions" description="Exclusive ticket bundles and concession perks for film lovers." action="View All Offers" icon="gift" onAction={() => setPreview({ title: "Sample offers", content: <p className="leading-7 text-muted">The three offers shown are design examples. Discounts, eligibility and availability are not active in this preview.</p> })} />
+          <SectionHeading title="Offers & Promotions" description="Design examples only. These offers are not active and do not apply to your Booking preview." action="View All Offers" icon="gift" onAction={() => setPreview({ title: "Sample offers", content: <p className="leading-7 text-muted">The three offers shown are design examples. Discounts, eligibility and availability are not active in this preview.</p> })} />
           <div className="grid gap-6 md:grid-cols-3">{OFFERS.map(offer => <article key={offer.title} className="flex flex-col justify-between gap-4 rounded-xl bg-panel-low p-6">
             <div className="space-y-3"><span className="flex size-12 items-center justify-center rounded-lg bg-panel-high text-accent"><Icon name={offer.icon} width={28} height={28} /></span><h3 className="text-[22px] font-bold">{offer.title}</h3><p className="text-sm leading-7 text-muted">{offer.description}</p></div>
             <div className="space-y-2 border-t border-panel pt-3"><p className="flex items-center gap-2 text-xs text-muted"><Icon name="calendar" className="text-accent" />{offer.validity}</p><Button variant="text" className="px-0 text-xs" onClick={() => setPreview({ title: offer.title, content: <div className="space-y-4 leading-7 text-muted"><p>{offer.description}</p><p>Sample offer only. No discount or eligibility rules are applied.</p></div> })}>View Offer<Icon name="arrow" width={16} /></Button></div>

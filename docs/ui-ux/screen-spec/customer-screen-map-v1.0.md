@@ -1,7 +1,7 @@
 # Canonical Customer Screen Map v1.0
 
 Date: 2026-09-25.
-Status: Canonical reference selection; Booking history/Tickets/Booking QR preview coverage updated 2026-09-28. No Stitch edits.
+Status: Canonical reference selection; Final Customer QA reconciliation updated 2026-09-28. No Stitch edits.
 Project: Smart Cinema Ecosystem, `1208499799798658711`.
 
 ## 1. Authority and classification
@@ -86,10 +86,10 @@ Displaying the contracted ageRating label is allowed; rating/popularity controls
 | `frontend/src/app/(public)/page.tsx`; `features/home/home-screen.tsx`; `home-movies.tsx` | Home hero/two Movie rows use public catalog data; real detail links and /movies discovery; loading/empty/retry states | No booking/Cinema/Showtime integration; browser evidence uses contract fixtures |
 | `features/home/home-mock-data.ts`; `features/movie/movie.types.ts`; `movie-card.tsx` | Mock file now holds only Cinema/offers; Home and listing share MovieSummary cards and string IDs | No Movie sample arrays, synthetic opening labels or sample slug links remain |
 | `app/(auth)/login/page.tsx`; `register/page.tsx`; login/register forms | Actual forms calling Auth APIs, errors and redirects | Forgot password is disabled text, not an implemented flow |
-| `app/(customer)/profile/page.tsx`; `features/auth/profile-screen.tsx` | Profile load/edit/save/cancel/retry and protected-field display | Source review is not runtime acceptance; current verified wording needs reconciliation with actual account facts |
+| `app/(customer)/profile/page.tsx`; `features/auth/profile-screen.tsx` | Profile load/edit/save/cancel/retry and protected-field display | Browser fixtures cover loading/retry/edit/cancel/save and 401 recovery; verification claims removed. Live backend acceptance remains pending |
 | `features/auth/auth-api.ts`, `auth-context.tsx`, `auth-storage.ts` | Registration/login/profile APIs, token renewal, logout and session handling | No Cinema, Hold, Booking, Payment or Ticket frontend client |
 | `app/(public)/movies/`; `features/movie/movie-api.ts`; `movie-catalog.tsx`; `movie-detail-screen.tsx` | Typed public Movie/Genre reads, list/detail routes, URL filters, retries, string IDs and browser-tested states | Browser tests use isolated contract fixtures; live backend acceptance is not established |
-| `features/auth/customer-account-menu.tsx`; `components/layout/site-header.tsx` | Account menu/profile link/logout; Movies links to /movies, brand to /; Movie pages use supported navigation only | Home retains other preview actions and section links; Cinema/Showtime/Seat/Concession previews exist; production Booking routes remain missing |
+| `features/auth/customer-account-menu.tsx`; `components/layout/site-header.tsx` | Account menu/profile link/logout; Movies links to /movies, brand to /; My Bookings is available in shared navigation; Home Showtime shortcuts recover through Movie-first discovery | Home retains other preview actions and section links; Cinema/Showtime/Seat/Concession previews exist; production Booking routes remain missing |
 | `features/cinema/`; `app/(public)/movies/[movieId]/cinemas/page.tsx` | Canonical Cinema preview, local adapter, string IDs, selected/loading/empty/closed/unavailable/retry states; Movie Detail entry | No Cinema API; Continue now opens the Showtime preview route |
 | `features/showtime/`; `app/(public)/movies/[movieId]/cinemas/[cinemaId]/showtimes/page.tsx` | Typed local schedule adapter, date selection, Hall groups, future/available-only continuation, retry and responsive states | No Showtime API; Continue opens Seat Selection preview; local clock is preview-only |
 | `features/seat/`; `app/(public)/showtimes/[showtimeId]/seats/page.tsx` | Typed local map, indivisible Couple units, unit/guest summary, local countdown/expiry, navigation to Concession preview | No authoritative Hold, seat ownership, Booking or transaction behavior |
@@ -106,3 +106,13 @@ Route files now include `/`, `/login`, `/register`, `/profile`, `/movies`, `/mov
 The static preview routes additionally implement Concession, Summary with embedded Promotion, Payment Method, Payment Processing and Payment Result, including local expiry states. See the [Concession report](../../reports/2026-09-27_concession-selection-frontend_report.md), [Booking Summary report](../../reports/2026-09-28_booking-summary-frontend_report.md) and [Payment Method report](../../reports/2026-09-28_payment-method-frontend_report.md) for prior verification. See the [Payment Processing report](../../reports/2026-09-28_payment-processing-frontend_report.md) for Processing verification. See the [Payment Result report](../../reports/2026-09-28_payment-result-frontend_report.md) for current Result verification and the distinction from owned-Booking production routes.
 
 See the [implementation plan](../customer-frontend-implementation-plan-v1.0.md) for dependencies, states and acceptance gates.
+
+## 6. Final QA coverage and service boundaries
+
+The final [Customer QA report](../../reports/2026-09-28_customer-frontend-final-qa_report.md) reconciles all 17 canonical IDs and 16 route patterns, desktop/mobile navigation and all existing feature tests. No source screen ID or Stitch reference was changed. Auth/Profile browser coverage supersedes earlier source-only verification; old intermediate preview-handoff descriptions are historical.
+
+Every canonical presentation has a route, embedded panel/dialog or shared component. This does not mean every production state is available. Ownership denied, live HELD/VIP Seat data, authoritative contention/reconnect, cancel-pending Booking, frozen composition and verified Payment/issuance require future backend contracts. The four owned-Booking checkout URL patterns remain deliberately absent; no current link targets them.
+
+Only Auth/Profile and Movie/Genre modules call backend APIs. All downstream adapters remain local. Movie/Genre and domain fixture IDs are strings; Auth still follows its existing numeric userId response/storage contract and requires a coordinated bigint serialization decision. Payment Result is not connected to fixture Ticket issuance: customers can navigate to My Bookings, but those examples are independent of the checkout preview.
+
+Current UI fixes: Profile status truthfulness and Movie return, account-menu Escape/focus, removal of the nonfunctional Remember me control, and Home Showtime recovery with clearly labeled sample locations/offers. No new Customer feature or endpoint was added. Freeze readiness applies to the current UI/preview scope only; production readiness remains blocked on service integration and live acceptance.

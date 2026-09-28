@@ -137,7 +137,7 @@ export function ProfileScreen() {
       <section aria-label="Profile summary" className="mt-10 flex flex-col gap-5 rounded-2xl border border-outline/40 bg-panel p-6 shadow-2xl shadow-black/20 sm:flex-row sm:items-center sm:p-8">
         <div className="flex size-20 shrink-0 items-center justify-center rounded-full bg-accent font-heading text-2xl font-bold text-on-action" aria-hidden="true">{initials(profile.fullName)}</div>
         <div className="min-w-0 flex-1"><h2 className="truncate text-2xl font-semibold text-white">{profile.fullName}</h2><p className="mt-1 truncate text-muted">{profile.email}</p><div className="mt-4 flex flex-wrap gap-2"><StatusBadge>{labelEnum(profile.role)}</StatusBadge><StatusBadge success={profile.status === "ACTIVE"}>{labelEnum(profile.status)}</StatusBadge></div></div>
-        <div className="border-t border-outline/30 pt-5 sm:border-l sm:border-t-0 sm:pl-8 sm:pt-0"><p className="text-xs font-bold uppercase tracking-[0.18em] text-muted">Account access</p><p className="mt-2 flex items-center gap-2 font-heading font-semibold text-success"><span className="size-2 rounded-full bg-success" aria-hidden="true" />{profile.status === "ACTIVE" ? "Verified and active" : labelEnum(profile.status)}</p></div>
+        <div className="border-t border-outline/30 pt-5 sm:border-l sm:border-t-0 sm:pl-8 sm:pt-0"><p className="text-xs font-bold uppercase tracking-[0.18em] text-muted">Account access</p><p className="mt-2 flex items-center gap-2 font-heading font-semibold text-success"><span className="size-2 rounded-full bg-success" aria-hidden="true" />{profile.status === "ACTIVE" ? "Active" : labelEnum(profile.status)}</p></div>
       </section>
 
       <section className="mt-8 overflow-hidden rounded-2xl border border-outline/40 bg-panel shadow-2xl shadow-black/20">
@@ -145,7 +145,7 @@ export function ProfileScreen() {
         <form onSubmit={saveProfile} noValidate className="p-6 sm:p-8">
           <div className="grid gap-6 md:grid-cols-2">
             <ProfileField label="Full name" name="fullName" value={editing ? draft.fullName : profile.fullName} editable={editing} error={fieldErrors.fullName} onChange={value => setDraft(current => ({ ...current, fullName: value }))} autoComplete="name" />
-            <ReadOnlyField label="Email address" value={profile.email} hint="Verified identity field" />
+            <ReadOnlyField label="Email address" value={profile.email} hint="Protected account field" />
             <ProfileField label="Phone number" name="phone" value={editing ? draft.phone : profile.phone} editable={editing} error={fieldErrors.phone} onChange={value => setDraft(current => ({ ...current, phone: value }))} autoComplete="tel" />
             <ReadOnlyField label="Account role" value={labelEnum(profile.role)} hint="Managed by Smart Cinema" />
             <ReadOnlyField label="Account status" value={labelEnum(profile.status)} hint="Managed by Smart Cinema" />
@@ -154,14 +154,14 @@ export function ProfileScreen() {
           {editing && <div className="mt-4 flex flex-col-reverse gap-3 border-t border-outline/30 pt-6 sm:flex-row sm:justify-end"><Button variant="secondary" onClick={cancelEditing} disabled={saving}>Cancel</Button><Button type="submit" disabled={saving}>{saving ? "Saving…" : "Save changes"}</Button></div>}
         </form>
       </section>
-      <section className="mt-8 rounded-2xl border border-outline/30 bg-panel-low p-6 sm:p-8"><h2 className="text-lg font-semibold text-white">Account information &amp; privacy</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-muted">Your role, status, and verified email are protected account fields. Contact Smart Cinema support if any protected information is incorrect.</p></section>
+      <section className="mt-8 rounded-2xl border border-outline/30 bg-panel-low p-6 sm:p-8"><h2 className="text-lg font-semibold text-white">Account information &amp; privacy</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-muted">Your role, status, and email are protected account fields. Contact Smart Cinema support if any protected information is incorrect.</p></section>
     </main>
   </ProfileShell>;
 }
 
 function ProfileShell({ children }: { children: ReactNode }) {
-  return <div className="min-h-screen bg-[radial-gradient(circle_at_80%_10%,rgba(245,158,11,0.07),transparent_28%),linear-gradient(180deg,#0a0e16_0%,#0f131c_45%,#0a0e16_100%)]">
-    <header className="fixed inset-x-0 top-0 z-40 border-b border-outline/20 bg-canvas/90 backdrop-blur-xl"><div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-10"><Link href="/" aria-label="Smart Cinema home"><CinemaBrand /></Link><nav aria-label="Account navigation" className="flex items-center gap-4"><Link href="/" className="hidden text-sm text-muted hover:text-accent sm:block">Back to movies</Link><CustomerAccountMenu /></nav></div></header>
+  return <div className="min-h-screen bg-linear-to-b from-canvas via-background to-canvas">
+    <header className="fixed inset-x-0 top-0 z-40 border-b border-outline/20 bg-canvas/90 backdrop-blur-xl"><div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-10"><Link href="/" aria-label="Smart Cinema home"><CinemaBrand /></Link><nav aria-label="Account navigation" className="flex items-center gap-4"><Link href="/movies" className="hidden min-h-11 items-center text-sm text-muted hover:text-accent sm:inline-flex">Back to movies</Link><CustomerAccountMenu /></nav></div></header>
     {children}
     <footer className="border-t border-outline/20 bg-canvas px-4 py-8 text-center text-sm text-muted">© 2026 Smart Cinema. Premium cinema, thoughtfully delivered.</footer>
   </div>;

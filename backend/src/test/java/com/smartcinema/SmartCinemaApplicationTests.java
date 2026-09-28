@@ -32,6 +32,8 @@ import com.smartcinema.movie.MovieRepository;
 })
 @AutoConfigureMockMvc
 class SmartCinemaApplicationTests {
+	@MockitoBean
+	private com.smartcinema.discovery.DiscoveryRepository discoveryRepository;
 
 	@MockitoBean
 	private MovieRepository movieRepository;

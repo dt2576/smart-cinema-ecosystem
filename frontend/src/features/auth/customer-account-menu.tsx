@@ -19,7 +19,13 @@ export function CustomerAccountMenu() {
     router.replace("/");
   }
 
-  return <details ref={menuRef} className="relative">
+  return <details ref={menuRef} className="relative" onKeyDown={event => {
+    if (event.key === "Escape" && menuRef.current?.open) {
+      event.preventDefault();
+      menuRef.current.removeAttribute("open");
+      menuRef.current.querySelector("summary")?.focus();
+    }
+  }}>
     <summary className="flex min-h-11 list-none items-center gap-2 rounded-lg bg-panel-high px-2 font-heading text-sm font-semibold text-foreground transition-colors hover:bg-panel-hover [&::-webkit-details-marker]:hidden">
       <span className="hidden max-w-40 truncate pl-2 sm:block">{user.fullName}</span>
       <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-bold text-on-action" aria-hidden="true">{getInitials(user.fullName)}</span>

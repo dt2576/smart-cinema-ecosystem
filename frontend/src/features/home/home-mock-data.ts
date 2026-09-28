@@ -7,6 +7,6 @@ export const CINEMAS = [
 export const VND_FORMAT = new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND", maximumFractionDigits: 0 });
 export const OFFERS = [
   { title: "Student Ticket Offer", icon: "school" as const, description: "Enjoy 30% off standard tickets every Monday through Wednesday with valid student ID.", validity: "Valid until Dec 31, 2025" },
-  { title: "Couples Night Promotion", icon: "heart" as const, description: "Pair two Couple Lounger seats with complimentary gourmet popcorn combo on Friday evenings.", validity: "Every Friday after 18:00" },
+  { title: "Couples Night Promotion", icon: "heart" as const, description: "Sample bundle: one indivisible Couple Seat Unit for two guests with a popcorn combo. No offer is active.", validity: "Design example only" },
   { title: "Early Bird Weekend", icon: "sun" as const, description: `Book any screening before 12:00 PM on Saturdays and Sundays for flat ${VND_FORMAT.format(95000)} pricing.`, validity: "Ongoing Weekend Offer" },
 ];

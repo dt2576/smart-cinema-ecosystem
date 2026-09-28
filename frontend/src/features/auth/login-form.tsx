@@ -102,11 +102,6 @@ export function LoginForm() {
         {errors.password && <p id="password-error" className="text-sm text-error">{errors.password}</p>}
       </div>
 
-      <label className="flex w-fit items-center gap-3 text-sm text-muted">
-        <input name="rememberMe" type="checkbox" className="size-5 accent-action" />
-        Remember me
-      </label>
-
       <Button type="submit" disabled={isSubmitting} className="w-full py-3 uppercase tracking-wider shadow-lg shadow-action/20">{isSubmitting ? "Signing In..." : "Sign In"} <Icon name="arrow" /></Button>
       {status && <p role="status" className="text-center text-sm leading-6 text-muted">{status}</p>}
     </form>
