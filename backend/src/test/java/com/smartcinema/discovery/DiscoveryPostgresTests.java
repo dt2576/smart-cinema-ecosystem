@@ -160,6 +160,6 @@ class DiscoveryPostgresTests {
                     .andExpect(status().isMethodNotAllowed());
         }
         mvc.perform(get("/api/v1/halls")).andExpect(status().isUnauthorized());
-        mvc.perform(get("/api/v1/showtimes/11/seats")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/v1/showtimes/11/administration")).andExpect(status().isUnauthorized());
     }
 }

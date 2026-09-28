@@ -23,7 +23,7 @@ class DiscoveryMigrationPostgresTests {
     @Test
     void freshSchemaAndUpgradePreserveOldChecksumsAndData() throws Exception {
         flyway.validate();
-        assertThat(flyway.info().current().getVersion().getVersion()).isEqualTo("4");
+        assertThat(flyway.info().current().getVersion().compareTo(MigrationVersion.fromVersion("4"))).isGreaterThanOrEqualTo(0);
         String schema = "discovery_upgrade_" + UUID.randomUUID().toString().replace("-", "");
         Flyway previous = Flyway.configure().dataSource(dataSource).defaultSchema(schema).schemas(schema, "public")
                 .locations("classpath:db/migration").target(MigrationVersion.fromVersion("3")).load();
@@ -36,7 +36,7 @@ class DiscoveryMigrationPostgresTests {
                 statement.execute("INSERT INTO " + schema + ".movies(title,duration,status) VALUES ('Upgrade preserved',90,'DRAFT')");
             }
             Flyway upgrade = Flyway.configure().dataSource(dataSource).defaultSchema(schema).schemas(schema, "public")
-                    .locations("classpath:db/migration").load();
+                    .locations("classpath:db/migration").target(MigrationVersion.fromVersion("4")).load();
             assertThat(upgrade.migrate().migrationsExecuted).isEqualTo(1);
             upgrade.validate();
             assertThat(upgrade.migrate().migrationsExecuted).isZero();
