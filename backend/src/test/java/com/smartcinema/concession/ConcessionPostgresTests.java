@@ -332,7 +332,7 @@ class ConcessionPostgresTests {
     }
 
     @Test
-    void promotionSchemaChecksDataWithoutEnablingApplicationOrDiscount() throws Exception {
+    void promotionSchemaChecksRejectInvalidDataAndGuardRecalculatesDiscount() throws Exception {
         long bookingId = Long.parseLong(create(hold(user, couple)).id());
         try (Connection connection = dataSource.getConnection(); var sql = connection.createStatement()) {
             sql.execute("SET ROLE smart_cinema_hold_owner");
@@ -345,10 +345,10 @@ class ConcessionPostgresTests {
             }
             assertThatThrownBy(() -> sql.execute("INSERT INTO promotions SELECT id+100,code,discount_type,discount_value,valid_from,valid_until,minimum_order,usage_limit,status FROM promotions WHERE code='" + code + "'"))
                     .isInstanceOf(SQLException.class);
-            assertThatThrownBy(() -> sql.execute("UPDATE bookings SET promotion_id=(SELECT id FROM promotions WHERE code='" + code + "'),discount=1,final_amount=subtotal-1 WHERE id=" + bookingId)).isInstanceOf(SQLException.class);
+            sql.execute("UPDATE bookings SET promotion_id=(SELECT id FROM promotions WHERE code='" + code + "'),discount=1,final_amount=subtotal-1 WHERE id=" + bookingId);
             sql.execute("RESET ROLE");
         }
-        assertThat(bookings.detail(bookingId, user).discount()).isEqualTo("0.0000");
+        assertThat(bookings.detail(bookingId, user).discount()).isEqualTo("12.0000");
         mvc.perform(post("/api/v1/bookings/" + bookingId + "/promotions").with(customer(user))
                 .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf())
                 .contentType("application/json").content("{\"code\":\"DEMO10\"}" )).andExpect(status().isNotFound());

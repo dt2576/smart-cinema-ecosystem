@@ -54,7 +54,11 @@ public class BookingRepository {
                     row.getTimestamp("start_time").toInstant(), row.getTimestamp("created_at").toInstant(), row.getTimestamp("expires_at").toInstant(),
                     now, lines.size(), lines.stream().mapToInt(BookingResponse.SeatLine::guestCount).sum(),
                     row.getBigDecimal("seat_amount").toPlainString(), row.getBigDecimal("concession_amount").toPlainString(),
-                    row.getBigDecimal("subtotal").toPlainString(), row.getBigDecimal("discount").toPlainString(), row.getBigDecimal("final_amount").toPlainString(), lines, concessions));
+                    row.getBigDecimal("subtotal").toPlainString(), row.getBigDecimal("discount").toPlainString(), row.getBigDecimal("final_amount").toPlainString(), lines, concessions,
+                    row.getString("promotion_id") == null ? null : new BookingResponse.PromotionSnapshot(row.getString("promotion_id"),
+                        row.getString("promotion_code_snapshot"), row.getString("promotion_type_snapshot"),
+                        row.getBigDecimal("promotion_value_snapshot").toPlainString(), row.getBigDecimal("promotion_minimum_snapshot").toPlainString(),
+                        row.getBigDecimal("promotion_cap_snapshot") == null ? null : row.getBigDecimal("promotion_cap_snapshot").toPlainString())));
         if (result.isEmpty()) { throw new SeatUnavailableException(); }
         return result.getFirst();
     }

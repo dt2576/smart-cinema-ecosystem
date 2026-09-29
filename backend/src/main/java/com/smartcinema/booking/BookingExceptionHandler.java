@@ -12,7 +12,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import com.smartcinema.seat.SeatRequestException;
 import com.smartcinema.seat.SeatUnavailableException;
 
-@RestControllerAdvice(assignableTypes = {BookingController.class, com.smartcinema.concession.ConcessionController.class})
+@RestControllerAdvice(assignableTypes = {BookingController.class, com.smartcinema.concession.ConcessionController.class,
+        com.smartcinema.promotion.PromotionController.class})
 public class BookingExceptionHandler {
     @ExceptionHandler(SeatRequestException.class)
     ProblemDetail invalid(SeatRequestException exception) {
@@ -35,6 +36,9 @@ public class BookingExceptionHandler {
         if ("P0001".equals(state)) { return problem(400, "Invalid request", "Invalid Booking selection or quantity."); }
         if ("P0002".equals(state)) { return problem(404, "Resource unavailable", "The requested Booking resource is unavailable."); }
         if ("P0004".equals(state)) { return denied(null); }
+        if ("P0005".equals(state)) {
+            return problem(409, "Promotion unavailable", "The Promotion is invalid or no longer eligible. Remove or replace it before continuing.");
+        }
         if ("P0003".equals(state) || "23505".equals(state)) {
             return problem(409, "Booking conflict", "The Booking selection is unavailable or cannot be changed. Reload your selection.");
         }

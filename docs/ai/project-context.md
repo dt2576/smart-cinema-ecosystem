@@ -1,6 +1,6 @@
 # Smart Cinema project context
 
-Last reconciled: 2026-09-28, migration head V6. This is a repository-owned orientation summary, not a replacement for requirements, API contracts or canonical AI instructions. Use [current handoff](current-handoff.md) for the immediate task and update it as work progresses.
+Last reconciled: 2026-09-29, migration head V8. This is a repository-owned orientation summary, not a replacement for requirements, API contracts or canonical AI instructions. Use [current handoff](current-handoff.md) for the immediate task and update it as work progresses.
 
 ## How a new AI agent should start
 
@@ -56,7 +56,9 @@ Some older design headers still describe all domain persistence as proposed, and
 
 - Concessions are Booking add-ons only: **POPCORN, DRINK, COMBO**. No inventory, warehouse, supplier, kitchen or POS scope.
 - Server computes authoritative totals and persists price snapshots; frontend preview values never establish production pricing or discounts.
-- Promotion discount basis, usage consumption point (application/freeze/PAID) and release policy remain unresolved. Read integrity design §6, Promotion boundary, before enabling Promotion behavior. Do not copy `DEMO10`, `DEMORETRY` or frontend rounding rules into production.
+- Approved Promotion policy (2026-09-29): discount/minimum basis is Seat + Concession subtotal. PERCENTAGE rounds down to whole VND with optional cap; FIXED_AMOUNT is bounded by subtotal. One Promotion per Booking. ACTIVE/window/minimum/usage checks are authoritative. Frontend demo codes remain unrelated fixtures.
+- Applying/removing or pre-Payment cancellation/expiry consumes no usage. Usage is consumed only after backend-verified Payment SUCCESS, counted through PAID Bookings under the Promotion lock. First initiation must revalidate eligibility and freeze accepted terms/discount; an invalid Promotion must be removed/replaced before initiation. Frozen snapshots must never be repriced.
+- V8 reads preserve stored Promotion terms. Pre-Payment Concession edits revalidate current terms and recalculate atomically; invalid Promotion rolls back the edit until removed/replaced. See [Promotion contract](../api/promotion-composition-contract-v1.0.md).
 - Real Payment verification is backend-authoritative. A client redirect or local success preview is not verified Payment.
 - The **first actual Payment initiation** atomically establishes permanent composition/price freeze with the first persisted attempt. Opening Summary or Payment preview does not freeze anything. Retries do not reopen the basket.
 - Only eligible backend-verified Payment SUCCESS may atomically set PAID/paid_at, set line sold_at, consume origin Holds, and issue Tickets plus one Booking QR, with the required aggregate integrity/audit. No real Ticket or Booking QR before verified Payment.
@@ -76,7 +78,7 @@ The full preview journey exists: Home/Auth/Profile → Movies → Movie Detail �
 
 ## Current implementation: backend and migrations
 
-Migration head: **V6**. Historical migrations must never be edited or checksum-repaired to accommodate changes; use reviewed forward migrations. No new migration is allocated by this handoff.
+Migration head: **V8**. Historical migrations must never be edited or checksum-repaired to accommodate changes; use reviewed forward migrations. No new migration is allocated by this handoff.
 
 | Migration | Persistence |
 |---|---|
@@ -86,8 +88,10 @@ Migration head: **V6**. Historical migrations must never be edited or checksum-r
 | [V4](../../backend/src/main/resources/db/migration/V4__create_customer_discovery_tables.sql) | cinemas, halls, showtimes |
 | [V5](../../backend/src/main/resources/db/migration/V5__create_seats_and_authoritative_holds.sql) | seats, showtime_seats, seat_holds |
 | [V6](../../backend/src/main/resources/db/migration/V6__create_pending_bookings.sql) | bookings, booking_seats; aggregate-aware Hold attachment/expiry |
+| [V7](../../backend/src/main/resources/db/migration/V7__create_concession_composition.sql) | concession_items, booking_concessions, promotions; pre-Payment add-ons |
+| [V8](../../backend/src/main/resources/db/migration/V8__enable_promotion_composition.sql) | Promotion cap, Booking term snapshots and guarded apply/remove/recalculation |
 
-Implemented and verified slices: Auth/Profile, Movie, Genre, Customer Discovery, authoritative Seat/Hold and pre-Payment Booking. Current contract entry points:
+Implemented and verified slices: Auth/Profile, Movie, Genre, Customer Discovery, authoritative Seat/Hold, pre-Payment Booking, Concession catalog/composition and Promotion composition. Current contract entry points:
 
 | Contract | Important boundary |
 |---|---|
@@ -104,9 +108,11 @@ Implemented and verified slices: Auth/Profile, Movie, Genre, Customer Discovery,
 - Seat Unit price currently equals **Showtime base_price** for STANDARD, VIP and COUPLE. Snapshot it on Booking Seat and aggregate totals. No automatic type adjustment has been approved.
 - No CONSUMED, non-null `booking_seats.sold_at`, PAID, Ticket or Booking QR before verified Payment success. `payment_started_at` stays NULL at this stage.
 - V6 prepares the sold predicate and partial unique index, but blocks sale writes. Authoritative BOOKED/sold completion and true no-double-sale finalization tests remain **Payment responsibilities**, not completed sale functionality.
-- Current Promotion reference is NULL; Concession amount and discount are zero. No Concession/Promotion persistence exists yet. Booking history list, Payment, Ticket and Staff scanner production APIs are not implemented.
+- Concession lines and a single Promotion may now be edited before Payment, with authoritative totals and snapshots. Booking history list, Payment, Ticket and Staff scanner production APIs remain unimplemented.
 
-Latest evidence: [Discovery report](../reports/2026-09-28_customer-discovery-backend_report.md), [Seat/Hold report](../reports/2026-09-28_seat-hold-backend_report.md), [Booking report](../reports/2026-09-28_booking-backend_report.md). The Booking report supersedes earlier next-step notes: **144 tests PASS, zero failures/errors/skips**, including PostgreSQL concurrency, fresh migration/V5 upgrade and package build. This count is recorded evidence, not a test rerun by the context-documentation task.
+Historical V6 evidence: [Discovery report](../reports/2026-09-28_customer-discovery-backend_report.md), [Seat/Hold report](../reports/2026-09-28_seat-hold-backend_report.md), [Booking report](../reports/2026-09-28_booking-backend_report.md). The Booking report supersedes earlier next-step notes: **144 tests PASS, zero failures/errors/skips**, including PostgreSQL concurrency, fresh migration/V5 upgrade and package build. This count is recorded evidence, not a test rerun by the context-documentation task.
+
+Current additive contracts: [Booking v1.2](../api/booking-contract-v1.2.md), [Booking v1.1](../api/booking-contract-v1.1.md), [Concession v1.0](../api/concession-composition-contract-v1.0.md), [Promotion v1.0](../api/promotion-composition-contract-v1.0.md). V7 adds Concession/Promotion persistence; [V8](../../backend/src/main/resources/db/migration/V8__enable_promotion_composition.sql) enables guarded Promotion application and snapshots. Latest evidence: [Promotion report](../reports/2026-09-29_promotion-composition-backend_report.md). The historical V6 evidence above is retained as dated evidence, not current test count.
 
 ## Maintaining this context
 
