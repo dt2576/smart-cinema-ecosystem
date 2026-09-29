@@ -1,0 +1,14 @@
+{
+  "name": "smart-cinema-development",
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "concurrently --kill-others --names backend,frontend --prefix-colors blue,magenta \"cd backend && mvn spring-boot:run\" \"pnpm --dir frontend dev\""
+  },
+  "packageManager": "pnpm@12.4.1",
+  "devDependencies": {
+    "concurrently": "10.0.5"
+  }
+}

@@ -8,6 +8,16 @@ Customer frontend feature development remains frozen after final preview QA. Bac
 
 Latest backend verification: **163 tests PASS, zero failures/errors/skips**, `mvn verify`, PostgreSQL integration, fresh/V6 upgrade, immutable snapshots, quantity edits, aggregate totals and concurrent edit/cancellation coverage. Promotion runtime eligibility/application tests remain DEFERRED. Frontend final QA remains the earlier TypeScript/lint/build/visual PASS, 49 unit tests and 73 Playwright tests; frontend was not changed or retested for V7.
 
+## Developer workflow update (2026-09-29)
+
+Run **`pnpm dev` from the repository root** to start Maven/Spring Boot and Next.js
+together. One-time dependency installation, prerequisites, environment configuration
+and Windows Ctrl+C behavior are documented in the [root README](../../README.md#local-development).
+See the [development command report](../reports/2026-09-29_root-development-command_report.md)
+for startup, shutdown and failure-path verification. Migration head V7, current
+contracts, completed domain slices and the exact next domain task below are unchanged.
+Stable project context and historical reports remain unchanged.
+
 ## Exact next task
 
 **Resolve Promotion business policy and finalize its pre-Payment composition contract**
