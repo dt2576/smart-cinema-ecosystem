@@ -48,12 +48,18 @@ public class AuthSecurityConfiguration {
 		RequestMatcher holdRelease = PathPatternRequestMatcher.pathPattern(HttpMethod.DELETE, "/api/v1/showtimes/{showtimeId}/seat-holds/{holdId}");
 		RequestMatcher bookingCreate = PathPatternRequestMatcher.pathPattern(HttpMethod.POST, "/api/v1/bookings");
 		RequestMatcher bookingCancel = PathPatternRequestMatcher.pathPattern(HttpMethod.DELETE, "/api/v1/bookings/{bookingId}");
+		RequestMatcher concessionAdd = PathPatternRequestMatcher.pathPattern(HttpMethod.POST, "/api/v1/bookings/{bookingId}/concessions");
+		RequestMatcher concessionUpdate = PathPatternRequestMatcher.pathPattern(HttpMethod.PATCH, "/api/v1/bookings/{bookingId}/concessions/{lineId}");
+		RequestMatcher concessionRemove = PathPatternRequestMatcher.pathPattern(HttpMethod.DELETE, "/api/v1/bookings/{bookingId}/concessions/{lineId}");
 
 		return http
 				.csrf(csrf -> csrf.ignoringRequestMatchers(
 						registrationEndpoint, loginEndpoint, tokenRenewalEndpoint,
-						tokenRevocationEndpoint, profileEndpoint, holdAcquire, holdRelease, bookingCreate, bookingCancel))
+						tokenRevocationEndpoint, profileEndpoint, holdAcquire, holdRelease, bookingCreate, bookingCancel,
+						concessionAdd, concessionUpdate, concessionRemove))
 				.authorizeHttpRequests(authorize -> authorize
+						.requestMatchers(PathPatternRequestMatcher.pathPattern(HttpMethod.GET, "/api/v1/concession-items")).permitAll()
+						.requestMatchers(concessionAdd, concessionUpdate, concessionRemove).hasRole("CUSTOMER")
 						.requestMatchers(bookingCreate, bookingCancel,
 								PathPatternRequestMatcher.pathPattern(HttpMethod.GET, "/api/v1/bookings/{bookingId}")).hasRole("CUSTOMER")
 						.requestMatchers(PathPatternRequestMatcher.pathPattern(HttpMethod.GET, "/api/v1/showtimes/{showtimeId}/seats")).permitAll()

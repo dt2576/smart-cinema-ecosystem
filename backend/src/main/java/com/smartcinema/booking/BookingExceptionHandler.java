@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import com.smartcinema.seat.SeatRequestException;
 import com.smartcinema.seat.SeatUnavailableException;
 
-@RestControllerAdvice(assignableTypes = BookingController.class)
+@RestControllerAdvice(assignableTypes = {BookingController.class, com.smartcinema.concession.ConcessionController.class})
 public class BookingExceptionHandler {
     @ExceptionHandler(SeatRequestException.class)
     ProblemDetail invalid(SeatRequestException exception) {
@@ -32,11 +32,11 @@ public class BookingExceptionHandler {
         for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
             if (cause instanceof SQLException sql) { state = sql.getSQLState(); break; }
         }
-        if ("P0001".equals(state)) { return problem(400, "Invalid request", "Invalid Hold selection."); }
-        if ("P0002".equals(state)) { return problem(404, "Resource unavailable", "Booking or Showtime is unavailable."); }
+        if ("P0001".equals(state)) { return problem(400, "Invalid request", "Invalid Booking selection or quantity."); }
+        if ("P0002".equals(state)) { return problem(404, "Resource unavailable", "The requested Booking resource is unavailable."); }
         if ("P0004".equals(state)) { return denied(null); }
         if ("P0003".equals(state) || "23505".equals(state)) {
-            return problem(409, "Booking conflict", "The Holds are unavailable or already attached. Reload your selection.");
+            return problem(409, "Booking conflict", "The Booking selection is unavailable or cannot be changed. Reload your selection.");
         }
         if ("55P03".equals(state) || "40P01".equals(state) || "40001".equals(state) || "57014".equals(state)) {
             return problem(409, "Booking contention", "The request could not complete in time. Reload and retry.");

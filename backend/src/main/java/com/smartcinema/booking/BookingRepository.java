@@ -37,6 +37,12 @@ public class BookingRepository {
                     row.getString("hold_id"), row.getString("row"), row.getString("number"), row.getString("seat_type_snapshot"),
                     "COUPLE".equals(row.getString("seat_type_snapshot")) ? 2 : 1,
                     row.getBigDecimal("unit_price_snapshot").toPlainString(), row.getBigDecimal("final_price").toPlainString()));
+        var concessions = jdbc.query("""
+                SELECT bc.* FROM booking_concessions bc JOIN bookings b ON b.id=bc.booking_id
+                WHERE b.id=:id AND b.customer_id=:user ORDER BY bc.id
+                """, parameters, (row, index) -> new BookingResponse.ConcessionLine(row.getString("id"), row.getString("concession_item_id"),
+                    row.getString("item_name_snapshot"), row.getString("category_snapshot"), row.getInt("quantity"),
+                    row.getBigDecimal("unit_price_snapshot").toPlainString(), row.getBigDecimal("total_price").toPlainString()));
         var result = jdbc.query("""
                 SELECT b.*,s.movie_id,s.hall_id,s.start_time,m.title,h.name AS hall_name,h.cinema_id,c.name AS cinema_name,
                     CASE WHEN b.status='PENDING' AND b.expires_at<=:now THEN 'EXPIRED' ELSE b.status END AS effective_status
@@ -48,7 +54,7 @@ public class BookingRepository {
                     row.getTimestamp("start_time").toInstant(), row.getTimestamp("created_at").toInstant(), row.getTimestamp("expires_at").toInstant(),
                     now, lines.size(), lines.stream().mapToInt(BookingResponse.SeatLine::guestCount).sum(),
                     row.getBigDecimal("seat_amount").toPlainString(), row.getBigDecimal("concession_amount").toPlainString(),
-                    row.getBigDecimal("subtotal").toPlainString(), row.getBigDecimal("discount").toPlainString(), row.getBigDecimal("final_amount").toPlainString(), lines));
+                    row.getBigDecimal("subtotal").toPlainString(), row.getBigDecimal("discount").toPlainString(), row.getBigDecimal("final_amount").toPlainString(), lines, concessions));
         if (result.isEmpty()) { throw new SeatUnavailableException(); }
         return result.getFirst();
     }

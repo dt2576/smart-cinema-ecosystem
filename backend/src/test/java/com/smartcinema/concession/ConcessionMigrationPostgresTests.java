@@ -1,4 +1,4 @@
-package com.smartcinema.booking;
+package com.smartcinema.concession;
 
 import static org.assertj.core.api.Assertions.*;
 import java.sql.Connection;
@@ -13,22 +13,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest(properties = "seat-hold.cleanup-enabled=false")
-@EnabledIfEnvironmentVariable(named = "BOOKING_DB_TESTS", matches = "true")
-class BookingMigrationPostgresTests {
+@EnabledIfEnvironmentVariable(named = "CONCESSION_DB_TESTS", matches = "true")
+class ConcessionMigrationPostgresTests {
     @Autowired private DataSource dataSource;
     @Autowired private Flyway flyway;
 
     @Test
-    void freshAndPopulatedV5UpgradePreserveHistoryAndEnableOnlyPendingBookings() throws Exception {
+    void freshAndPopulatedV6UpgradePreserveBookingAndEnableConcessionComposition() throws Exception {
         flyway.validate();
-        assertThat(Integer.parseInt(flyway.info().current().getVersion().getVersion())).isGreaterThanOrEqualTo(6);
-        String schema = "booking_upgrade_" + UUID.randomUUID().toString().replace("-", "");
+        assertThat(Integer.parseInt(flyway.info().current().getVersion().getVersion())).isEqualTo(7);
+        String schema = "concession_upgrade_" + UUID.randomUUID().toString().replace("-", "");
         try {
             var old = Flyway.configure().dataSource(dataSource).defaultSchema(schema).schemas(schema, "public")
-                    .target(MigrationVersion.fromVersion("5")).load();
+                    .target(MigrationVersion.fromVersion("6")).load();
             old.migrate();
             var checksums = Arrays.stream(old.info().applied()).filter(m -> m.getVersion() != null).map(m -> m.getChecksum()).toList();
-            assertThat(checksums).containsExactly(1536752408, 1495804464, 1822747767, -336975126, -226696638);
+            assertThat(checksums).containsExactly(1536752408, 1495804464, 1822747767, -336975126, -226696638, -1104445100);
             try (Connection connection = dataSource.getConnection(); var sql = connection.createStatement()) {
                 sql.execute("SET search_path TO " + schema + ",public");
                 sql.execute("INSERT INTO users(id,email,password_hash,full_name,phone,role,status) VALUES (71,'upgrade@example.test','hash','Name','0123','CUSTOMER','ACTIVE')");
@@ -40,12 +40,13 @@ class BookingMigrationPostgresTests {
                 sql.execute("SELECT initialize_hall_seats(71,'[{\"row\":\"H\",\"number\":\"9-10\",\"type\":\"COUPLE\",\"physicalStatus\":\"ACTIVE\"}]')");
                 sql.execute("SELECT initialize_showtime_seats(71,ARRAY(SELECT id FROM seats))");
                 sql.execute("SELECT * FROM acquire_seat_holds(71,71,ARRAY(SELECT id FROM seats),interval '10 minutes')");
+                sql.execute("SELECT create_booking(71,71,ARRAY(SELECT id FROM seat_holds))");
                 sql.execute("RESET search_path");
             }
-            var upgrade = Flyway.configure().dataSource(dataSource).defaultSchema(schema).schemas(schema, "public").target(MigrationVersion.fromVersion("6")).load();
+            var upgrade = Flyway.configure().dataSource(dataSource).defaultSchema(schema).schemas(schema, "public").load();
             assertThat(upgrade.migrate().migrationsExecuted).isEqualTo(1);
             upgrade.validate(); assertThat(upgrade.migrate().migrationsExecuted).isZero();
-            assertThat(Arrays.stream(upgrade.info().applied()).filter(m -> m.getVersion() != null).limit(5).map(m -> m.getChecksum()).toList()).isEqualTo(checksums);
+            assertThat(Arrays.stream(upgrade.info().applied()).filter(m -> m.getVersion() != null).limit(6).map(m -> m.getChecksum()).toList()).isEqualTo(checksums);
             try (Connection connection = dataSource.getConnection(); var sql = connection.createStatement()) {
                 sql.execute("SET search_path TO " + schema + ",public");
                 sql.execute("SET ROLE smart_cinema_hold_runtime");
@@ -54,6 +55,14 @@ class BookingMigrationPostgresTests {
                     assertThat(result.next()).isTrue(); assertThat(result.getString(1)).isEqualTo("PENDING");
                     assertThat(result.getBigDecimal(2)).isEqualByComparingTo("80");
                     assertThat(result.getString(3)).isEqualTo("ACTIVE"); assertThat(result.getBoolean(4)).isTrue(); assertThat(result.getBoolean(5)).isTrue();
+                }
+                sql.execute("RESET ROLE");
+                sql.execute("SELECT configure_concession_item(NULL,'Upgrade popcorn',NULL,'POPCORN',12.3456,NULL,'ACTIVE')");
+                sql.execute("SET ROLE smart_cinema_hold_runtime");
+                sql.execute("SELECT edit_booking_concession((SELECT id FROM bookings),71,NULL,(SELECT id FROM concession_items),2,'ADD')");
+                try (var result = sql.executeQuery("SELECT concession_amount,final_amount FROM bookings")) {
+                    assertThat(result.next()).isTrue(); assertThat(result.getBigDecimal(1)).isEqualByComparingTo("24.6912");
+                    assertThat(result.getBigDecimal(2)).isEqualByComparingTo("104.6912");
                 }
                 sql.execute("SELECT cancel_booking((SELECT id FROM bookings),71)");
                 sql.execute("RESET ROLE");
