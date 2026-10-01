@@ -4,8 +4,8 @@ import java.time.LocalDate;
 import org.springframework.stereotype.Service;
 
 /**
- * Validation only: no catalog write API or persistence operation is exposed.
- * Future writers must validate the current locked state and persist atomically.
+ * Shared publication validation. Admin writers validate the locked persisted
+ * state and content inside the same transaction; public reads remain separate.
  */
 @Service
 public class MoviePublicationPolicy {

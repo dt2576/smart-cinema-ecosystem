@@ -153,3 +153,18 @@ local PostgreSQL uses the same file or the documented fallback values.
 This is an explicit demo command, never part of normal startup/migrations.
 Never point it at production. See [demo seed setup](docs/development/demo-seed.md)
 for dataset, safe reruns, privileges, date behavior and verification limitations.
+
+## Admin Movie management
+
+The first Admin area is available at <http://localhost:3000/admin>. An existing
+active ADMIN can use the normal login to create Movie drafts, edit supported
+content/Genres, and publish/unpublish. Changes persist through authorized backend
+APIs and the same catalog consumed by Customer Home/Movies. No Delete or other
+Admin module is exposed.
+
+Provision a dedicated development Admin with **`pnpm admin:dev`** after setting
+local `DEV_ADMIN_*` inputs in ignored `backend/.env`. Registration and demo seed
+do not create an Admin. See [development Admin provisioning](docs/development/development-admin-provisioning.md)
+for safeguards and [Admin developer guide](docs/development/admin-movie-management.md)
+for routes and verification, and the
+[Admin Movie contract](docs/api/admin-movie-contract-v1.0.md) for API behavior.

@@ -37,6 +37,28 @@ public class Movie {
 	protected Movie() {
 	}
 
+	public static Movie draft(String title, Integer duration) {
+		Movie movie = new Movie();
+		movie.title = title;
+		movie.duration = duration;
+		movie.status = MovieStatus.DRAFT.name();
+		return movie;
+	}
+
+	public void updateContent(String title, Integer duration, LocalDate releaseDate, String ageRating,
+			String language, String posterUrl, String description, String trailerUrl) {
+		this.title = title;
+		this.duration = duration;
+		this.releaseDate = releaseDate;
+		this.ageRating = ageRating;
+		this.language = language;
+		this.posterUrl = posterUrl;
+		this.description = description;
+		this.trailerUrl = trailerUrl;
+	}
+
+	public void changeStatus(MovieStatus status) { this.status = status.name(); }
+
 	public Long getId() { return id; }
 	public String getTitle() { return title; }
 	public String getDescription() { return description; }

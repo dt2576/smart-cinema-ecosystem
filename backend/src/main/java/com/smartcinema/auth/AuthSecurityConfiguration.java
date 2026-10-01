@@ -55,13 +55,16 @@ public class AuthSecurityConfiguration {
 		RequestMatcher promotionRemove = PathPatternRequestMatcher.pathPattern(HttpMethod.DELETE, "/api/v1/bookings/{bookingId}/promotion");
 		RequestMatcher paymentInitiate = PathPatternRequestMatcher.pathPattern(HttpMethod.POST, "/api/v1/bookings/{bookingId}/payment-transactions");
 		RequestMatcher paymentSubmit = PathPatternRequestMatcher.pathPattern(HttpMethod.POST, "/api/v1/bookings/{bookingId}/payment-transactions/{paymentId}/vnpay-submission");
+		RequestMatcher adminMovies = PathPatternRequestMatcher.pathPattern("/api/v1/admin/movies/**");
 
 		return http
 				.csrf(csrf -> csrf.ignoringRequestMatchers(
 						registrationEndpoint, loginEndpoint, tokenRenewalEndpoint,
 						tokenRevocationEndpoint, profileEndpoint, holdAcquire, holdRelease, bookingCreate, bookingCancel,
-						concessionAdd, concessionUpdate, concessionRemove, promotionApply, promotionRemove, paymentInitiate, paymentSubmit))
+						concessionAdd, concessionUpdate, concessionRemove, promotionApply, promotionRemove, paymentInitiate, paymentSubmit,
+						adminMovies))
 				.authorizeHttpRequests(authorize -> authorize
+						.requestMatchers(PathPatternRequestMatcher.pathPattern("/api/v1/admin/**")).hasRole("ADMIN")
 						.requestMatchers(PathPatternRequestMatcher.pathPattern(HttpMethod.GET,"/api/v1/payments/vnpay/ipn"),
 							PathPatternRequestMatcher.pathPattern(HttpMethod.GET,"/api/v1/payments/vnpay/return")).permitAll()
 						.requestMatchers(paymentSubmit,PathPatternRequestMatcher.pathPattern(HttpMethod.GET,

@@ -33,6 +33,7 @@ export function CustomerAccountMenu() {
     </summary>
     <div className="absolute right-0 top-[calc(100%+0.5rem)] z-50 min-w-52 overflow-hidden rounded-lg border border-outline/40 bg-panel p-2 shadow-2xl shadow-black/40">
       <p className="truncate px-3 py-2 text-xs text-muted sm:hidden">{user.fullName}</p>
+      {user.role === "ADMIN" && <Link href="/admin" onClick={() => menuRef.current?.removeAttribute("open")} className="flex min-h-11 items-center rounded-md px-3 font-heading text-sm font-semibold text-accent hover:bg-panel-high">Admin area</Link>}
       <Link href="/profile" onClick={() => menuRef.current?.removeAttribute("open")} className="flex min-h-11 items-center rounded-md px-3 font-heading text-sm font-semibold text-foreground hover:bg-panel-high">My Profile</Link>
       <button type="button" onClick={() => void logout()} className="flex min-h-11 w-full items-center rounded-md px-3 text-left font-heading text-sm font-semibold text-error hover:bg-panel-high">Logout</button>
     </div>

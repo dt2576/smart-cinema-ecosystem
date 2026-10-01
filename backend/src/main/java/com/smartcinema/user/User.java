@@ -72,6 +72,11 @@ public class User {
 		this.phone = phone;
 	}
 
+	/** Creation only; the development CLI guards invocation and never promotes existing users. */
+	public static User developmentAdmin(String email, String passwordHash, String fullName, String phone) {
+		return new User(email, passwordHash, fullName, phone, UserRole.ADMIN, AccountStatus.ACTIVE);
+	}
+
 	public Long getId() {
 		return id;
 	}

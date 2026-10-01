@@ -44,7 +44,7 @@ export function LoginForm() {
     try {
       const session = await login({ email, password });
       establishSession(session);
-      router.replace("/");
+      router.replace(session.user.role === "ADMIN" ? "/admin" : "/");
     } catch (error) {
       if (error instanceof AuthApiError) {
         setErrors({

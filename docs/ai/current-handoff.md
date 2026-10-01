@@ -1,21 +1,58 @@
 ﻿# Current AI handoff
 
-Last reconciled: 2026-10-01 after development demo seed implementation and actual Neon verification. The workspace already contained uncommitted prior backend/configuration work. No commit is implied. Read [project context](project-context.md), AGENTS.md and Git status before editing.
+Last reconciled: 2026-10-01 after Development Admin provisioning implementation (live Neon verification PARTIAL). Earlier Admin work remains uncommitted; no commit is implied. Read [project context](project-context.md), AGENTS.md and Git status before editing.
 
 ## Current milestone
 
 Backend Auth/Profile, Movie/Genre, Discovery, Seat/Hold, Booking, Concession, Promotion, Payment initiation/freeze and protected Sandbox result/finalization paths are implemented. Flyway head: **V10**, [migration](../../backend/src/main/resources/db/migration/V10__integrate_sandbox_payment_finalization.sql).
 
-**Local verification PASS; real VNPAY interoperability DEFERRED.** All external confirmation gates default false. No merchant credentials, real VNPAY calls or external charge were used. Latest `mvn verify`: **231 tests, zero failures/errors/skips**, PostgreSQL 18.4, fresh migration and populated V9 upgrade, package build PASS. See [implementation report](../reports/2026-09-30_vnpay-sandbox-payment-backend_report.md).
+The first real **Admin Foundation + Movie Management** slice is implemented:
+verified active ADMIN access, `/admin`, real Movie list/create/edit and approved
+publication/unpublication. It uses existing V3 persistence and public Customer
+catalog rules; no Delete, other Admin module, provisioning or migration was added.
+Read the [Admin contract](../api/admin-movie-contract-v1.0.md),
+[developer guide](../development/admin-movie-management.md) and
+[implementation report](../reports/2026-10-01_admin-foundation-movie-management_report.md).
+Development provisioning now exists: root **`pnpm admin:dev`**, a separate non-web
+CLI using ignored local `DEV_ADMIN_EMAIL`, `DEV_ADMIN_PASSWORD`, `DEV_ADMIN_NAME`
+and `DEV_ADMIN_PHONE`. It rejects production/staging profiles, creates only absent
+ACTIVE ADMIN accounts and verifies matching reruns without mutation. Conflicting
+role/status/identity/password fails; no promotion or reset. Normal startup and
+registration are unchanged. Read the [provisioning guide](../development/development-admin-provisioning.md)
+and [latest report](../reports/2026-10-01_development-admin-provisioning_report.md).
+**Live Neon status: PARTIAL/DEFERRED**, because all four Admin inputs were absent
+at the final local preflight. The user said they would add them; do not assume
+that means completed. No Neon account/Movie write or live login/UI proof occurred.
+Existing Neon catalog/demo verification is earlier evidence, not an Admin write test.
 
-Customer frontend remains frozen at previous preview QA (49 unit / 73 Playwright tests); it was preserved and not retested in this backend task.
+**Local verification PASS; real VNPAY interoperability DEFERRED.** All external confirmation gates default false. No merchant credentials, real VNPAY calls or external charge were used. Historical VNPAY slice `mvn verify`: **231 tests, zero failures/errors/skips**, PostgreSQL 18.4, fresh migration and populated V9 upgrade, package build PASS. See [implementation report](../reports/2026-09-30_vnpay-sandbox-payment-backend_report.md).
+
+Customer frontend feature development remains frozen at previous preview QA.
+The Admin slice reran the Customer regression together with new Admin tests;
+use the latest provisioning report for current counts and results. Latest Maven verify:
+**265 tests PASS, zero failures/errors/skips**, PostgreSQL 18.4 and package build
+PASS, 2026-10-01 19:51:32 +07:00. Frontend TypeScript/lint/build and **54 unit tests
+PASS**, plus **82/82 Playwright tests PASS** (installed Edge, 9 Admin + 73 Customer),
+desktop/mobile/keyboard regression coverage. Earlier manual visual review belongs
+to the Admin Foundation report; live Neon browser smoke remains DEFERRED. Final
+documentation/links/whitespace and protected-scope hash checks are recorded in the
+latest provisioning report.
 
 ## Exact next task
 
-For the current catalog/demo objective: **run `pnpm dev` and review Home/Movies using
-the seeded real API**. Normal frontend downstream Discovery/Seat/Booking/Payment
-adapters still use previews; an explicitly scoped real checkout frontend integration
-task is needed to connect them. Do not interpret seeded data as completed integration.
+**Supply the four local DEV_ADMIN_* inputs, run `pnpm admin:dev` against the
+configured Neon development database, then verify normal Auth login → signed JWT
+→ `/api/v1/admin` → Movie DRAFT → publish → edit → unpublish through actual API/UI.**
+Use a uniquely named verification Movie and leave it UNPUBLISHED; prove public
+visibility transitions without API interception. Generate a new follow-up report
+and reconcile this handoff. Never print credentials or manufacture JWTs. No default
+Admin password or automatic privilege promotion exists. Public registration remains
+CUSTOMER-only. Do not alter seed/production accounts to claim verification.
+
+After that, the next separately scoped Admin feature is Cinema Management. It has
+not been implemented or implicitly authorized by this handoff. Normal Customer
+downstream Discovery/Seat/Booking/Payment adapters still use previews; checkout
+integration is a separate task. `pnpm dev` and seeded Home/Movies remain available.
 
 Latest developer slice: [demo seed report](../reports/2026-10-01_development-demo-seed_report.md)
 and [workflow](../development/demo-seed.md). `pnpm seed:demo` at root is opt-in, one-shot,
@@ -24,7 +61,7 @@ Actual Neon PostgreSQL 18.6 seed/reseed and public API reads PASS. Dataset: 7 Ge
 10 PUBLISHED Movies, 3 Cinemas, 6 Halls, 270 Seat Units, 72 future Showtimes with
 3240 memberships, 5 Concessions and 2 date-namespaced Promotions. No Booking, Hold,
 Payment, evidence, Ticket, QR or sale was seeded. Current head remains V10.
-Latest full Maven verify: **243 tests PASS, zero failures/errors/skips**, local
+Seed slice full Maven verify: **243 tests PASS, zero failures/errors/skips**, local
 PostgreSQL regression plus package build, 2026-10-01 16:02:59 +07:00.
 
 The separately approved provider follow-up remains pending:
@@ -40,6 +77,8 @@ The separately approved provider follow-up remains pending:
 
 | Read | Boundary |
 |---|---|
+| [Admin Movie v1.0](../api/admin-movie-contract-v1.0.md), [Admin report](../reports/2026-10-01_admin-foundation-movie-management_report.md) | Current first Admin slice; active DB role check, DRAFT creation, publication, no Delete or account provisioning |
+| [Development Admin guide](../development/development-admin-provisioning.md), [latest report](../reports/2026-10-01_development-admin-provisioning_report.md) | Explicit CLI provisioning implemented; live Neon verification awaiting local input |
 | [VNPAY v1.1](../api/vnpay-sandbox-payment-contract-v1.1.md) plus approved [v1.0](../api/vnpay-sandbox-payment-contract-v1.0.md) | Implemented resources, configuration, disabled confirmation gates and provider policy |
 | [Integrity v1.2](../db/integrity-enforcement-design-v1.2.md) plus [v1.1](../db/integrity-enforcement-design-v1.1.md) | V10 schema, protected writer, lock order, paid assertions and grants |
 | [V10 report](../reports/2026-09-30_vnpay-sandbox-payment-backend_report.md) | Latest verification and deferrals |

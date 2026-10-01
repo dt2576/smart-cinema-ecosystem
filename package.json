@@ -5,6 +5,7 @@
     "node": ">=22"
   },
   "scripts": {
+    "admin:dev": "cd backend && mvn spring-boot:run -Dspring-boot.run.main-class=com.smartcinema.development.DevelopmentAdminApplication -Dspring-boot.run.arguments=--development.admin.confirm=development-only",
     "seed:demo": "cd backend && mvn spring-boot:run -Dspring-boot.run.main-class=com.smartcinema.demo.DemoSeedApplication -Dspring-boot.run.arguments=--demo.seed.confirm=development-only",
     "dev": "concurrently --kill-others --names backend,frontend --prefix-colors blue,magenta \"cd backend && mvn spring-boot:run\" \"pnpm --dir frontend dev\""
   },
