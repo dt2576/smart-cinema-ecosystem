@@ -1,58 +1,84 @@
-# Current AI handoff
+﻿# Current AI handoff
 
-Last reconciled: 2026-09-29, after functional Promotion composition. Task-entry commit: `09b39c8`. Read [project context](project-context.md) and current Git status before editing. No commit is implied.
+Last reconciled: 2026-10-01 after development demo seed implementation and actual Neon verification. The workspace already contained uncommitted prior backend/configuration work. No commit is implied. Read [project context](project-context.md), AGENTS.md and Git status before editing.
 
 ## Current milestone
 
-Customer frontend remains frozen after final preview QA. Backend Auth/Profile, Movie/Genre, Discovery, Seat/Hold, pre-Payment Booking, Concession and **Promotion composition** are implemented. Flyway head: **V8**, [migration](../../backend/src/main/resources/db/migration/V8__enable_promotion_composition.sql). Historical migrations, reports and contracts remain unchanged.
+Backend Auth/Profile, Movie/Genre, Discovery, Seat/Hold, Booking, Concession, Promotion, Payment initiation/freeze and protected Sandbox result/finalization paths are implemented. Flyway head: **V10**, [migration](../../backend/src/main/resources/db/migration/V10__integrate_sandbox_payment_finalization.sql).
 
-Latest verification: **178 tests PASS, zero failures/errors/skips**, Maven verify with all PostgreSQL suites enabled, fresh V8 and V7 upgrade. Evidence: [Promotion report](../reports/2026-09-29_promotion-composition-backend_report.md). Frontend remains the earlier QA baseline (49 unit / 73 Playwright tests); it was not changed or retested for V8.
+**Local verification PASS; real VNPAY interoperability DEFERRED.** All external confirmation gates default false. No merchant credentials, real VNPAY calls or external charge were used. Latest `mvn verify`: **231 tests, zero failures/errors/skips**, PostgreSQL 18.4, fresh migration and populated V9 upgrade, package build PASS. See [implementation report](../reports/2026-09-30_vnpay-sandbox-payment-backend_report.md).
+
+Customer frontend remains frozen at previous preview QA (49 unit / 73 Playwright tests); it was preserved and not retested in this backend task.
 
 ## Exact next task
 
-**Payment initiation + atomic first-payment composition freeze**
+For the current catalog/demo objective: **run `pnpm dev` and review Home/Movies using
+the seeded real API**. Normal frontend downstream Discovery/Seat/Booking/Payment
+adapters still use previews; an explicitly scoped real checkout frontend integration
+task is needed to connect them. Do not interpret seeded data as completed integration.
 
-1. Read [Promotion Payment prerequisites](../api/promotion-composition-contract-v1.0.md#required-payment-integration), Booking revisions and integrity design.
-2. Finalize provider/currency/minor-unit, idempotency, attempt identity, amount acceptance and timeout/reconciliation contracts before enabling charges. Percentage discount uses whole VND; existing numeric(19,4) prices/fixed values can be fractional and are not silently rounded here.
-3. Under existing ordered locks, revalidate owned eligible aggregate/Holds, original expiry/cutoff and current Promotion immediately before initiation. Invalid/expired/ineligible Promotion blocks initiation until removed/replaced.
-4. Atomically persist the first real Payment attempt and permanent payment_started_at with accepted composition/discount. Never create a freeze marker alone. Later edits must fail; retries retain frozen terms despite master changes.
-5. Test initiation-versus-composition races, frozen snapshots, retries/idempotency and expiry.
-6. Initiation is not success. Usage consumption, PAID/sold_at/CONSUMED/Ticket/one Booking QR require backend-verified SUCCESS. Resolve limited-Promotion exhaustion versus provider settlement before charges; applying does not reserve usage.
-7. Generate a new report and reconcile contracts/context/handoff.
+Latest developer slice: [demo seed report](../reports/2026-10-01_development-demo-seed_report.md)
+and [workflow](../development/demo-seed.md). `pnpm seed:demo` at root is opt-in, one-shot,
+uses existing `.env`/Flyway/JPA validation, and commits only catalog/discovery data.
+Actual Neon PostgreSQL 18.6 seed/reseed and public API reads PASS. Dataset: 7 Genres,
+10 PUBLISHED Movies, 3 Cinemas, 6 Halls, 270 Seat Units, 72 future Showtimes with
+3240 memberships, 5 Concessions and 2 date-namespaced Promotions. No Booking, Hold,
+Payment, evidence, Ticket, QR or sale was seeded. Current head remains V10.
+Latest full Maven verify: **243 tests PASS, zero failures/errors/skips**, local
+PostgreSQL regression plus package build, 2026-10-01 16:02:59 +07:00.
 
-### Protected boundaries
+The separately approved provider follow-up remains pending:
 
-- No Payment, paid writer, Hold consumption, sold_at, Ticket or QR exists yet. Do not drop stage guards in isolation.
-- Preserve historical migrations; no unrelated Admin CRUD, inventory/POS, wallet/loyalty, fake APIs or frontend expansion.
-- One COUPLE Seat Unit = two guests, one Hold/Booking Seat/future Ticket; one paid Booking QR and independent Ticket check-in. Unit price remains Showtime base_price, without invented type adjustments.
+**Provision a VNPAY Sandbox merchant and perform real interoperability confirmation before enabling affected integration gates.**
 
-## Contracts and evidence
+1. Configure secret merchant inputs, registered HTTPS IPN/ReturnURL and a separate least-privilege system database login. Follow the [configuration register](../api/vnpay-sandbox-payment-contract-v1.1.md#5-configuration-and-confirmation-register).
+2. Capture actual PAY/query signature vectors, success and definitive negative combinations, callback acknowledgements, duplicate/reopened URL behavior, query visibility/throttling and merchant amount/window limits.
+3. Verify lost-IPN recovery and special/late/contradictory outcomes in Sandbox. Enable only individually confirmed gates; record real evidence separately from local fixtures. Do not enable production money or automatic refunds.
+4. Reconcile contracts/report and this handoff from actual evidence. Full frontend checkout integration, Booking history and Staff admission remain subsequent tasks.
 
-| Read | Why |
+## Current contracts and evidence
+
+| Read | Boundary |
 |---|---|
-| [Promotion v1.0](../api/promotion-composition-contract-v1.0.md) / [V8 report](../reports/2026-09-29_promotion-composition-backend_report.md) | Apply/remove, policy, snapshots, usage and locks |
-| [Booking v1.2](../api/booking-contract-v1.2.md), [v1.1](../api/booking-contract-v1.1.md), [v1.0](../api/booking-contract-v1.0.md) | Additive changes plus original ownership/expiry contract |
-| [Concession v1.0](../api/concession-composition-contract-v1.0.md) / [V7 report](../reports/2026-09-29_concession-composition-backend_report.md) | Concession snapshots; former disabled Promotion boundary superseded by V8 |
-| [Seat/Hold v1.1](../api/seat-hold-contract-v1.1.md), [v1.0](../api/seat-hold-contract-v1.0.md) | Authority, origins, deadline, roles and sale prohibition |
-| [Discovery](../api/customer-discovery-contract-v1.0.md) | Visibility, cutoff, timezone |
-| [Decisions](../db/database-design-decisions-v1.0.md), [dictionary](../db/physical-data-dictionary-v1.0.md), [integrity design](../db/integrity-enforcement-design-v1.0.md) | Existing model; old unresolved Promotion policy resolved by explicit task approval and V8 contract |
-| [SRS v1.2](../srs/srs-v1.2.md) | FR-PROMO-002–006; FR-BOOKING-008/013–018 |
-| [Final frontend QA](../reports/2026-09-28_customer-frontend-final-qa_report.md) | Frozen preview coverage/integration gaps |
+| [VNPAY v1.1](../api/vnpay-sandbox-payment-contract-v1.1.md) plus approved [v1.0](../api/vnpay-sandbox-payment-contract-v1.0.md) | Implemented resources, configuration, disabled confirmation gates and provider policy |
+| [Integrity v1.2](../db/integrity-enforcement-design-v1.2.md) plus [v1.1](../db/integrity-enforcement-design-v1.1.md) | V10 schema, protected writer, lock order, paid assertions and grants |
+| [V10 report](../reports/2026-09-30_vnpay-sandbox-payment-backend_report.md) | Latest verification and deferrals |
+| [Payment initiation](../api/payment-initiation-contract-v1.0.md), [Booking v1.3](../api/booking-contract-v1.3.md) | Permanent first-attempt freeze and base ownership/composition |
+| [Promotion v1.1](../api/promotion-composition-contract-v1.1.md), [Concession](../api/concession-composition-contract-v1.0.md) | Snapshot and pre-Payment composition rules |
+| [Seat/Hold v1.1](../api/seat-hold-contract-v1.1.md), [Discovery](../api/customer-discovery-contract-v1.0.md) | Exact origins, expiry, shared eligibility/cutoff |
+| [SRS v1.2](../srs/srs-v1.2.md), [dictionary](../db/physical-data-dictionary-v1.0.md), [decisions](../db/database-design-decisions-v1.0.md) | Requirements and approved domain model |
+| [Provider research](../reports/2026-09-30_vnpay-provider-research_report.md), [contract report](../reports/2026-09-30_vnpay-sandbox-payment-contract_report.md) | Historical evidence/design; not real Sandbox certification |
+| [Final frontend QA](../reports/2026-09-28_customer-frontend-final-qa_report.md) | Preview coverage and remaining integrations |
 
-## Active decisions and limitations
+## Active invariants and limitations
 
-- PostgreSQL authority, protected routines/restricted runtime role; Showtime gate and ordered locks. Promotion lock follows aggregate locks; master administration never locks Bookings afterward.
-- Whole subtotal is discount/minimum basis. PERCENTAGE floors whole VND with cap; FIXED_AMOUNT cannot exceed subtotal. One Promotion. Global usage counts PAID Bookings only; PENDING application/cancellation/expiry consume nothing.
-- Reads preserve snapshots; accepted pre-Payment composition edits refresh current eligible terms and discount. Invalid applied Promotion rolls back Concession edits until removed/replaced. Cancellation/expiry retain history.
-- V8 translates FIXED to FIXED_AMOUNT and adds cap/term snapshots. No production codes are seeded. Runtime cannot administer Promotion masters.
-- Actual paid-count exhaustion/finalization and first-payment freeze races are future Payment tests; no fake paid records or usage counter exist.
-- Downstream frontend adapters remain local. Legacy Auth numeric userId remains a string-safety gap.
-- Provider integration, real checkout/history, realtime, production role provisioning/load and complete Seat geometry remain outstanding.
+- Exact domain numeric(19,4) is unchanged. Provider submission alone requires positive whole VND, exact ×100 and confirmed merchant limits; no rounding or client-controlled amount.
+- First freeze is permanent. Eligible historical V9 attempts bind once; original deadlines and snapshots never extend or reprice. Unresolved attempts cannot be replaced. Definitive mappings are empty until confirmed.
+- ReturnURL is UX only. Signed IPN/verified Query use a separate protected system writer. Later BLOCKED alone is not a settlement veto. Normal runtime cannot forge results or directly mutate sale tables.
+- Eligible verified SUCCESS atomically commits PAID/paid_at, sold_at, exact origin CONSUMED Holds, serialized Promotion usage, one Ticket per whole Seat Unit, one Booking QR and audit. COUPLE is one Ticket for two guests; no per-Ticket QR.
+- Financial SUCCESS without entitlement is retained with reconciliation, never forced into PAID or a fake refund. Contradictory evidence and late additional success cannot trigger another automatic sale.
+- Worker scheduling commits before network calls. Horizon/network errors do not imply failure. Audited operator case resolution exists as a protected database command; operator UI and automatic refund do not.
+- Owned Payment detail projects issued Tickets/QR; standalone history/check-in APIs, notification sender, full checkout frontend integration, production provisioning/load and legacy Auth numeric userId correction remain outstanding.
 
 ## Developer workflow and verification
 
-Run **`pnpm dev` at root** for both apps: [README](../../README.md#local-development), [workflow report](../reports/2026-09-29_root-development-command_report.md).
+Run **`pnpm dev` at root**: [README](../../README.md#local-development).
 
-Backend: `mvn verify` from `backend/` against a dedicated PostgreSQL database using existing DB settings. Set PROMOTION_DB_TESTS, CONCESSION_DB_TESTS, BOOKING_DB_TESTS, SEAT_DB_TESTS, MOVIE_DB_TESTS and DISCOVERY_DB_TESTS=true; SEAT_HOLD_CLEANUP_ENABLED=false for deterministic tests. Expiry routines are tested directly. Never store credentials here. Final counts are in the V8 report.
+Local datasource setup updated 2026-10-01: copy `backend/.env.example` to
+`backend/.env`, fill Neon JDBC URL/username/password, and run the existing command.
+Spring Boot imports the optional file as properties without extra dependencies;
+OS overrides and local fallbacks remain supported. `.env` is Git-ignored. The
+subsequent demo seed task verified actual Neon connection, existing V1–V10 history,
+seed and rerun; configuration report below remains dated evidence. Migration head
+and domain/provider scope remain unchanged. See the
+[configuration report](../reports/2026-10-01_neon-local-database-configuration_report.md).
+The subsequent user-reported startup blocker is now fixed: removed an unused
+invalid test helper and isolated the config test from the developer's actual env
+file. Full `mvn verify` with PostgreSQL: **235 tests PASS, zero failures/errors/skips**,
+BUILD SUCCESS, 2026-10-01 15:07:58 +07:00. See the
+[test compilation fix report](../reports/2026-10-01_backend-test-compilation-fix_report.md).
+Neon catalog reads and demo command startup are now verified by the later seed report.
 
-Reconcile handoff links, migration head, status and exact next task during documentation checks. Stable context now includes approved Promotion rules; preserve historical evidence.
+Run `mvn verify` in backend with a dedicated PostgreSQL database. Enable VNPAY_DB_TESTS, PAYMENT_DB_TESTS, PROMOTION_DB_TESTS, CONCESSION_DB_TESTS, BOOKING_DB_TESTS, SEAT_DB_TESTS, MOVIE_DB_TESTS and DISCOVERY_DB_TESTS=true; SEAT_HOLD_CLEANUP_ENABLED=false for deterministic tests. Final accepted database: `smart_cinema_vnpay_accepted_20260930`. Final verification ended 19:36:27 +07:00, exit 0. Test-only Hikari limits prevent accumulated Spring contexts exhausting local PostgreSQL connections.
+
+Earlier development databases contain superseded uncommitted V10 checksums; do not repair/reuse them as final evidence. V1–V9 and historical reports/contracts were preserved. Never put credentials here. Include handoff, current contracts, report links and whitespace in final documentation checks.

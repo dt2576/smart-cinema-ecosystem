@@ -53,16 +53,23 @@ public class AuthSecurityConfiguration {
 		RequestMatcher concessionRemove = PathPatternRequestMatcher.pathPattern(HttpMethod.DELETE, "/api/v1/bookings/{bookingId}/concessions/{lineId}");
 		RequestMatcher promotionApply = PathPatternRequestMatcher.pathPattern(HttpMethod.PUT, "/api/v1/bookings/{bookingId}/promotion");
 		RequestMatcher promotionRemove = PathPatternRequestMatcher.pathPattern(HttpMethod.DELETE, "/api/v1/bookings/{bookingId}/promotion");
+		RequestMatcher paymentInitiate = PathPatternRequestMatcher.pathPattern(HttpMethod.POST, "/api/v1/bookings/{bookingId}/payment-transactions");
+		RequestMatcher paymentSubmit = PathPatternRequestMatcher.pathPattern(HttpMethod.POST, "/api/v1/bookings/{bookingId}/payment-transactions/{paymentId}/vnpay-submission");
 
 		return http
 				.csrf(csrf -> csrf.ignoringRequestMatchers(
 						registrationEndpoint, loginEndpoint, tokenRenewalEndpoint,
 						tokenRevocationEndpoint, profileEndpoint, holdAcquire, holdRelease, bookingCreate, bookingCancel,
-						concessionAdd, concessionUpdate, concessionRemove, promotionApply, promotionRemove))
+						concessionAdd, concessionUpdate, concessionRemove, promotionApply, promotionRemove, paymentInitiate, paymentSubmit))
 				.authorizeHttpRequests(authorize -> authorize
+						.requestMatchers(PathPatternRequestMatcher.pathPattern(HttpMethod.GET,"/api/v1/payments/vnpay/ipn"),
+							PathPatternRequestMatcher.pathPattern(HttpMethod.GET,"/api/v1/payments/vnpay/return")).permitAll()
+						.requestMatchers(paymentSubmit,PathPatternRequestMatcher.pathPattern(HttpMethod.GET,
+							"/api/v1/bookings/{bookingId}/payment-transactions/{paymentId}")).hasRole("CUSTOMER")
 						.requestMatchers(PathPatternRequestMatcher.pathPattern(HttpMethod.GET, "/api/v1/concession-items")).permitAll()
 						.requestMatchers(concessionAdd, concessionUpdate, concessionRemove).hasRole("CUSTOMER")
 						.requestMatchers(promotionApply, promotionRemove).hasRole("CUSTOMER")
+						.requestMatchers(paymentInitiate).hasRole("CUSTOMER")
 						.requestMatchers(bookingCreate, bookingCancel,
 								PathPatternRequestMatcher.pathPattern(HttpMethod.GET, "/api/v1/bookings/{bookingId}")).hasRole("CUSTOMER")
 						.requestMatchers(PathPatternRequestMatcher.pathPattern(HttpMethod.GET, "/api/v1/showtimes/{showtimeId}/seats")).permitAll()

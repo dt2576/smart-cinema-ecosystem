@@ -66,10 +66,45 @@ Prerequisites: Java 21, Maven (`mvn` on PATH), Node.js 22 or newer
 (required by the development runner), pnpm 12.4.1, and a running PostgreSQL database configured for
 the backend. Use the existing backend environment variables documented in
 [backend/.env.example](backend/.env.example) and frontend configuration in
-[frontend/.env.example](frontend/.env.example). Export backend variables into
-your terminal environment; the root command does not load `.env` files.
+[frontend/.env.example](frontend/.env.example). Spring Boot imports the optional
+backend `.env` file; no terminal export or extra dependency is required.
 Next.js continues to load `frontend/.env.local` normally. Do not commit secrets.
 Backend startup runs the existing Flyway migrations against the configured database.
+
+For Neon, create the local file once (PowerShell also supports `cp`):
+
+```sh
+cd backend
+cp .env.example .env
+```
+
+Paste your Neon connection values into `backend/.env`:
+
+```properties
+DB_URL=jdbc:postgresql://<NEON_HOST>/neondb?sslmode=require
+DB_USERNAME=neondb_owner
+DB_PASSWORD=<NEON_PASSWORD>
+```
+
+Use the actual host, database and role supplied by Neon, and preserve all supplied
+JDBC SSL parameters. Enter raw `KEY=value` lines without quotes or `export`.
+This file uses Java properties syntax: a literal backslash must be written as
+`\\`; do not use shell variable expansion. Save as UTF-8 without BOM. The file is
+Git-ignored and not packaged in the application JAR. Never paste secrets into logs.
+
+Then run `mvn spring-boot:run` from `backend/`, or return to the repository root
+and run `pnpm dev`. IDE/JAR launches should use `backend/` or the repository root
+as working directory. Spring imports `./backend/.env` and then `./.env`; use only
+`backend/.env` for this workflow. OS environment variables/system properties still
+override file values. Without the file or overrides, the original localhost
+database, `postgres` username and `123456` password defaults remain available.
+
+Flyway remains enabled and Hibernate uses `ddl-auto=validate`. On an empty database,
+startup applies V1 through V10 before validation. The migration login must be able
+to install `btree_gist`, create the existing NOLOGIN roles, and perform ownership
+and grants required by those migrations. Confirm those permissions on Neon before
+expecting first startup to succeed; this workflow does not alter migrations or
+bypass database guards. No real Neon connection is implied by configuration alone.
 
 Install development dependencies once from the repository root:
 
@@ -99,3 +134,22 @@ The root package only supplies development process supervision using
 [concurrently](https://github.com/open-cli-tools/concurrently). Frontend dependencies
 and its lockfile remain separate; there is no new pnpm workspace. For separate
 operation, the original commands inside `backend/` and `frontend/` still work.
+
+## Development demo catalog
+
+After configuring `backend/.env` for a **development database**, run from root:
+
+```sh
+pnpm seed:demo
+pnpm dev
+```
+
+The first command uses the existing Maven/Spring PostgreSQL configuration, applies
+Flyway, validates Hibernate, seeds in one transaction and exits. The second starts
+the normal applications. Open <http://localhost:3000/> or
+<http://localhost:3000/movies>. No terminal credential export is needed for Neon;
+local PostgreSQL uses the same file or the documented fallback values.
+
+This is an explicit demo command, never part of normal startup/migrations.
+Never point it at production. See [demo seed setup](docs/development/demo-seed.md)
+for dataset, safe reruns, privileges, date behavior and verification limitations.

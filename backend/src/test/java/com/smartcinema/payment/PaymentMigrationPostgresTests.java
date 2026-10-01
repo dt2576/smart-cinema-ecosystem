@@ -1,4 +1,4 @@
-package com.smartcinema.promotion;
+package com.smartcinema.payment;
 
 import static org.assertj.core.api.Assertions.*;
 import java.sql.Connection;
@@ -13,22 +13,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest(properties = "seat-hold.cleanup-enabled=false")
-@EnabledIfEnvironmentVariable(named = "PROMOTION_DB_TESTS", matches = "true")
-class PromotionMigrationPostgresTests {
+@EnabledIfEnvironmentVariable(named = "PAYMENT_DB_TESTS", matches = "true")
+class PaymentMigrationPostgresTests {
     @Autowired private DataSource dataSource;
     @Autowired private Flyway flyway;
 
     @Test
-    void freshAndPopulatedV7UpgradePreserveBookingAndTranslateFixedPromotion() throws Exception {
+    void freshAndPopulatedV8UpgradePreserveSnapshotsAndEnableAtomicInitiation() throws Exception {
         flyway.validate();
-        assertThat(Integer.parseInt(flyway.info().current().getVersion().getVersion())).isGreaterThanOrEqualTo(8);
-        String schema = "promotion_upgrade_" + UUID.randomUUID().toString().replace("-", "");
+        assertThat(Integer.parseInt(flyway.info().current().getVersion().getVersion())).isGreaterThanOrEqualTo(9);
+        String schema = "payment_upgrade_" + UUID.randomUUID().toString().replace("-", "");
         try {
             var old = Flyway.configure().dataSource(dataSource).defaultSchema(schema).schemas(schema, "public")
-                    .target(MigrationVersion.fromVersion("7")).load();
+                    .target(MigrationVersion.fromVersion("8")).load();
             old.migrate();
             var checksums = Arrays.stream(old.info().applied()).filter(m -> m.getVersion() != null).map(m -> m.getChecksum()).toList();
-            assertThat(checksums).containsExactly(1536752408, 1495804464, 1822747767, -336975126, -226696638, -1104445100, -2107511975);
+            assertThat(checksums.subList(0,7)).containsExactly(1536752408, 1495804464, 1822747767, -336975126, -226696638, -1104445100, -2107511975);
             try (Connection connection = dataSource.getConnection(); var sql = connection.createStatement()) {
                 sql.execute("SET search_path TO " + schema + ",public");
                 sql.execute("INSERT INTO users(id,email,password_hash,full_name,phone,role,status) VALUES (71,'upgrade@example.test','hash','Name','0123','CUSTOMER','ACTIVE')");
@@ -42,14 +42,14 @@ class PromotionMigrationPostgresTests {
                 sql.execute("SELECT * FROM acquire_seat_holds(71,71,ARRAY(SELECT id FROM seats),interval '10 minutes')");
                 sql.execute("SELECT create_booking(71,71,ARRAY(SELECT id FROM seat_holds))");
                 sql.execute("SET ROLE smart_cinema_hold_owner");
-                sql.execute("INSERT INTO promotions(code,discount_type,discount_value,valid_from,valid_until,minimum_order,status) VALUES ('UPGRADE-FIXED','FIXED',10,clock_timestamp()-interval '1 day',clock_timestamp()+interval '1 day',0,'ACTIVE')");
+                sql.execute("INSERT INTO promotions(code,discount_type,discount_value,valid_from,valid_until,minimum_order,status) VALUES ('UPGRADE-FIXED','FIXED_AMOUNT',10,clock_timestamp()-interval '1 day',clock_timestamp()+interval '1 day',0,'ACTIVE')");
                 sql.execute("RESET ROLE");
                 sql.execute("RESET search_path");
             }
-            var upgrade = Flyway.configure().dataSource(dataSource).defaultSchema(schema).schemas(schema, "public").target(MigrationVersion.fromVersion("8")).load();
+            var upgrade = Flyway.configure().dataSource(dataSource).defaultSchema(schema).schemas(schema, "public").target(MigrationVersion.fromVersion("9")).load();
             assertThat(upgrade.migrate().migrationsExecuted).isEqualTo(1);
             upgrade.validate(); assertThat(upgrade.migrate().migrationsExecuted).isZero();
-            assertThat(Arrays.stream(upgrade.info().applied()).filter(m -> m.getVersion() != null).limit(7).map(m -> m.getChecksum()).toList()).isEqualTo(checksums);
+            assertThat(Arrays.stream(upgrade.info().applied()).filter(m -> m.getVersion() != null).limit(8).map(m -> m.getChecksum()).toList()).isEqualTo(checksums);
             try (Connection connection = dataSource.getConnection(); var sql = connection.createStatement()) {
                 sql.execute("SET search_path TO " + schema + ",public");
                 sql.execute("SET ROLE smart_cinema_hold_runtime");
@@ -71,6 +71,12 @@ class PromotionMigrationPostgresTests {
                 try (var result = sql.executeQuery("SELECT promotion_type_snapshot,discount,final_amount FROM bookings")) {
                     assertThat(result.next()).isTrue(); assertThat(result.getString(1)).isEqualTo("FIXED_AMOUNT");
                     assertThat(result.getBigDecimal(2)).isEqualByComparingTo("10"); assertThat(result.getBigDecimal(3)).isEqualByComparingTo("94.6912");
+                }
+                sql.execute("SELECT initiate_payment((SELECT id FROM bookings),71)");
+                sql.execute("SELECT initiate_payment((SELECT id FROM bookings),71)");
+                try (var result = sql.executeQuery("SELECT p.amount,p.initiated_at=b.payment_started_at,p.provider IS NULL,p.currency IS NULL FROM payment_transactions p JOIN bookings b ON b.id=p.booking_id")) {
+                    assertThat(result.next()).isTrue(); assertThat(result.getBigDecimal(1)).isEqualByComparingTo("94.6912");
+                    assertThat(result.getBoolean(2)).isTrue(); assertThat(result.getBoolean(3)).isTrue(); assertThat(result.getBoolean(4)).isTrue(); assertThat(result.next()).isFalse();
                 }
                 sql.execute("SELECT cancel_booking((SELECT id FROM bookings),71)");
                 sql.execute("RESET ROLE");

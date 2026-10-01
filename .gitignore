@@ -4,3 +4,8 @@ node_modules/
 target/
 dist/
 build/
+
+# Local credentials; safe examples remain trackable.
+.env
+.env.*
+!.env.example

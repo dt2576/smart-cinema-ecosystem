@@ -13,8 +13,13 @@ import com.smartcinema.seat.SeatRequestException;
 import com.smartcinema.seat.SeatUnavailableException;
 
 @RestControllerAdvice(assignableTypes = {BookingController.class, com.smartcinema.concession.ConcessionController.class,
-        com.smartcinema.promotion.PromotionController.class})
+        com.smartcinema.promotion.PromotionController.class, com.smartcinema.payment.PaymentController.class,
+        com.smartcinema.payment.VnpayController.class})
 public class BookingExceptionHandler {
+    @ExceptionHandler(com.smartcinema.payment.VnpayUnavailableException.class)
+    ProblemDetail sandboxUnavailable() { return problem(503,"Sandbox unavailable","VNPAY Sandbox configuration or confirmation is incomplete."); }
+    @ExceptionHandler(com.smartcinema.payment.VnpayConflictException.class)
+    ProblemDetail sandboxConflict(com.smartcinema.payment.VnpayConflictException exception) { return problem(409,"Payment conflict",exception.getMessage()); }
     @ExceptionHandler(SeatRequestException.class)
     ProblemDetail invalid(SeatRequestException exception) {
         var result = problem(400, "Invalid request", exception.getMessage());
@@ -38,6 +43,9 @@ public class BookingExceptionHandler {
         if ("P0004".equals(state)) { return denied(null); }
         if ("P0005".equals(state)) {
             return problem(409, "Promotion unavailable", "The Promotion is invalid or no longer eligible. Remove or replace it before continuing.");
+        }
+        if ("P0006".equals(state)) {
+            return problem(409, "Composition review required", "Promotion terms changed. Reapply or remove the Promotion and review the Booking before initiating Payment.");
         }
         if ("P0003".equals(state) || "23505".equals(state)) {
             return problem(409, "Booking conflict", "The Booking selection is unavailable or cannot be changed. Reload your selection.");

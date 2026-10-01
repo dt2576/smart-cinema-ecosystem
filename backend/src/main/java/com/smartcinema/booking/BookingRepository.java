@@ -58,7 +58,8 @@ public class BookingRepository {
                     row.getString("promotion_id") == null ? null : new BookingResponse.PromotionSnapshot(row.getString("promotion_id"),
                         row.getString("promotion_code_snapshot"), row.getString("promotion_type_snapshot"),
                         row.getBigDecimal("promotion_value_snapshot").toPlainString(), row.getBigDecimal("promotion_minimum_snapshot").toPlainString(),
-                        row.getBigDecimal("promotion_cap_snapshot") == null ? null : row.getBigDecimal("promotion_cap_snapshot").toPlainString())));
+                        row.getBigDecimal("promotion_cap_snapshot") == null ? null : row.getBigDecimal("promotion_cap_snapshot").toPlainString()),
+                    row.getTimestamp("payment_started_at") == null ? null : row.getTimestamp("payment_started_at").toInstant()));
         if (result.isEmpty()) { throw new SeatUnavailableException(); }
         return result.getFirst();
     }
