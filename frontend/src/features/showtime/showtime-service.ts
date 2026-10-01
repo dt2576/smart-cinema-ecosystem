@@ -3,12 +3,12 @@ import type { SeatSelectionHandoff, ShowtimeOption, ShowtimePreviewState, Showti
 // All current sample branches are in Vietnam. This is preview configuration only.
 export const SHOWTIME_PREVIEW_TIME_ZONE = "Asia/Ho_Chi_Minh";
 
-export function showtimeDate(value: string | number): string {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: SHOWTIME_PREVIEW_TIME_ZONE, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(value));
+export function showtimeDate(value: string | number, timeZone = SHOWTIME_PREVIEW_TIME_ZONE): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(value));
 }
 
-export function formatShowtimeTime(value: string): string {
-  return new Intl.DateTimeFormat("en-GB", { timeZone: SHOWTIME_PREVIEW_TIME_ZONE, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(value));
+export function formatShowtimeTime(value: string, timeZone = SHOWTIME_PREVIEW_TIME_ZONE): string {
+  return new Intl.DateTimeFormat("en-GB", { timeZone, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(value));
 }
 
 export function formatShowtimeDate(value: string): string {
@@ -21,7 +21,7 @@ export function parseShowtimePreviewState(value: string | null): ShowtimePreview
 
 export function canSelectShowtime(option: ShowtimeOption, movieId: string, cinemaId: string, date: string, now: number): boolean {
   const start = Date.parse(option.startsAt);
-  return Number.isFinite(start) && start > now && option.hasAvailableSeats && option.movieId === movieId && option.cinemaId === cinemaId && showtimeDate(start) === date;
+  return Number.isFinite(start) && start > now && option.hasAvailableSeats !== false && (!option.bookingCutOff || Date.parse(option.bookingCutOff) > now) && option.movieId === movieId && option.cinemaId === cinemaId && showtimeDate(start, option.timeZone) === date;
 }
 
 export function createSeatSelectionHandoff(option: ShowtimeOption, movieId: string, cinemaId: string, date: string, now: number): SeatSelectionHandoff | null {

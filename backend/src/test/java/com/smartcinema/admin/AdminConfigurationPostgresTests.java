@@ -185,7 +185,7 @@ class AdminConfigurationPostgresTests {
                 sql.execute("SELECT initialize_hall_seats(71,'[{\"row\":\"B\",\"number\":\"1-2\",\"type\":\"COUPLE\",\"physicalStatus\":\"ACTIVE\"}]')");
                 sql.execute("RESET search_path");
             }
-            var upgrade=Flyway.configure().dataSource(dataSource).defaultSchema(schema).schemas(schema,"public").load(); assertThat(upgrade.migrate().migrationsExecuted).isEqualTo(1); upgrade.validate();
+            var upgrade=Flyway.configure().dataSource(dataSource).defaultSchema(schema).schemas(schema,"public").target("11").load(); assertThat(upgrade.migrate().migrationsExecuted).isEqualTo(1); upgrade.validate();
             assertThat(Arrays.stream(upgrade.info().applied()).filter(item->item.getVersion()!=null).limit(10).map(item->item.getChecksum()).toList()).isEqualTo(checksums);
             assertThat(jdbc.queryForObject("SELECT count(*) FROM "+schema+".seats WHERE hall_id=71 AND seat_type='COUPLE'",Integer.class)).isEqualTo(1);
         } finally { jdbc.execute("DROP SCHEMA IF EXISTS "+schema+" CASCADE"); }

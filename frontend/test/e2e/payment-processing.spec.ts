@@ -1,12 +1,14 @@
+import { mockDiscoveryReads, isCustomerReadPath } from "./helpers/customer-discovery";
 import { test, expect, type Page } from "@playwright/test";
 import { resolve } from "node:path";
 
 const MOVIE_ID = "9223372036854775807";
 const CINEMA_ID = "9007199254740993";
 const PROCESSING = "/bookings/preview/payment/processing";
-const SEATS = `/showtimes/${CINEMA_ID}01/seats?movieId=${MOVIE_ID}&cinemaId=${CINEMA_ID}&date=2030-01-01`;
+const SEATS = `/showtimes/9007199254741001/seats?movieId=${MOVIE_ID}&cinemaId=${CINEMA_ID}&date=2030-01-01`;
 
 async function enter(page: Page, time = "09:00:00", addOns = true) {
+  await mockDiscoveryReads(page);
   await page.clock.setFixedTime(new Date(`2030-01-01T${time}+07:00`));
   await page.route(`**/api/v1/movies/${MOVIE_ID}`, route => route.fulfill({ json: { id: MOVIE_ID, title: "Processing Journey", duration: 125, releaseDate: "2029-01-01", ageRating: "T13", language: "English", posterUrl: "https://media.example.test/processing.jpg", status: "PUBLISHED", genres: [], description: null, trailerUrl: null } }));
   await page.route("https://media.example.test/**", route => route.fulfill({ path: resolve("public/images/movies/dune-part-two.jpg") }));
@@ -32,7 +34,7 @@ test("processing preserves complete reviewed context; duplicate actions cannot p
   const unexpected: string[] = [];
   page.on("request", request => {
     const url = new URL(request.url());
-    if ((url.pathname.startsWith("/api/") && url.pathname !== `/api/v1/movies/${MOVIE_ID}`) || !["127.0.0.1", "localhost", "media.example.test"].includes(url.hostname)) unexpected.push(url.href);
+    if ((url.pathname.startsWith("/api/") && (!isCustomerReadPath(url.pathname) || request.method() !== "GET")) || !["127.0.0.1", "localhost", "media.example.test"].includes(url.hostname)) unexpected.push(url.href);
   });
   await enter(page);
   const screening = page.getByRole("region", { name: "Selected screening" });

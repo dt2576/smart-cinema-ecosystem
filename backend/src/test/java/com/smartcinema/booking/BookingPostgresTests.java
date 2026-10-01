@@ -104,7 +104,7 @@ class BookingPostgresTests {
         assertThat(jdbc.queryForObject("SELECT count(*) FROM seat_holds WHERE booking_id=? AND status='ACTIVE'", Integer.class, Long.parseLong(result.id()))).isEqualTo(2);
         assertThat(seats.mine(showtime, user).holds()).isEmpty();
         assertThat(seats.map(showtime).units()).allSatisfy(unit -> assertThat(unit.availability()).isEqualTo("HELD"));
-        jdbc.update("UPDATE showtimes SET base_price=999 WHERE id=?", showtime);
+        assertThatThrownBy(() -> jdbc.update("UPDATE showtimes SET base_price=999 WHERE id=?", showtime)).isInstanceOf(org.springframework.dao.DataAccessException.class);
         assertThat(create(ids).id()).isEqualTo(result.id());
         assertThat(create(ids).seatAmount()).isEqualTo("246.9134");
         assertThat(create(ids).expiresAt()).isEqualTo(result.expiresAt());
@@ -225,6 +225,11 @@ class BookingPostgresTests {
             long id = switch (table) { case "movies" -> movie; case "cinemas" -> cinema; case "halls" -> hall; default -> showtime; };
             String original = table.equals("movies") ? "PUBLISHED" : table.equals("showtimes") ? "OPEN_FOR_BOOKING" : "ACTIVE";
             String blocked = table.equals("movies") ? "UNPUBLISHED" : table.equals("showtimes") ? "CANCELLED" : "INACTIVE";
+            if (table.equals("showtimes")) {
+                assertThatThrownBy(() -> jdbc.update("UPDATE showtimes SET status=? WHERE id=?", blocked, id)).isInstanceOf(org.springframework.dao.DataAccessException.class);
+                assertThat(jdbc.queryForObject("SELECT status FROM showtimes WHERE id=?", String.class, id)).isEqualTo(original);
+                continue;
+            }
             jdbc.update("UPDATE " + table + " SET status=? WHERE id=?", blocked, id);
             assertThat(createHttp(user, ids)).isEqualTo(404);
             jdbc.update("UPDATE " + table + " SET status=? WHERE id=?", original, id);
@@ -327,10 +332,14 @@ class BookingPostgresTests {
             sql.execute("RESET ROLE");
         }
         bookings.cancel(Long.parseLong(result.id()), user);
+        assertThatThrownBy(() -> jdbc.update("UPDATE showtimes SET base_price=999999999999999 WHERE id=?", showtime)).isInstanceOf(org.springframework.dao.DataAccessException.class);
+        long original = showtime;
+        showtime = jdbc.queryForObject("INSERT INTO showtimes(movie_id,hall_id,start_time,end_time,occupied_until,booking_cut_off,base_price,status) SELECT movie_id,hall_id,start_time+interval '4 hours',end_time+interval '4 hours',occupied_until+interval '4 hours',booking_cut_off+interval '4 hours',999999999999999,status FROM showtimes WHERE id=? RETURNING id", Long.class, original);
+        jdbc.queryForObject("SELECT initialize_showtime_seats(?,CAST(? AS bigint[]))", Object.class, showtime, array(List.of(standard,couple)));
         var ids = hold(user, standard, couple);
-        jdbc.update("UPDATE showtimes SET base_price=999999999999999 WHERE id=?", showtime);
         assertThat(createHttp(user, ids)).isEqualTo(409);
-        assertThat(jdbc.queryForObject("SELECT count(*) FROM bookings WHERE showtime_id=?", Integer.class, showtime)).isEqualTo(1);
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM bookings WHERE showtime_id=?", Integer.class, original)).isEqualTo(1);
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM bookings WHERE showtime_id=?", Integer.class, showtime)).isZero();
         assertThat(seats.mine(showtime, user).holds()).hasSize(2);
     }
 }

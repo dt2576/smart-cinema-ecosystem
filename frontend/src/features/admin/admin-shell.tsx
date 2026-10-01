@@ -42,10 +42,11 @@ export function AdminShell({ children }: { children: ReactNode }) {
         </div>
       </header>
       <div className="mx-auto grid max-w-7xl gap-6 px-5 py-6 md:grid-cols-[180px_minmax(0,1fr)] md:px-8 md:py-8">
-        <nav aria-label="Admin navigation" className="flex gap-2 md:flex-col">
+        <nav aria-label="Admin navigation" className="flex flex-wrap gap-2 md:flex-col">
           <Link href="/admin" aria-current={pathname === "/admin" ? "page" : undefined} className="rounded-lg px-4 py-3 text-sm font-semibold hover:bg-panel-high aria-[current=page]:bg-panel-high aria-[current=page]:text-accent">Home</Link>
           <Link href="/admin/movies" aria-current={pathname.startsWith("/admin/movies") ? "page" : undefined} className="rounded-lg px-4 py-3 text-sm font-semibold hover:bg-panel-high aria-[current=page]:bg-panel-high aria-[current=page]:text-accent">Movies</Link>
           <Link href="/admin/cinemas" aria-current={pathname.startsWith("/admin/cinemas") || pathname.startsWith("/admin/halls") ? "page" : undefined} className="rounded-lg px-4 py-3 text-sm font-semibold hover:bg-panel-high aria-[current=page]:bg-panel-high aria-[current=page]:text-accent">Cinemas</Link>
+          <Link href="/admin/showtimes" aria-current={pathname.startsWith("/admin/showtimes") ? "page" : undefined} className="rounded-lg px-4 py-3 text-sm font-semibold hover:bg-panel-high aria-[current=page]:bg-panel-high aria-[current=page]:text-accent">Showtimes</Link>
         </nav>
         <main id="admin-content" tabIndex={-1} className="min-w-0">{children}</main>
       </div>

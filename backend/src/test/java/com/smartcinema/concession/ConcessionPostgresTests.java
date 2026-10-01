@@ -247,6 +247,11 @@ class ConcessionPostgresTests {
             long id = switch (table) { case "movies" -> movie; case "cinemas" -> cinema; case "halls" -> hall; default -> showtime; };
             String original = table.equals("movies") ? "PUBLISHED" : table.equals("showtimes") ? "OPEN_FOR_BOOKING" : "ACTIVE";
             String blocked = table.equals("movies") ? "UNPUBLISHED" : table.equals("showtimes") ? "CANCELLED" : "INACTIVE";
+            if (table.equals("showtimes")) {
+                assertThatThrownBy(() -> jdbc.update("UPDATE showtimes SET status=? WHERE id=?", blocked, id)).isInstanceOf(org.springframework.dao.DataAccessException.class);
+                assertThat(jdbc.queryForObject("SELECT status FROM showtimes WHERE id=?", String.class, id)).isEqualTo(original);
+                continue;
+            }
             jdbc.update("UPDATE " + table + " SET status=? WHERE id=?", blocked, id);
             assertThat(addHttp(bookingId, user, itemId, 1)).isEqualTo(409);
             jdbc.update("UPDATE " + table + " SET status=? WHERE id=?", original, id);

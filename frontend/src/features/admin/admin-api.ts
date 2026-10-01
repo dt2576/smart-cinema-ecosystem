@@ -52,3 +52,7 @@ export const saveAdminHall = (token: string, cinemaId: string, hallId: string | 
 export const getAdminSeats = (token: string, hallId: string, signal?: AbortSignal) => adminRequest<AdminSeat[]>(`/halls/${segment(hallId)}/seats`, token, "GET", undefined, signal);
 export const initializeAdminSeats = (token: string, hallId: string, units: SeatContent[]) => adminRequest<AdminSeat[]>(`/halls/${segment(hallId)}/seats`, token, "POST", { units });
 export const updateAdminSeat = (token: string, seatId: string, content: SeatContent) => adminRequest<AdminSeat>(`/seats/${segment(seatId)}`, token, "PUT", content);
+import type { AdminShowtimeSchedule, AdminShowtimeDetail, ShowtimeContent } from "@/features/admin/admin-showtime.types";
+export const getAdminShowtimes = (token: string, query = "", signal?: AbortSignal) => adminRequest<AdminShowtimeSchedule>(`/showtimes${query ? `?${query}` : ""}`, token, "GET", undefined, signal);
+export const getAdminShowtime = (token: string, id: string, signal?: AbortSignal) => adminRequest<AdminShowtimeDetail>(`/showtimes/${segment(id)}`, token, "GET", undefined, signal);
+export const saveAdminShowtime = (token: string, id: string | undefined, content: ShowtimeContent) => adminRequest<AdminShowtimeDetail>(id ? `/showtimes/${segment(id)}` : "/showtimes", token, id ? "PUT" : "POST", content);

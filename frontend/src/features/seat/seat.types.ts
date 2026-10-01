@@ -1,15 +1,15 @@
 import type { ShowtimeOption } from "@/features/showtime/showtime.types";
 
-// Preview representation of an existing Seat, not a new persistence entity.
+// Whole-unit UI projection. Availability comes from reads; selection stays local.
 export type SeatUnit = {
   id: string;
   hallId: string;
   showtimeId: string;
   row: string;
   number: string;
-  column: number;
-  type: "STANDARD" | "COUPLE";
-  availability: "AVAILABLE" | "BOOKED" | "UNAVAILABLE";
+  column: number; // Display order only; public API supplies no physical coordinates.
+  type: "STANDARD" | "VIP" | "COUPLE";
+  availability: "AVAILABLE" | "HELD" | "BOOKED" | "UNAVAILABLE";
 };
 export type SeatMap = { showtimeId: string; hallId: string; units: SeatUnit[] };
 export type SeatPreviewScenario = "default" | "empty" | "error" | "unavailable";

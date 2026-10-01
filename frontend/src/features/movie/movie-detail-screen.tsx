@@ -43,7 +43,7 @@ function DetailContent({ movieId, backHref }: { movieId: string; backHref: strin
             <span>{movie.duration} min</span>{movie.language && <span>· {movie.language}</span>}
           </div>
           {movie.genres.length > 0 && <ul aria-label="Genres" className="mt-4 flex flex-wrap gap-2">{movie.genres.map(genre => <li key={genre.id} className="rounded-full bg-panel-high px-3 py-1 text-xs text-muted">{genre.name}</li>)}</ul>}
-          <Link href={`/movies/${movie.id}/cinemas?from=${encodeURIComponent(backHref)}`} className="mr-3 mt-7 inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-panel-high px-6 font-heading text-sm font-bold hover:bg-panel-hover">Select Cinema <span className="text-xs text-muted">Preview</span><Icon name="arrow" /></Link>
+          <Link href={`/movies/${movie.id}/cinemas?from=${encodeURIComponent(backHref)}`} className="mr-3 mt-7 inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-panel-high px-6 font-heading text-sm font-bold hover:bg-panel-hover">Select Cinema<Icon name="arrow" /></Link>
           {trailer && <a href={trailer} target="_blank" rel="noopener noreferrer" className="mt-7 inline-flex min-h-12 items-center justify-center gap-3 rounded-lg bg-action px-6 font-heading text-sm font-bold text-on-action hover:bg-action-hover"><Icon name="play" />Watch Trailer <span className="sr-only">(opens in a new tab)</span></a>}
         </div>
       </div>

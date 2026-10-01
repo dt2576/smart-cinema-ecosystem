@@ -159,8 +159,14 @@ for dataset, safe reruns, privileges, date behavior and verification limitations
 The first Admin area is available at <http://localhost:3000/admin>. An existing
 active ADMIN can use the normal login to create Movie drafts, edit supported
 content/Genres, and publish/unpublish. Changes persist through authorized backend
-APIs and the same catalog consumed by Customer Home/Movies. No Delete or other
-Admin module is exposed.
+APIs and the same catalog consumed by Customer Home/Movies. No Delete is exposed.
+
+Admin also manages [Cinema/Hall/Seat configuration](docs/development/admin-cinema-configuration.md)
+and [Showtimes](docs/development/admin-showtime-management.md) at
+<http://localhost:3000/admin/showtimes>. V12 authoring atomically initializes
+membership and protects transactional history. Customer Cinema/Showtime/Seat-map
+reads use real APIs; Seat selection/countdown and downstream checkout remain
+explicit local previews with no real Hold or Booking.
 
 Provision a dedicated development Admin with **`pnpm admin:dev`** after setting
 local `DEV_ADMIN_*` inputs in ignored `backend/.env`. Registration and demo seed

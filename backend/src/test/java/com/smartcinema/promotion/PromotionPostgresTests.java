@@ -321,6 +321,11 @@ class PromotionPostgresTests {
             long parent = switch (table) { case "movies" -> movie; case "cinemas" -> cinema; case "halls" -> hall; default -> showtime; };
             String original = table.equals("movies") ? "PUBLISHED" : table.equals("showtimes") ? "OPEN_FOR_BOOKING" : "ACTIVE";
             String blocked = table.equals("movies") ? "UNPUBLISHED" : table.equals("showtimes") ? "CANCELLED" : "INACTIVE";
+            if (table.equals("showtimes")) {
+                assertThatThrownBy(() -> jdbc.update("UPDATE showtimes SET status=? WHERE id=?", blocked, parent)).isInstanceOf(org.springframework.dao.DataAccessException.class);
+                assertThat(jdbc.queryForObject("SELECT status FROM showtimes WHERE id=?", String.class, parent)).isEqualTo(original);
+                continue;
+            }
             jdbc.update("UPDATE " + table + " SET status=? WHERE id=?", blocked, parent);
             assertThat(applyHttp(id, user, code)).isEqualTo(409);
             mvc.perform(delete("/api/v1/bookings/" + id + "/promotion").with(customer(user))).andExpect(status().isConflict());

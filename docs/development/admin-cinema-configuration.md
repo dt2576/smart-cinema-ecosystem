@@ -60,9 +60,10 @@ Run backend `mvn verify` against a dedicated local PostgreSQL database with the
 existing integration flags, including `MOVIE_DB_TESTS=true` for Admin tests and
 `DEMO_DB_TESTS=true` for seed compatibility. Run frontend `pnpm exec tsc --noEmit`,
 `pnpm lint`, `pnpm test`, `pnpm build`, `pnpm test:e2e`. Set the configured browser
-channel where required by the machine. The Showtime loading test controls only
-local adapter timers and retains its loading assertion without production delays
-or retry masking.
+channel where required by the machine. The Showtime loading test controls the
+public read response and retains its loading assertion without production delays
+or retry masking. See [Showtime management](admin-showtime-management.md) for the
+V12 writer and current Customer read integration.
 
 No seed reset is needed. Live verification creates a separate uniquely named
 Cinema/Hall/layout through normal Admin APIs and leaves those verification

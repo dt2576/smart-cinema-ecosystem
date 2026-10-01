@@ -1,11 +1,15 @@
-// Local preview models, not a backend DTO or persisted Showtime status enum.
+// UI projections shared by real discovery reads and isolated legacy test fixtures.
 export type ShowtimeOption = {
   id: string;
   movieId: string;
   cinemaId: string;
   hall: { id: string; name: string };
   startsAt: string;
-  hasAvailableSeats: boolean;
+  // Legacy fixture hint only. Public discovery does not promise Seat availability.
+  hasAvailableSeats?: boolean;
+  endsAt?: string;
+  bookingCutOff?: string;
+  timeZone?: string;
 };
 
 export type ShowtimeSchedule = { dates: string[]; items: ShowtimeOption[] };

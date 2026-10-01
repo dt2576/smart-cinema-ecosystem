@@ -331,6 +331,10 @@ class PaymentPostgresTests {
             long parent = switch (table) { case "movies" -> movie; case "cinemas" -> cinema; case "halls" -> hall; default -> showtime; };
             String original = table.equals("movies") ? "PUBLISHED" : table.equals("showtimes") ? "OPEN_FOR_BOOKING" : "ACTIVE";
             String blocked = table.equals("movies") ? "UNPUBLISHED" : table.equals("showtimes") ? "CANCELLED" : "INACTIVE";
+            if (table.equals("showtimes")) {
+                assertThatThrownBy(() -> jdbc.update("UPDATE showtimes SET status=? WHERE id=?", blocked, parent)).isInstanceOf(org.springframework.dao.DataAccessException.class);
+                noAttempt(id); continue;
+            }
             jdbc.update("UPDATE " + table + " SET status=? WHERE id=?", blocked, parent); assertThat(initiateHttp(id, user)).isEqualTo(409);
             jdbc.update("UPDATE " + table + " SET status=? WHERE id=?", original, parent);
         }

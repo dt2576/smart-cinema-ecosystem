@@ -1,3 +1,4 @@
+import { mockDiscoveryReads, isCustomerReadPath } from "./helpers/customer-discovery";
 import { test, expect, type Page, type TestInfo } from "@playwright/test";
 import { resolve } from "node:path";
 
@@ -8,6 +9,7 @@ const PROFILE = { fullName: "Cinema Customer", email: "customer@example.test", p
 const TOKEN = { accessToken: "qa-access", tokenType: "Bearer", expiresIn: 3600, refreshToken: "qa-refresh", refreshExpiresIn: 86400, userId: 1, email: PROFILE.email, fullName: PROFILE.fullName, role: "CUSTOMER" };
 
 async function mockCatalog(page: Page) {
+  await mockDiscoveryReads(page);
   await page.route("https://media.example.test/**", route => route.fulfill({ path: resolve("public/images/movies/dune-part-two.jpg") }));
   await page.route("**/api/v1/movies?**", route => {
     const params = new URL(route.request().url()).searchParams;
@@ -38,7 +40,7 @@ for (const mobile of [false, true]) test(`complete Customer journey keeps bounda
   page.on("pageerror", error => errors.push(error.message));
   page.on("request", request => {
     const url = new URL(request.url());
-    if (url.pathname.startsWith("/api/") && !["/api/v1/movies", `/api/v1/movies/${MOVIE_ID}`, "/api/v1/genres", "/api/v1/auth/tokens", "/api/v1/profile", "/api/v1/auth/token-revocations"].includes(url.pathname)) unexpected.push(url.pathname);
+    if (url.pathname.startsWith("/api/") && !isCustomerReadPath(url.pathname) && !["/api/v1/movies", `/api/v1/movies/${MOVIE_ID}`, "/api/v1/genres", "/api/v1/auth/tokens", "/api/v1/profile", "/api/v1/auth/token-revocations"].includes(url.pathname)) unexpected.push(url.pathname);
   });
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(MOVIE.title);
@@ -54,7 +56,7 @@ for (const mobile of [false, true]) test(`complete Customer journey keeps bounda
   await page.getByRole("radio", { name: "Smart Cinema Landmark", exact: true }).check();
   await capture(page, info, "04-cinema");
   await page.getByRole("button", { name: "Continue to Showtimes" }).click();
-  await page.getByRole("radio", { name: "Hall 1 10:00 Available", exact: true }).check();
+  await page.getByRole("radio", { name: "Hall 1 10:00 Open for booking", exact: true }).check();
   await capture(page, info, "05-showtime");
   await page.getByRole("button", { name: "Continue to Seat Selection" }).click();
   await page.getByRole("button", { name: "E1-2, Couple, 2 guests, Available", exact: true }).click();

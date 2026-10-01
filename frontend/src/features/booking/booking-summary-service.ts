@@ -3,12 +3,13 @@ import type { ConcessionItem, ConcessionQuantities } from "@/features/concession
 import type { SeatUnit } from "@/features/seat/seat.types";
 
 // UI fixtures only, not a pricing policy. COUPLE has its own whole-unit price.
-export const PREVIEW_SEAT_PRICES: Record<SeatUnit["type"], number> = { STANDARD: 90000, COUPLE: 150000 };
+export const PREVIEW_SEAT_PRICES: Record<Exclude<SeatUnit["type"], "VIP">, number> = { STANDARD: 90000, COUPLE: 150000 };
 
 export function createBookingSummaryPreview(units: SeatUnit[], catalog: ConcessionItem[], quantities: ConcessionQuantities): BookingSummaryPreview | null {
   if (!units.length || new Set(units.map(unit => unit.id)).size !== units.length || new Set(catalog.map(item => item.id)).size !== catalog.length) return null;
   if (units.some(unit => unit.availability !== "AVAILABLE" || unit.hallId !== units[0].hallId || unit.showtimeId !== units[0].showtimeId || !Object.hasOwn(PREVIEW_SEAT_PRICES, unit.type))) return null;
-  const seats = units.map(unit => ({ unit, amount: PREVIEW_SEAT_PRICES[unit.type] }));
+  // Unknown fixture pricing (including VIP) is rejected above; never invent a rate.
+  const seats = units.map(unit => ({ unit, amount: PREVIEW_SEAT_PRICES[unit.type as keyof typeof PREVIEW_SEAT_PRICES] }));
   const concessions: BookingSummaryPreview["concessions"] = [];
   for (const [id, quantity] of Object.entries(quantities)) {
     const item = catalog.find(candidate => candidate.id === id && candidate.available);

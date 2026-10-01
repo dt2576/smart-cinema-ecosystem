@@ -46,7 +46,7 @@ export function toggleSeatUnit(selection: SeatPreviewSelection, unitId: string, 
 }
 
 export function createConcessionPreviewHandoff(selection: SeatPreviewSelection, map: SeatMap, showtime: ShowtimeOption, now: number): ConcessionPreviewHandoff | null {
-  if (!selection.unitIds.length || new Set(selection.unitIds).size !== selection.unitIds.length || selection.expiresAt === null || now >= selection.expiresAt || !(Date.parse(showtime.startsAt) > now) || !showtime.hasAvailableSeats || map.showtimeId !== showtime.id || map.hallId !== showtime.hall.id) return null;
+  if (!selection.unitIds.length || new Set(selection.unitIds).size !== selection.unitIds.length || selection.expiresAt === null || now >= selection.expiresAt || !(Date.parse(showtime.startsAt) > now) || showtime.hasAvailableSeats === false || (showtime.bookingCutOff && !(Date.parse(showtime.bookingCutOff) > now)) || map.showtimeId !== showtime.id || map.hallId !== showtime.hall.id) return null;
   const units = selection.unitIds.map(id => map.units.find(unit => unit.id === id));
   if (units.some(unit => !unit || unit.availability !== "AVAILABLE" || unit.hallId !== map.hallId || unit.showtimeId !== map.showtimeId)) return null;
   return { movieId: showtime.movieId, cinemaId: showtime.cinemaId, showtimeId: showtime.id, hallId: map.hallId, seatUnitIds: [...selection.unitIds], guestCount: units.reduce((sum, unit) => sum + seatUnitCapacity(unit!), 0) };

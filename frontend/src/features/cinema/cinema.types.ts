@@ -1,4 +1,4 @@
-// UI-only preview model. These are not backend status values or a proposed API DTO.
+// UI projection: selectionState is selectable presentation, not stored Cinema status.
 export type CinemaOption = {
   id: string;
   name: string;

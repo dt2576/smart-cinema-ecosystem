@@ -59,13 +59,14 @@ public class AuthSecurityConfiguration {
 		RequestMatcher adminCinemas = PathPatternRequestMatcher.pathPattern("/api/v1/admin/cinemas/**");
 		RequestMatcher adminHalls = PathPatternRequestMatcher.pathPattern("/api/v1/admin/halls/**");
 		RequestMatcher adminSeats = PathPatternRequestMatcher.pathPattern("/api/v1/admin/seats/**");
+		RequestMatcher adminShowtimes = PathPatternRequestMatcher.pathPattern("/api/v1/admin/showtimes/**");
 
 		return http
 				.csrf(csrf -> csrf.ignoringRequestMatchers(
 						registrationEndpoint, loginEndpoint, tokenRenewalEndpoint,
 						tokenRevocationEndpoint, profileEndpoint, holdAcquire, holdRelease, bookingCreate, bookingCancel,
 						concessionAdd, concessionUpdate, concessionRemove, promotionApply, promotionRemove, paymentInitiate, paymentSubmit,
-						adminMovies, adminCinemas, adminHalls, adminSeats))
+						adminMovies, adminCinemas, adminHalls, adminSeats, adminShowtimes))
 				.authorizeHttpRequests(authorize -> authorize
 						.requestMatchers(PathPatternRequestMatcher.pathPattern("/api/v1/admin/**")).hasRole("ADMIN")
 						.requestMatchers(PathPatternRequestMatcher.pathPattern(HttpMethod.GET,"/api/v1/payments/vnpay/ipn"),

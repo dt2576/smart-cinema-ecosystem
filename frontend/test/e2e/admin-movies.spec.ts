@@ -50,7 +50,7 @@ test("Admin verification failure can retry and verified backend identity control
   await expect(page.getByText("Temporary outage")).toBeVisible();
   await page.getByRole("button", { name: "Retry access check" }).click();
   await expect(page.getByRole("heading", { name: "Admin Home" })).toBeVisible();
-  await expect(page.getByRole("navigation", { name: "Admin navigation" }).getByRole("link")).toHaveCount(3);
+  await expect(page.getByRole("navigation", { name: "Admin navigation" }).getByRole("link")).toHaveCount(4);
   await page.getByRole("link", { name: "Movies", exact: true }).click();
   await expect(page.getByRole("heading", { name: movie.title })).toBeVisible();
   expect(calls).toBe(3);

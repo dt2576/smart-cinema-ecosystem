@@ -352,7 +352,8 @@ class VnpayPostgresTests {
     }
     @Test void currentShowtimeEligibilityIsRevalidatedAndUnpaidQrNeverAppears() {
         long p=attempt(couple);bind(p);
-        jdbc.update("UPDATE showtimes SET status='STARTED' WHERE id=?",showtime);
+        assertThatThrownBy(()->jdbc.update("UPDATE showtimes SET status='STARTED' WHERE id=?",showtime)).isInstanceOf(org.springframework.dao.DataAccessException.class);
+        jdbc.update("UPDATE halls SET status='INACTIVE' WHERE id=?",hall);
         result(p,"SUCCESS",digest());
         assertThat(jdbc.queryForObject("SELECT status FROM payment_transactions WHERE id=?",String.class,p)).isEqualTo("SUCCESS");
         assertThat(jdbc.queryForObject("SELECT booking_qr_token FROM bookings WHERE id=?",String.class,booking(p))).isNull();

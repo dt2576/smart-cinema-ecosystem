@@ -1,6 +1,6 @@
 # Smart Cinema project context
 
-Last reconciled: 2026-10-02, migration head V11. This is a repository-owned orientation summary, not a replacement for requirements, API contracts or canonical AI instructions. Use [current handoff](current-handoff.md) for the immediate task and update it as work progresses.
+Last reconciled: 2026-10-02, migration head V12. This is a repository-owned orientation summary, not a replacement for requirements, API contracts or canonical AI instructions. Use [current handoff](current-handoff.md) for the immediate task and update it as work progresses.
 
 ## How a new AI agent should start
 
@@ -52,6 +52,7 @@ Some older design headers still describe all domain persistence as proposed, and
 - No overlapping operational Showtimes in one Hall, including the stored configured buffer; follow the V4 exclusion and existing scheduling lifecycle rules.
 - Hold/Booking writes share a Showtime gate and ordered resource locks, protected database routines and restricted runtime privileges. Preserve exact origin identities, aggregate expiry/cancellation and historical rows. Consult the integrity design before modifying guards or lock order.
 - V11 Admin physical configuration uses a separate NOLOGIN definer with controlled execution, never runtime Seat ownership/direct DML. Actor → Cinema → Hall-exclusive → Seat coordination precedes conflicting Showtime/Hold/settlement gates. Hall membership is permanent; initialized capacity cannot change; referenced Seat row/number/type cannot change. Unreferenced edits preserve guest capacity. See the [Admin configuration contract](../api/admin-cinema-configuration-contract-v1.0.md).
+- V12 Admin Showtime authoring uses that configuration-owner boundary with only guarded runtime EXECUTE. New authoring requires PUBLISHED Movie, ACTIVE parents and a complete guest-capacity layout; Showtime plus all physical membership commit together. Hall is permanent. New/retimed schedules derive end from persisted Movie duration, occupied_until=end and booking_cut_off=start. Price is exact nonnegative numeric(19,4), including zero/fractions. Price/status-only edits preserve saved times despite later master duration changes. Existing half-open Hall exclusion is reused; any Hold/Booking history freezes schedule, price, membership and lifecycle. Future unreferenced forward preparation/opening/cancellation only; no Admin STARTED/ENDED, regressions or cancelled reopening. See the [Admin Showtime contract](../api/admin-showtime-contract-v1.0.md).
 
 ## Concession, Promotion and Payment boundaries
 
@@ -80,14 +81,15 @@ Customer frontend new-feature development is **frozen after final QA**; only reg
 The full preview journey exists: Home/Auth/Profile → Movies → Movie Detail → Cinema → Showtime → Seats → Concessions → Booking Summary with Promotion → Payment Method → Processing → Result → My Bookings / Tickets / Booking QR.
 
 - Auth/Profile, Movie and Genre use existing real APIs where implemented; Home uses the real Movie client.
-- Downstream Cinema/Showtime/Seat/Concession/Booking/Payment/Ticket flows still use typed local adapters/fixtures. Backend Discovery, Hold and Booking APIs existing does **not** mean frontend adapters have been connected.
+- Cinema discovery, Showtime query/detail and Seat-map READ now use existing real public APIs. Server date options/IANA zone and eligibility remain authoritative; no invented sold-out/count/pricing fields. STANDARD/VIP/COUPLE and AVAILABLE/HELD/BOOKED/UNAVAILABLE are read from the real map. Ordered labels are a visual layout projection, not stored physical coordinates.
+- Seat selection/countdown remains local and creates no Hold/reservation. Concession/Booking/Promotion/Payment/Ticket/history/QR frontend adapters remain previews; backend APIs existing does **not** mean checkout has been connected. Existing Summary demo fixtures price STANDARD/COUPLE only; real VIP map display does not invent a VIP checkout price. See the [Showtime integration guide](../development/admin-showtime-management.md).
 - Preserve original preview expiry, atomic COUPLE selection and truthful preview messaging. Local Payment success does not issue a real Booking/Ticket/QR. Mock paid history/QR fixtures are demonstrations, not ownership or verified-payment evidence.
 - Do not reintroduce unsupported Movie rating/popularity/cast/pricing controls or Profile biometric/SMS/lounge/wallet features.
 - [Final Customer QA](../reports/2026-09-28_customer-frontend-final-qa_report.md): TypeScript, lint, build, desktop/mobile/accessibility review PASS; 49 unit tests and 73 Playwright tests PASS. Auth numeric IDs, missing production checkout integrations and Cinema-first behavior remain explicit limitations.
 
 ## Current implementation: backend and migrations
 
-Migration head: **V11**. Historical migrations must never be edited or checksum-repaired to accommodate changes; use reviewed forward migrations. No new migration is allocated by this handoff.
+Migration head: **V12**. Historical migrations must never be edited or checksum-repaired to accommodate changes; use reviewed forward migrations. No further migration is allocated by this handoff.
 
 | Migration | Persistence |
 |---|---|
@@ -102,12 +104,14 @@ Migration head: **V11**. Historical migrations must never be edited or checksum-
 | [V9](../../backend/src/main/resources/db/migration/V9__create_payment_initiation.sql) | Internal payment_transactions and atomic first-attempt composition freeze |
 | [V10](../../backend/src/main/resources/db/migration/V10__integrate_sandbox_payment_finalization.sql) | Sandbox binding, protected results/evidence/reconciliation, atomic sale, Tickets/Booking QR/audit |
 | [V11](../../backend/src/main/resources/db/migration/V11__guard_admin_cinema_configuration.sql) | Guarded Admin Cinema/Hall/Seat configuration; narrow execution privileges, capacity and referenced-identity protection |
+| [V12](../../backend/src/main/resources/db/migration/V12__guard_admin_showtime_configuration.sql) | Guarded Admin Showtime authoring + atomic membership, narrow delegated initializer, permanent Hall and full schedule/price/history/lifecycle protection |
 
-Implemented and verified slices: Auth/Profile, Movie, Genre, Customer Discovery, authoritative Seat/Hold, pre-Payment Booking, Concession catalog/composition, Promotion composition, Payment initiation/freeze, locally verified VNPAY Sandbox result/finalization adapters, Admin Movie and guarded Admin Cinema/Hall/Seat configuration. Real provider interoperability remains unverified and disabled by default. Current contract entry points:
+Implemented slices: Auth/Profile, Movie, Genre, Customer Discovery, authoritative Seat/Hold, pre-Payment Booking, Concession catalog/composition, Promotion composition, Payment initiation/freeze, locally verified VNPAY Sandbox result/finalization adapters, Admin Movie, guarded Admin Cinema/Hall/Seat and Admin Showtime configuration plus real Customer discovery/Seat-map reads. Real provider interoperability remains unverified and disabled by default. Current contract entry points:
 
 | Contract | Important boundary |
 |---|---|
-| [Admin configuration v1.0](../api/admin-cinema-configuration-contract-v1.0.md) | Real Cinema/Hall/Seat API/UI; active ADMIN authority, whole-unit capacity, no Delete/reshape or Showtime authoring |
+| [Admin configuration v1.0](../api/admin-cinema-configuration-contract-v1.0.md) | Real Cinema/Hall/Seat API/UI; active ADMIN authority, whole-unit capacity, no Delete/reshape; historical scope excludes Showtime |
+| [Admin Showtime v1.0](../api/admin-showtime-contract-v1.0.md) | V12 protected authoring, exact times/money, conservative lifecycle/history freeze, real Customer READ integration only |
 | [Movie v1.0](../api/movie-service-contract-v1.0.md) | DRAFT/PUBLISHED/UNPUBLISHED; only PUBLISHED public catalog/detail; approved publication/search/filter/sort rules |
 | [Genre options v1.0](../api/genre-options-contract-v1.0.md) | Public filtering options; no Genre admin CRUD |
 | [Discovery v1.0](../api/customer-discovery-contract-v1.0.md) | Movie → Cinema → Showtime read APIs; Hall projection; no inferred Seat counts/pricing/format; chain IANA zone defaults to Asia/Ho_Chi_Minh |

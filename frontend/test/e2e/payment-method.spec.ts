@@ -1,13 +1,15 @@
+import { mockDiscoveryReads, isCustomerReadPath } from "./helpers/customer-discovery";
 import { test, expect, type Page } from "@playwright/test";
 import { resolve } from "node:path";
 
 const MOVIE_ID = "9223372036854775807";
 const CINEMA_ID = "9007199254740993";
-const SEATS = `/showtimes/${CINEMA_ID}01/seats?movieId=${MOVIE_ID}&cinemaId=${CINEMA_ID}&date=2030-01-01`;
+const SEATS = `/showtimes/9007199254741001/seats?movieId=${MOVIE_ID}&cinemaId=${CINEMA_ID}&date=2030-01-01`;
 const PAYMENT = "/bookings/preview/payment";
 const VNPAY = "VNPay · Available preview";
 const MOMO = "MoMo · Available preview";
 async function enter(page: Page, scenario = "default", time = "09:00:00", withAddOns = true) {
+  await mockDiscoveryReads(page);
   await page.addInitScript(() => {
     new MutationObserver(() => {
       if (document.body?.textContent?.includes("Loading payment methods...")) document.documentElement.dataset.paymentLoadingObserved = "true";
@@ -36,7 +38,7 @@ test("Payment preserves complete reviewed context and allows exactly one availab
   const unexpected: string[] = [];
   page.on("request", request => {
     const url = new URL(request.url());
-    if (url.pathname.startsWith("/api/") && url.pathname !== `/api/v1/movies/${MOVIE_ID}`) unexpected.push(url.href);
+    if (url.pathname.startsWith("/api/") && (!isCustomerReadPath(url.pathname) || request.method() !== "GET")) unexpected.push(url.href);
     if (!['127.0.0.1', 'localhost', 'media.example.test'].includes(url.hostname)) unexpected.push(url.href);
   });
   await enter(page);

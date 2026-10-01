@@ -1,15 +1,17 @@
+import { mockDiscoveryReads, isCustomerReadPath } from "./helpers/customer-discovery";
 import { test, expect, type Page } from "@playwright/test";
 import { resolve } from "node:path";
 
 const MOVIE_ID = "9223372036854775807";
 const CINEMA_ID = "9007199254740993";
-const SHOWTIME_ID = `${CINEMA_ID}01`;
+const SHOWTIME_ID = "9007199254741001";
 const SHOWTIMES = `/movies/${MOVIE_ID}/cinemas/${CINEMA_ID}/showtimes`;
 const ROUTE = `/showtimes/${SHOWTIME_ID}/seats?movieId=${MOVIE_ID}&cinemaId=${CINEMA_ID}&date=2030-01-01`;
 const movie = { id: MOVIE_ID, title: "Seat Journey", duration: 125, releaseDate: "2029-01-01", ageRating: "T13", language: "English", posterUrl: "https://media.example.test/seat.jpg", status: "PUBLISHED", genres: [], description: null, trailerUrl: null };
 const coupleName = "E1-2, Couple, 2 guests, Available";
 
 async function prepare(page: Page) {
+  await mockDiscoveryReads(page);
   await page.clock.setFixedTime(new Date("2030-01-01T09:00:00+07:00"));
   await page.route(`**/api/v1/movies/${MOVIE_ID}`, route => route.fulfill({ json: movie }));
   await page.route("https://media.example.test/**", route => route.fulfill({ path: resolve("public/images/movies/dune-part-two.jpg") }));
@@ -25,7 +27,7 @@ test("Showtime opens canonical Seats with context and indivisible couple selecti
   const apiPaths: string[] = [];
   page.on("request", request => { const path = new URL(request.url()).pathname; if (path.startsWith("/api/")) apiPaths.push(path); });
   await page.goto(`${SHOWTIMES}?from=${encodeURIComponent("/movies?q=journey&page=2")}`);
-  await page.getByRole("radio", { name: "Hall 1 10:00 Available" }).check();
+  await page.getByRole("radio", { name: "Hall 1 10:00 Open for booking" }).check();
   await page.getByRole("button", { name: "Continue to Seat Selection" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-seat-loading-observed", "true");
   await expect(page).toHaveURL(new RegExp(`/showtimes/${SHOWTIME_ID}/seats\\?`));
@@ -46,9 +48,9 @@ test("Showtime opens canonical Seats with context and indivisible couple selecti
   await page.getByRole("button", { name: "E1-2, Couple, 2 guests, Selected", exact: true }).click();
   await expect(summary).toContainText("1 Seat Unit · 1 guest");
   await page.getByRole("link", { name: "Change Showtime" }).click();
-  await expect(page.getByRole("radio", { name: "Hall 1 10:00 Available" })).toBeChecked();
+  await expect(page.getByRole("radio", { name: "Hall 1 10:00 Open for booking" })).toBeChecked();
   await expect(page).toHaveURL(/from=/);
-  expect(apiPaths.every(path => path === `/api/v1/movies/${MOVIE_ID}`)).toBe(true);
+  expect(apiPaths.every(isCustomerReadPath)).toBe(true);
 });
 
 test("preview countdown never extends when adding units and expiry blocks Concession handoff", async ({ page }) => {
@@ -89,7 +91,7 @@ test("missing, foreign, sold-out, past and hidden Movie contexts cannot expose s
   await prepare(page);
   await page.goto(`/showtimes/${SHOWTIME_ID}/seats`);
   await expect(page.getByRole("heading", { name: "Invalid Seat Selection link" })).toBeVisible();
-  for (const route of [ROUTE.replace(`cinemaId=${CINEMA_ID}`, "cinemaId=102"), ROUTE.replace("date=2030-01-01", "date=2030-01-02"), ROUTE.replace(`/showtimes/${SHOWTIME_ID}`, `/showtimes/${CINEMA_ID}02`), ROUTE.replace(`/showtimes/${SHOWTIME_ID}`, `/showtimes/${CINEMA_ID}00`)]) {
+  for (const route of [ROUTE.replace(`cinemaId=${CINEMA_ID}`, "cinemaId=102"), ROUTE.replace("date=2030-01-01", "date=2030-01-02"), ROUTE.replace(`/showtimes/${SHOWTIME_ID}`, `/showtimes/9007199254741099`), ROUTE.replace(`/showtimes/${SHOWTIME_ID}`, `/showtimes/9007199254741098`)]) {
     await page.goto(route);
     await expect(page.getByRole("heading", { name: "Showtime unavailable" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Continue to Concessions" })).toHaveCount(0);
@@ -138,4 +140,19 @@ test("keyboard/mobile map and Concession route are usable; returning clears prev
   await expect(page.getByRole("timer")).toHaveText("Not started");
   await expect(next).toBeDisabled();
   await expect(page.getByText("0 Seat Units · 0 guests", { exact: true })).toBeVisible();
+});
+
+test("authoritative Held and VIP units display independently from local selection", async ({ page }) => {
+  await prepare(page);
+  await page.route(`**/api/v1/showtimes/${SHOWTIME_ID}/seats`, route => route.fulfill({ json: { showtimeId: SHOWTIME_ID, movieId: MOVIE_ID, cinemaId: CINEMA_ID, hallId: "90071992547409931", serverTime: "2030-01-01T02:00:00Z", units: [
+    { id: "9007199254743001", row: "A", number: "1", type: "VIP", guestCount: 1, availability: "HELD" },
+    { id: "9007199254743002", row: "A", number: "2", type: "VIP", guestCount: 1, availability: "AVAILABLE" },
+    { id: "9007199254743003", row: "B", number: "1-2", type: "COUPLE", guestCount: 2, availability: "AVAILABLE" },
+  ] } }));
+  await page.goto(ROUTE);
+  await expect(page.getByRole("button", { name: "A1, VIP, 1 guest, Held", exact: true })).toBeDisabled();
+  await page.getByRole("button", { name: "A2, VIP, 1 guest, Available", exact: true }).click();
+  await page.getByRole("button", { name: "B1-2, Couple, 2 guests, Available", exact: true }).click();
+  await expect(page.getByRole("complementary", { name: "Seat selection summary" })).toContainText("2 Seat Units · 3 guests");
+  await expect(page.getByText(/no server Hold or reservation is created/)).toBeVisible();
 });

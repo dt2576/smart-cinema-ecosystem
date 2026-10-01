@@ -21,7 +21,7 @@ class VnpayMigrationPostgresTests {
     @Test
     void freshAndPopulatedV9UpgradePreserveAttemptsAndChecksums() throws Exception {
         flyway.validate();
-        assertThat(Integer.parseInt(flyway.info().current().getVersion().getVersion())).isEqualTo(11);
+        assertThat(Integer.parseInt(flyway.info().current().getVersion().getVersion())).isEqualTo(12);
         String schema = "vnpay_upgrade_" + UUID.randomUUID().toString().replace("-", "");
         try {
             var old = Flyway.configure().dataSource(dataSource).defaultSchema(schema).schemas(schema, "public")

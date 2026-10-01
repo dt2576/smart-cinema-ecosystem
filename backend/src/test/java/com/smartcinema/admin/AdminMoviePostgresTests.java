@@ -145,7 +145,7 @@ class AdminMoviePostgresTests {
         mvc.perform(post("/api/v1/admin/movies").with(admin()).contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(unknown))).andExpect(status().isBadRequest());
         mvc.perform(post("/api/v1/admin/movies").with(admin()).contentType(MediaType.APPLICATION_JSON).content("[]")).andExpect(status().isBadRequest());
         mvc.perform(delete("/api/v1/admin/movies/"+movie.id()).with(admin()).with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf())).andExpect(status().isMethodNotAllowed());
-        assertThat(jdbc.queryForObject("SELECT max(version::integer) FROM flyway_schema_history WHERE success",Integer.class)).isEqualTo(11);
+        assertThat(jdbc.queryForObject("SELECT max(version::integer) FROM flyway_schema_history WHERE success",Integer.class)).isEqualTo(12);
     }
     @Test void approvedTransitionsAndUnknownStoredStatusFailClosed() {
         var movie=create(" transitions"); long id=Long.valueOf(movie.id());
