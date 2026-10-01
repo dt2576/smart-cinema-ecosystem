@@ -1,6 +1,6 @@
 # Smart Cinema project context
 
-Last reconciled: 2026-09-30, migration head V10. This is a repository-owned orientation summary, not a replacement for requirements, API contracts or canonical AI instructions. Use [current handoff](current-handoff.md) for the immediate task and update it as work progresses.
+Last reconciled: 2026-10-02, migration head V11. This is a repository-owned orientation summary, not a replacement for requirements, API contracts or canonical AI instructions. Use [current handoff](current-handoff.md) for the immediate task and update it as work progresses.
 
 ## How a new AI agent should start
 
@@ -51,6 +51,7 @@ Some older design headers still describe all domain persistence as proposed, and
 - No new Hold/Booking after Showtime start or booking cutoff. Revalidate eligibility after transaction locks using database wall-clock time, not an earlier discovery response or client timestamp.
 - No overlapping operational Showtimes in one Hall, including the stored configured buffer; follow the V4 exclusion and existing scheduling lifecycle rules.
 - Hold/Booking writes share a Showtime gate and ordered resource locks, protected database routines and restricted runtime privileges. Preserve exact origin identities, aggregate expiry/cancellation and historical rows. Consult the integrity design before modifying guards or lock order.
+- V11 Admin physical configuration uses a separate NOLOGIN definer with controlled execution, never runtime Seat ownership/direct DML. Actor → Cinema → Hall-exclusive → Seat coordination precedes conflicting Showtime/Hold/settlement gates. Hall membership is permanent; initialized capacity cannot change; referenced Seat row/number/type cannot change. Unreferenced edits preserve guest capacity. See the [Admin configuration contract](../api/admin-cinema-configuration-contract-v1.0.md).
 
 ## Concession, Promotion and Payment boundaries
 
@@ -86,7 +87,7 @@ The full preview journey exists: Home/Auth/Profile → Movies → Movie Detail �
 
 ## Current implementation: backend and migrations
 
-Migration head: **V10**. Historical migrations must never be edited or checksum-repaired to accommodate changes; use reviewed forward migrations. No new migration is allocated by this handoff.
+Migration head: **V11**. Historical migrations must never be edited or checksum-repaired to accommodate changes; use reviewed forward migrations. No new migration is allocated by this handoff.
 
 | Migration | Persistence |
 |---|---|
@@ -100,11 +101,13 @@ Migration head: **V10**. Historical migrations must never be edited or checksum-
 | [V8](../../backend/src/main/resources/db/migration/V8__enable_promotion_composition.sql) | Promotion cap, Booking term snapshots and guarded apply/remove/recalculation |
 | [V9](../../backend/src/main/resources/db/migration/V9__create_payment_initiation.sql) | Internal payment_transactions and atomic first-attempt composition freeze |
 | [V10](../../backend/src/main/resources/db/migration/V10__integrate_sandbox_payment_finalization.sql) | Sandbox binding, protected results/evidence/reconciliation, atomic sale, Tickets/Booking QR/audit |
+| [V11](../../backend/src/main/resources/db/migration/V11__guard_admin_cinema_configuration.sql) | Guarded Admin Cinema/Hall/Seat configuration; narrow execution privileges, capacity and referenced-identity protection |
 
-Implemented and verified slices: Auth/Profile, Movie, Genre, Customer Discovery, authoritative Seat/Hold, pre-Payment Booking, Concession catalog/composition, Promotion composition, Payment initiation/freeze and locally verified VNPAY Sandbox result/finalization adapters. Real provider interoperability remains unverified and disabled by default. Current contract entry points:
+Implemented and verified slices: Auth/Profile, Movie, Genre, Customer Discovery, authoritative Seat/Hold, pre-Payment Booking, Concession catalog/composition, Promotion composition, Payment initiation/freeze, locally verified VNPAY Sandbox result/finalization adapters, Admin Movie and guarded Admin Cinema/Hall/Seat configuration. Real provider interoperability remains unverified and disabled by default. Current contract entry points:
 
 | Contract | Important boundary |
 |---|---|
+| [Admin configuration v1.0](../api/admin-cinema-configuration-contract-v1.0.md) | Real Cinema/Hall/Seat API/UI; active ADMIN authority, whole-unit capacity, no Delete/reshape or Showtime authoring |
 | [Movie v1.0](../api/movie-service-contract-v1.0.md) | DRAFT/PUBLISHED/UNPUBLISHED; only PUBLISHED public catalog/detail; approved publication/search/filter/sort rules |
 | [Genre options v1.0](../api/genre-options-contract-v1.0.md) | Public filtering options; no Genre admin CRUD |
 | [Discovery v1.0](../api/customer-discovery-contract-v1.0.md) | Movie → Cinema → Showtime read APIs; Hall projection; no inferred Seat counts/pricing/format; chain IANA zone defaults to Asia/Ho_Chi_Minh |

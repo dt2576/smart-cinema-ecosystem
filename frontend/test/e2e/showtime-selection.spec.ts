@@ -14,15 +14,42 @@ async function prepare(page: Page) {
 
 test("Cinema to Showtime preserves context, groups Halls and blocks sold-out/past options", async ({ page }) => {
   await prepare(page);
+  // Hold only the local adapters' 350ms timers; React/navigation timers stay real.
+  await page.addInitScript(() => {
+    const originalSet = window.setTimeout.bind(window);
+    const originalClear = window.clearTimeout.bind(window);
+    const held = new Map<number, () => void>();
+    const control = { pending: () => held.size, releaseNext: () => {
+      const entry = held.entries().next().value;
+      if (!entry) return;
+      held.delete(entry[0]); originalClear(entry[0]); entry[1]();
+    } };
+    Object.assign(window, { showtimeAdapterTestControl: control });
+    window.setTimeout = ((handler: TimerHandler, delay?: number, ...args: unknown[]) => {
+      if (delay !== 350 || typeof handler !== "function") return originalSet(handler, delay, ...args);
+      const id = originalSet(() => {}, 2147483647);
+      held.set(id, () => handler(...args)); return id;
+    }) as typeof window.setTimeout;
+    window.clearTimeout = ((id?: number) => { if (id !== undefined) held.delete(id); originalClear(id); }) as typeof window.clearTimeout;
+  });
+  async function releaseAdapter() {
+    await page.waitForFunction(() => (window as unknown as { showtimeAdapterTestControl: { pending: () => number } }).showtimeAdapterTestControl.pending() > 0);
+    await page.evaluate(() => (window as unknown as { showtimeAdapterTestControl: { releaseNext: () => void } }).showtimeAdapterTestControl.releaseNext());
+  }
   const requests: string[] = [];
   page.on("request", request => { const path = new URL(request.url()).pathname; if (path.startsWith("/api/")) requests.push(path); });
   await page.goto(`/movies/${MOVIE_ID}/cinemas?cinemaId=${CINEMA_ID}&from=${encodeURIComponent("/movies?q=journey&page=2")}`);
+  await releaseAdapter();
+  await expect(page.getByRole("button", { name: "Continue to Showtimes" })).toBeEnabled();
   await page.getByRole("button", { name: "Continue to Showtimes" }).click();
   await expect(page).toHaveURL(new RegExp(ROUTE));
+  await expect(page.getByRole("status")).toBeVisible();
+  await releaseAdapter();
   const context = page.getByRole("region", { name: "Selected Movie and Cinema" });
   await expect(context).toContainText(movie.title);
   await expect(context).toContainText("Smart Cinema Landmark");
   await expect(page.getByText("Loading Showtimes…", { exact: true })).toBeVisible();
+  await releaseAdapter();
   await expect(page.getByRole("radio")).toHaveCount(7);
   await expect(page.getByRole("radio", { name: "Hall 1 00:00 Started / past" })).toBeDisabled();
   await expect(page.getByRole("radio", { name: "Hall 1 14:00 Sold out" })).toBeDisabled();
@@ -31,8 +58,11 @@ test("Cinema to Showtime preserves context, groups Halls and blocks sold-out/pas
   await page.getByRole("radio", { name: "Hall 1 10:00 Available" }).check();
   await expect(page).toHaveURL(new RegExp(`showtimeId=${CINEMA_ID}01`));
   await page.reload();
+  await releaseAdapter();
+  await releaseAdapter();
   await expect(page.getByRole("radio", { name: "Hall 1 10:00 Available" })).toBeChecked();
   await page.getByRole("link", { name: "Change Cinema" }).click();
+  await releaseAdapter();
   await expect(page.getByRole("radio", { name: "Smart Cinema Landmark", exact: true })).toBeChecked();
   await page.getByRole("link", { name: "Back to Movie" }).click();
   await expect(page.getByRole("link", { name: "Back to Movies", exact: true })).toHaveAttribute("href", /q=journey&page=2/);

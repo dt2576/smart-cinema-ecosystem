@@ -1,10 +1,10 @@
-﻿# Current AI handoff
+# Current AI handoff
 
-Last reconciled: 2026-10-01 after Development Admin provisioning implementation (live Neon verification PARTIAL). Earlier Admin work remains uncommitted; no commit is implied. Read [project context](project-context.md), AGENTS.md and Git status before editing.
+Last reconciled: 2026-10-02 after V11 Guarded Admin Cinema/Hall/Seat Configuration completed. Implementation, full regression and live Neon API/UI PASS. No new commit is implied. Read [project context](project-context.md), AGENTS.md and Git status before editing.
 
 ## Current milestone
 
-Backend Auth/Profile, Movie/Genre, Discovery, Seat/Hold, Booking, Concession, Promotion, Payment initiation/freeze and protected Sandbox result/finalization paths are implemented. Flyway head: **V10**, [migration](../../backend/src/main/resources/db/migration/V10__integrate_sandbox_payment_finalization.sql).
+Backend Auth/Profile, Movie/Genre, Discovery, Seat/Hold, Booking, Concession, Promotion, Payment initiation/freeze and protected Sandbox result/finalization paths are implemented. Flyway head: **V11**, [migration](../../backend/src/main/resources/db/migration/V11__guard_admin_cinema_configuration.sql). V1–V10 files and applied Neon checksums remain unchanged.
 
 The first real **Admin Foundation + Movie Management** slice is implemented:
 verified active ADMIN access, `/admin`, real Movie list/create/edit and approved
@@ -19,40 +19,61 @@ and `DEV_ADMIN_PHONE`. It rejects production/staging profiles, creates only abse
 ACTIVE ADMIN accounts and verifies matching reruns without mutation. Conflicting
 role/status/identity/password fails; no promotion or reset. Normal startup and
 registration are unchanged. Read the [provisioning guide](../development/development-admin-provisioning.md)
-and [latest report](../reports/2026-10-01_development-admin-provisioning_report.md).
-**Live Neon status: PARTIAL/DEFERRED**, because all four Admin inputs were absent
-at the final local preflight. The user said they would add them; do not assume
-that means completed. No Neon account/Movie write or live login/UI proof occurred.
-Existing Neon catalog/demo verification is earlier evidence, not an Admin write test.
+and [provisioning report](../reports/2026-10-01_development-admin-provisioning_report.md).
+**Live Neon Admin verification is now PASS:** normal login and signed JWT → active
+Admin API → Movie DRAFT/public hiding → publish/public visibility → edit → unpublish
+passed against PostgreSQL 18.6. Real browser login/list/publish/edit/unpublish and
+Customer detail visibility also passed without interception. Exactly one verification
+Movie was created: **ID `12`, Admin Verification Movie 20261001-222226**, left
+UNPUBLISHED. Existing Admin provisioning rerun returned UNCHANGED; no new account
+or seeded Movie change. Read the [historical live Movie report](../reports/2026-10-01_live-neon-admin-and-cinema-management-preflight_report.md).
+
+**Admin Cinema/Hall/Seat is implemented and COMPLETE.** The separately authorized
+V11 adds controlled configuration writers, a separate NOLOGIN function owner and
+narrow EXECUTE grants; no columns/tables/indexes or historical migration changes.
+Runtime still cannot directly INSERT/UPDATE/DELETE Seats, execute the deployment
+initializer or inherit/set the configuration owner. No trigger bypass.
+Read the [configuration contract](../api/admin-cinema-configuration-contract-v1.0.md),
+[developer guide](../development/admin-cinema-configuration.md) and
+[latest implementation report](../reports/2026-10-01_v11-admin-cinema-configuration_report.md).
+Real Admin APIs/UI provide Cinema list/create/edit/status, Hall list/create/edit/status
+and whole Seat initialization/status/safe metadata. Initialized Hall capacity is
+immutable; any Showtime membership/Hold/Booking Seat reference protects identity.
+No Delete, append/reshape, Manager authoring or Showtime Management.
+
+Live Neon PostgreSQL 18.6 migrated normally through Flyway, then Hibernate validate
+and startup passed. Normal Admin login/JWT created exactly one verification Cinema
+ID **4**, Hall ID **7** and Seat Units **271/272/273**: three units, four guests,
+including one whole COUPLE. Final verification hierarchy is INACTIVE. Plain ACTIVE
+public Cinema visibility passed; Movie-filtered discovery correctly excluded it
+without Showtime. All original three Cinemas/six Halls/270 units and seeded/
+transactional data were preserved. Real desktop/mobile Admin navigation/save passed;
+Admin Movie read and provisioning UNCHANGED rerun passed.
 
 **Local verification PASS; real VNPAY interoperability DEFERRED.** All external confirmation gates default false. No merchant credentials, real VNPAY calls or external charge were used. Historical VNPAY slice `mvn verify`: **231 tests, zero failures/errors/skips**, PostgreSQL 18.4, fresh migration and populated V9 upgrade, package build PASS. See [implementation report](../reports/2026-09-30_vnpay-sandbox-payment-backend_report.md).
 
 Customer frontend feature development remains frozen at previous preview QA.
-The Admin slice reran the Customer regression together with new Admin tests;
-use the latest provisioning report for current counts and results. Latest Maven verify:
-**265 tests PASS, zero failures/errors/skips**, PostgreSQL 18.4 and package build
-PASS, 2026-10-01 19:51:32 +07:00. Frontend TypeScript/lint/build and **54 unit tests
-PASS**, plus **82/82 Playwright tests PASS** (installed Edge, 9 Admin + 73 Customer),
-desktop/mobile/keyboard regression coverage. Earlier manual visual review belongs
-to the Admin Foundation report; live Neon browser smoke remains DEFERRED. Final
-documentation/links/whitespace and protected-scope hash checks are recorded in the
-latest provisioning report.
+Latest V11 Maven verify: **278 tests PASS, zero failures/errors/skips**, PostgreSQL
+18.4 and package build PASS, 2026-10-02 00:01:20 +07:00. Frontend TypeScript/lint/
+production build and **57 unit tests PASS**. Full Playwright: **87/87 PASS**, installed
+Edge, one worker, no retries. The prior Showtime loading-test race is resolved by
+holding only adapter timers in the test, asserting loading, releasing and checking
+options; no production delay or removed assertion. Final live desktop/mobile,
+documentation/links/whitespace, handoff, secrets and protected-scope checks PASS in
+the V11 report. Historical preflight 81/82 evidence remains unchanged in its report.
 
 ## Exact next task
 
-**Supply the four local DEV_ADMIN_* inputs, run `pnpm admin:dev` against the
-configured Neon development database, then verify normal Auth login → signed JWT
-→ `/api/v1/admin` → Movie DRAFT → publish → edit → unpublish through actual API/UI.**
-Use a uniquely named verification Movie and leave it UNPUBLISHED; prove public
-visibility transitions without API interception. Generate a new follow-up report
-and reconcile this handoff. Never print credentials or manufacture JWTs. No default
-Admin password or automatic privilege promotion exists. Public registration remains
-CUSTOMER-only. Do not alter seed/production accounts to claim verification.
+**Admin Showtime Management.** The V11 task is COMPLETE; STOP before this next
+slice unless separately requested. Read SRS, Discovery/Seat/Hold contracts, V1–V11
+and the configuration contract before defining the approved schedule/membership
+write boundary. Preserve eligibility/cutoff, ordered locks, referenced identities,
+financial snapshots and admission history. No generic table writes, trigger bypass
+or HTTP owner-role switching.
 
-After that, the next separately scoped Admin feature is Cinema Management. It has
-not been implemented or implicitly authorized by this handoff. Normal Customer
-downstream Discovery/Seat/Booking/Payment adapters still use previews; checkout
-integration is a separate task. `pnpm dev` and seeded Home/Movies remain available.
+Customer downstream Discovery/Seat/Booking/Payment adapters still use previews;
+checkout integration is a separate task. The root development command and seeded
+Home/Movies remain available.
 
 Latest developer slice: [demo seed report](../reports/2026-10-01_development-demo-seed_report.md)
 and [workflow](../development/demo-seed.md). `pnpm seed:demo` at root is opt-in, one-shot,
@@ -60,7 +81,7 @@ uses existing `.env`/Flyway/JPA validation, and commits only catalog/discovery d
 Actual Neon PostgreSQL 18.6 seed/reseed and public API reads PASS. Dataset: 7 Genres,
 10 PUBLISHED Movies, 3 Cinemas, 6 Halls, 270 Seat Units, 72 future Showtimes with
 3240 memberships, 5 Concessions and 2 date-namespaced Promotions. No Booking, Hold,
-Payment, evidence, Ticket, QR or sale was seeded. Current head remains V10.
+Payment, evidence, Ticket, QR or sale was seeded. Seed-task head was V10; current head is V11. Do not reseed or mutate existing records for verification.
 Seed slice full Maven verify: **243 tests PASS, zero failures/errors/skips**, local
 PostgreSQL regression plus package build, 2026-10-01 16:02:59 +07:00.
 
@@ -78,10 +99,12 @@ The separately approved provider follow-up remains pending:
 | Read | Boundary |
 |---|---|
 | [Admin Movie v1.0](../api/admin-movie-contract-v1.0.md), [Admin report](../reports/2026-10-01_admin-foundation-movie-management_report.md) | Current first Admin slice; active DB role check, DRAFT creation, publication, no Delete or account provisioning |
-| [Development Admin guide](../development/development-admin-provisioning.md), [latest report](../reports/2026-10-01_development-admin-provisioning_report.md) | Explicit CLI provisioning implemented; live Neon verification awaiting local input |
+| [Development Admin guide](../development/development-admin-provisioning.md), [provisioning report](../reports/2026-10-01_development-admin-provisioning_report.md) | Explicit CLI provisioning implemented; historical report predates supplied input/live verification |
+| [Admin configuration v1.0](../api/admin-cinema-configuration-contract-v1.0.md), [guide](../development/admin-cinema-configuration.md), [V11 report](../reports/2026-10-01_v11-admin-cinema-configuration_report.md) | Latest completed Admin Cinema/Hall/Seat slice; full regression and real Neon API/UI PASS |
+| [Historical live Admin / Cinema readiness report](../reports/2026-10-01_live-neon-admin-and-cinema-management-preflight_report.md) | Prior Movie/Auth PASS and V11 authorization gate; subsequently resolved by separate V11 task |
 | [VNPAY v1.1](../api/vnpay-sandbox-payment-contract-v1.1.md) plus approved [v1.0](../api/vnpay-sandbox-payment-contract-v1.0.md) | Implemented resources, configuration, disabled confirmation gates and provider policy |
 | [Integrity v1.2](../db/integrity-enforcement-design-v1.2.md) plus [v1.1](../db/integrity-enforcement-design-v1.1.md) | V10 schema, protected writer, lock order, paid assertions and grants |
-| [V10 report](../reports/2026-09-30_vnpay-sandbox-payment-backend_report.md) | Latest verification and deferrals |
+| [V10 report](../reports/2026-09-30_vnpay-sandbox-payment-backend_report.md) | Historical Payment verification and continuing provider deferrals |
 | [Payment initiation](../api/payment-initiation-contract-v1.0.md), [Booking v1.3](../api/booking-contract-v1.3.md) | Permanent first-attempt freeze and base ownership/composition |
 | [Promotion v1.1](../api/promotion-composition-contract-v1.1.md), [Concession](../api/concession-composition-contract-v1.0.md) | Snapshot and pre-Payment composition rules |
 | [Seat/Hold v1.1](../api/seat-hold-contract-v1.1.md), [Discovery](../api/customer-discovery-contract-v1.0.md) | Exact origins, expiry, shared eligibility/cutoff |
@@ -90,6 +113,8 @@ The separately approved provider follow-up remains pending:
 | [Final frontend QA](../reports/2026-09-28_customer-frontend-final-qa_report.md) | Preview coverage and remaining integrations |
 
 ## Active invariants and limitations
+
+- Admin configuration uses actor → Cinema → Hall-exclusive → Seat ordering. Whole guest capacity and referenced identity remain protected. Durable searchable Admin audit, Manager authoring and layout reshaping remain deferred; after-commit technical logs match Admin Movie.
 
 - Exact domain numeric(19,4) is unchanged. Provider submission alone requires positive whole VND, exact ×100 and confirmed merchant limits; no rounding or client-controlled amount.
 - First freeze is permanent. Eligible historical V9 attempts bind once; original deadlines and snapshots never extend or reprice. Unresolved attempts cannot be replaced. Definitive mappings are empty until confirmed.
@@ -118,6 +143,18 @@ BUILD SUCCESS, 2026-10-01 15:07:58 +07:00. See the
 [test compilation fix report](../reports/2026-10-01_backend-test-compilation-fix_report.md).
 Neon catalog reads and demo command startup are now verified by the later seed report.
 
-Run `mvn verify` in backend with a dedicated PostgreSQL database. Enable VNPAY_DB_TESTS, PAYMENT_DB_TESTS, PROMOTION_DB_TESTS, CONCESSION_DB_TESTS, BOOKING_DB_TESTS, SEAT_DB_TESTS, MOVIE_DB_TESTS and DISCOVERY_DB_TESTS=true; SEAT_HOLD_CLEANUP_ENABLED=false for deterministic tests. Final accepted database: `smart_cinema_vnpay_accepted_20260930`. Final verification ended 19:36:27 +07:00, exit 0. Test-only Hikari limits prevent accumulated Spring contexts exhausting local PostgreSQL connections.
+Run `mvn verify` in backend with a dedicated PostgreSQL database. Enable VNPAY_DB_TESTS, PAYMENT_DB_TESTS, PROMOTION_DB_TESTS, CONCESSION_DB_TESTS, BOOKING_DB_TESTS, SEAT_DB_TESTS, MOVIE_DB_TESTS, DISCOVERY_DB_TESTS and DEMO_DB_TESTS=true; SEAT_HOLD_CLEANUP_ENABLED=false for deterministic tests. Final V11 accepted database: `smart_cinema_v11_accepted_20261001`. Final verification ended 2026-10-02 00:01:20 +07:00, exit 0. Test-only Hikari limits prevent accumulated Spring contexts exhausting local PostgreSQL connections.
 
-Earlier development databases contain superseded uncommitted V10 checksums; do not repair/reuse them as final evidence. V1–V9 and historical reports/contracts were preserved. Never put credentials here. Include handoff, current contracts, report links and whitespace in final documentation checks.
+Managed Neon bootstrap initially rolled back because the migration principal lacked
+SET authority for function ownership transfer. Final V11 temporarily grants required
+SET/schema CREATE and revokes both before commit. The development runtime login
+was separately enrolled in the existing restricted hold runtime role with INHERIT
+TRUE and SET FALSE, following the guide. No direct Seat grants or owner inheritance/
+SET authority. PostgreSQL may retain creator ADMIN-only membership in configuration
+owner, with inheritance/SET disabled. Production must separate runtime/deployment
+credentials.
+
+Earlier development databases contain superseded uncommitted V10/V11 checksums;
+do not repair/reuse them as final evidence. V1–V10 and historical reports/contracts
+were preserved. Never put credentials here. Include handoff, current contracts,
+report links and whitespace in final documentation checks.

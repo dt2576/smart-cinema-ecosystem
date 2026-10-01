@@ -1,0 +1,1 @@
+import { AdminHallEditor } from "@/features/admin/admin-configuration-screen"; export default async function Page({ params }: { params: Promise<{ hallId: string }> }) { const { hallId } = await params; return <AdminHallEditor hallId={hallId} />; }

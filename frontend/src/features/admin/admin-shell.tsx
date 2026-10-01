@@ -29,7 +29,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
 
   if (!isHydrated || session && identity.loading) return <AdminAccessMessage title="Checking Admin access"><p role="status">Verifying your account…</p></AdminAccessMessage>;
   if (!session) return <AdminAccessMessage title="Sign in required"><p>Sign in with an Admin account to enter this area.</p><Link href="/login" className="text-accent underline">Sign in</Link></AdminAccessMessage>;
-  if (denied) return <AdminAccessMessage title="Admin access denied"><p>An active Admin account is required. Your account cannot access Movie management.</p><Button onClick={() => void logoutSession()}>Sign out</Button></AdminAccessMessage>;
+  if (denied) return <AdminAccessMessage title="Admin access denied"><p>An active Admin account is required. Your account cannot access Admin management.</p><Button onClick={() => void logoutSession()}>Sign out</Button></AdminAccessMessage>;
   if (identity.error || identity.data?.role !== "ADMIN") return <AdminAccessMessage title="Admin access could not be verified"><p role="alert">{identity.error?.message ?? "Please try again."}</p><Button onClick={identity.retry}>Retry access check</Button></AdminAccessMessage>;
 
   return <AdminContext.Provider value={{ accessToken: token, reportError }}>
@@ -45,6 +45,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
         <nav aria-label="Admin navigation" className="flex gap-2 md:flex-col">
           <Link href="/admin" aria-current={pathname === "/admin" ? "page" : undefined} className="rounded-lg px-4 py-3 text-sm font-semibold hover:bg-panel-high aria-[current=page]:bg-panel-high aria-[current=page]:text-accent">Home</Link>
           <Link href="/admin/movies" aria-current={pathname.startsWith("/admin/movies") ? "page" : undefined} className="rounded-lg px-4 py-3 text-sm font-semibold hover:bg-panel-high aria-[current=page]:bg-panel-high aria-[current=page]:text-accent">Movies</Link>
+          <Link href="/admin/cinemas" aria-current={pathname.startsWith("/admin/cinemas") || pathname.startsWith("/admin/halls") ? "page" : undefined} className="rounded-lg px-4 py-3 text-sm font-semibold hover:bg-panel-high aria-[current=page]:bg-panel-high aria-[current=page]:text-accent">Cinemas</Link>
         </nav>
         <main id="admin-content" tabIndex={-1} className="min-w-0">{children}</main>
       </div>
@@ -58,6 +59,6 @@ function AdminAccessMessage({ title, children }: { title: string; children: Reac
 
 export function useAdmin() {
   const context = useContext(AdminContext);
-  if (!context) throw new Error("Admin access must be verified before Movie management renders.");
+  if (!context) throw new Error("Admin access must be verified before Admin management renders.");
   return context;
 }

@@ -1,0 +1,1 @@
+import { AdminCinemaEditor } from "@/features/admin/admin-configuration-screen"; export default async function Page({ params }: { params: Promise<{ cinemaId: string }> }) { const { cinemaId } = await params; return <AdminCinemaEditor cinemaId={cinemaId} />; }
