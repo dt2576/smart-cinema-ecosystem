@@ -1,4 +1,5 @@
-import { mockDiscoveryReads, isCustomerReadPath } from "./helpers/customer-discovery";
+import { mockCustomerHolds, confirmSelectedHolds } from "./helpers/customer-holds";
+import { mockDiscoveryReads, isCustomerReadPath, isCustomerHoldPath } from "./helpers/customer-discovery";
 import { test, expect, type Page, type TestInfo } from "@playwright/test";
 import { resolve } from "node:path";
 
@@ -9,7 +10,8 @@ const PROFILE = { fullName: "Cinema Customer", email: "customer@example.test", p
 const TOKEN = { accessToken: "qa-access", tokenType: "Bearer", expiresIn: 3600, refreshToken: "qa-refresh", refreshExpiresIn: 86400, userId: 1, email: PROFILE.email, fullName: PROFILE.fullName, role: "CUSTOMER" };
 
 async function mockCatalog(page: Page) {
-  await mockDiscoveryReads(page);
+  const discovery = await mockDiscoveryReads(page);
+  await mockCustomerHolds(page, discovery, false);
   await page.route("https://media.example.test/**", route => route.fulfill({ path: resolve("public/images/movies/dune-part-two.jpg") }));
   await page.route("**/api/v1/movies?**", route => {
     const params = new URL(route.request().url()).searchParams;
@@ -35,14 +37,23 @@ for (const mobile of [false, true]) test(`complete Customer journey keeps bounda
   await page.setViewportSize(mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 });
   await page.clock.setFixedTime(new Date("2030-01-01T09:00:00+07:00"));
   await mockCatalog(page);
+  await page.route("**/api/v1/auth/tokens", route => route.fulfill({ json: TOKEN }));
+  await page.route("**/api/v1/profile", route => route.fulfill({ json: PROFILE }));
+  await page.route("**/api/v1/auth/token-revocations", route => route.fulfill({ status: 204 }));
   const unexpected: string[] = [];
   const errors: string[] = [];
   page.on("pageerror", error => errors.push(error.message));
   page.on("request", request => {
     const url = new URL(request.url());
-    if (url.pathname.startsWith("/api/") && !isCustomerReadPath(url.pathname) && !["/api/v1/movies", `/api/v1/movies/${MOVIE_ID}`, "/api/v1/genres", "/api/v1/auth/tokens", "/api/v1/profile", "/api/v1/auth/token-revocations"].includes(url.pathname)) unexpected.push(url.pathname);
+    if (url.pathname.startsWith("/api/") && !isCustomerReadPath(url.pathname) && !isCustomerHoldPath(url.pathname) && !["/api/v1/movies", `/api/v1/movies/${MOVIE_ID}`, "/api/v1/genres", "/api/v1/auth/tokens", "/api/v1/profile", "/api/v1/auth/token-revocations"].includes(url.pathname)) unexpected.push(url.pathname);
   });
   await page.goto("/");
+  await page.getByRole("link", { name: "Sign In", exact: true }).click();
+  await capture(page, info, "00-login");
+  await page.getByLabel("Email Address", { exact: true }).fill(PROFILE.email);
+  await page.getByLabel("Password", { exact: true }).fill("PreviewOnly123!");
+  await page.getByRole("button", { name: "Sign In", exact: true }).click();
+  await expect(page).toHaveURL("/");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(MOVIE.title);
   await capture(page, info, "01-home");
   await page.getByRole("link", { name: "Explore Movies", exact: true }).click();
@@ -62,6 +73,7 @@ for (const mobile of [false, true]) test(`complete Customer journey keeps bounda
   await page.getByRole("button", { name: "E1-2, Couple, 2 guests, Available", exact: true }).click();
   await page.getByRole("button", { name: "A1, Standard, 1 guest, Available", exact: true }).click();
   await capture(page, info, "06-seats");
+  await confirmSelectedHolds(page);
   await page.getByRole("button", { name: "Continue to Concessions" }).click();
   const countdown = page.getByRole("timer", { name: "Preview time remaining", exact: true });
   await expect(countdown).toHaveText("10:00");
@@ -104,15 +116,6 @@ for (const mobile of [false, true]) test(`complete Customer journey keeps bounda
   await expect(page.locator('img[alt^="Demo Booking QR"]')).toHaveCount(1);
   await page.screenshot({ path: info.outputPath("14-booking-qr.png") });
   await page.keyboard.press("Escape");
-  await page.route("**/api/v1/auth/tokens", route => route.fulfill({ json: TOKEN }));
-  await page.route("**/api/v1/profile", route => route.fulfill({ json: PROFILE }));
-  await page.route("**/api/v1/auth/token-revocations", route => route.fulfill({ status: 204 }));
-  await page.getByRole("link", { name: "Sign In", exact: true }).click();
-  await capture(page, info, "15-login");
-  await page.getByLabel("Email Address", { exact: true }).fill(PROFILE.email);
-  await page.getByLabel("Password", { exact: true }).fill("PreviewOnly123!");
-  await page.getByRole("button", { name: "Sign In", exact: true }).click();
-  await expect(page).toHaveURL("/");
   await page.locator("summary").filter({ hasText: "Open account menu" }).click();
   await page.getByRole("link", { name: "My Profile", exact: true }).click();
   await expect(page.getByRole("heading", { name: "My Profile", exact: true })).toBeVisible();

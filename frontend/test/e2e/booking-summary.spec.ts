@@ -1,4 +1,5 @@
-import { mockDiscoveryReads, isCustomerReadPath } from "./helpers/customer-discovery";
+import { mockCustomerHolds, confirmSelectedHolds } from "./helpers/customer-holds";
+import { mockDiscoveryReads, isCustomerReadPath, isCustomerHoldPath } from "./helpers/customer-discovery";
 import { test, expect, type Page } from "@playwright/test";
 import { resolve } from "node:path";
 
@@ -7,13 +8,15 @@ const CINEMA_ID = "9007199254740993";
 const SEATS = `/showtimes/9007199254741001/seats?movieId=${MOVIE_ID}&cinemaId=${CINEMA_ID}&date=2030-01-01`;
 const SUMMARY = "/bookings/preview/summary";
 async function enter(page: Page, withConcessions = true, time = "09:00:00") {
-  await mockDiscoveryReads(page);
+  const discovery = await mockDiscoveryReads(page);
+  await mockCustomerHolds(page, discovery);
   await page.clock.setFixedTime(new Date(`2030-01-01T${time}+07:00`));
   await page.route(`**/api/v1/movies/${MOVIE_ID}`, route => route.fulfill({ json: { id: MOVIE_ID, title: "Summary Journey", duration: 125, releaseDate: "2029-01-01", ageRating: "T13", language: "English", posterUrl: "https://media.example.test/summary.jpg", status: "PUBLISHED", genres: [], description: null, trailerUrl: null } }));
   await page.route("https://media.example.test/**", route => route.fulfill({ path: resolve("public/images/movies/dune-part-two.jpg") }));
   await page.goto(SEATS);
   await page.getByRole("button", { name: "E1-2, Couple, 2 guests, Available", exact: true }).click();
   await page.getByRole("button", { name: "A1, Standard, 1 guest, Available", exact: true }).click();
+  await confirmSelectedHolds(page);
   await page.getByRole("button", { name: "Continue to Concessions" }).click();
   if (withConcessions) await page.getByRole("button", { name: "Increase Movie Combo" }).click();
   await page.getByRole("button", { name: "Continue to Booking Summary" }).click();
@@ -56,7 +59,7 @@ test("summary preserves context, whole Couple pricing and concessions; Payment h
   await expect(totals).toContainText("480,000");
   await expect(page.getByRole("textbox", { name: "Promotion code", exact: true })).toBeEmpty();
   await expect(page.getByRole("timer")).toHaveText("10:00");
-  expect(apiPaths.every(isCustomerReadPath)).toBe(true);
+  expect(apiPaths.every(path => isCustomerReadPath(path) || isCustomerHoldPath(path))).toBe(true);
 });
 
 test("optional concessions and Promotion invalid, expired, ineligible, retry and removal states", async ({ page }) => {

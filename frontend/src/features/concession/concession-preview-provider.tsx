@@ -6,6 +6,7 @@ import type { MovieDetail } from "@/features/movie/movie.types";
 import type { CinemaOption } from "@/features/cinema/cinema.types";
 import type { ShowtimeOption } from "@/features/showtime/showtime.types";
 import type { SeatMap, SeatPreviewSelection } from "@/features/seat/seat.types";
+import type { BookingHoldHandoff } from "@/features/seat/seat-hold.types";
 import type { ConcessionItem, ConcessionQuantities } from "@/features/concession/concession.types";
 import type { PaymentMethodPreview, ReviewedSummaryPreview } from "@/features/payment/payment-method.types";
 import type { PaymentResultPreview } from "@/features/payment/payment-result.types";
@@ -27,6 +28,7 @@ export interface ConcessionSeatContext {
   map: SeatMap;
   selection: SeatPreviewSelection;
   seatHref: string;
+  holdHandoff?: BookingHoldHandoff;
   concessions?: SelectedConcessionPreview;
   reviewedSummary?: ReviewedSummaryPreview;
   selectedPaymentMethod?: PaymentMethodPreview;

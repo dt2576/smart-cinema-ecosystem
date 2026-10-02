@@ -39,7 +39,8 @@ export async function getSeatMap(showtime: ShowtimeOption, signal: AbortSignal):
   const map = await read<PublicSeatMap>(`/showtimes/${encodeURIComponent(showtime.id)}/seats`, signal);
   if (map.showtimeId !== showtime.id || map.hallId !== showtime.hall.id || map.movieId !== showtime.movieId || map.cinemaId !== showtime.cinemaId) throw new DiscoveryApiError(409, "The Seat map does not match your screening. Choose the Showtime again.");
   const columns = new Map<string, number>();
-  return { showtimeId: map.showtimeId, hallId: map.hallId, units: map.units.map(unit => {
+  if (!Number.isFinite(Date.parse(map.serverTime)) || map.units.some(unit => typeof unit.id !== "string" || !/^[1-9][0-9]{0,18}$/.test(unit.id) || unit.guestCount !== (unit.type === "COUPLE" ? 2 : 1))) throw new DiscoveryApiError(502, "Unable to confirm the Seat map. Please try again.");
+  return { showtimeId: map.showtimeId, hallId: map.hallId, serverTime: map.serverTime, units: map.units.map(unit => {
     // Presentation order only: the public contract has no physical coordinates.
     const column = columns.get(unit.row) ?? 1; columns.set(unit.row, column + (unit.type === "COUPLE" ? 2 : 1));
     return { ...unit, showtimeId: map.showtimeId, hallId: map.hallId, column };

@@ -1,4 +1,5 @@
-import { mockDiscoveryReads, isCustomerReadPath } from "./helpers/customer-discovery";
+import { mockCustomerHolds, confirmSelectedHolds } from "./helpers/customer-holds";
+import { mockDiscoveryReads, isCustomerReadPath, isCustomerHoldPath } from "./helpers/customer-discovery";
 import { test, expect, type Page } from "@playwright/test";
 import { resolve } from "node:path";
 
@@ -9,7 +10,8 @@ const PAYMENT = "/bookings/preview/payment";
 const VNPAY = "VNPay · Available preview";
 const MOMO = "MoMo · Available preview";
 async function enter(page: Page, scenario = "default", time = "09:00:00", withAddOns = true) {
-  await mockDiscoveryReads(page);
+  const discovery = await mockDiscoveryReads(page);
+  await mockCustomerHolds(page, discovery);
   await page.addInitScript(() => {
     new MutationObserver(() => {
       if (document.body?.textContent?.includes("Loading payment methods...")) document.documentElement.dataset.paymentLoadingObserved = "true";
@@ -21,6 +23,7 @@ async function enter(page: Page, scenario = "default", time = "09:00:00", withAd
   await page.goto(`${SEATS}&paymentPreview=${scenario}`);
   await page.getByRole("button", { name: "E1-2, Couple, 2 guests, Available", exact: true }).click();
   await page.getByRole("button", { name: "A1, Standard, 1 guest, Available", exact: true }).click();
+  await confirmSelectedHolds(page);
   await page.getByRole("button", { name: "Continue to Concessions" }).click();
   if (withAddOns) await page.getByRole("button", { name: "Increase Movie Combo" }).click();
   await page.getByRole("button", { name: "Continue to Booking Summary" }).click();
@@ -38,7 +41,7 @@ test("Payment preserves complete reviewed context and allows exactly one availab
   const unexpected: string[] = [];
   page.on("request", request => {
     const url = new URL(request.url());
-    if (url.pathname.startsWith("/api/") && (!isCustomerReadPath(url.pathname) || request.method() !== "GET")) unexpected.push(url.href);
+    if (url.pathname.startsWith("/api/") && !((isCustomerReadPath(url.pathname) && request.method() === "GET") || (isCustomerHoldPath(url.pathname) && ["GET", "POST", "DELETE"].includes(request.method())))) unexpected.push(url.href);
     if (!['127.0.0.1', 'localhost', 'media.example.test'].includes(url.hostname)) unexpected.push(url.href);
   });
   await enter(page);

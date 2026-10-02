@@ -3,9 +3,12 @@ import type { Page } from "@playwright/test";
 export const DISCOVERY_SHOWTIME_ID = "9007199254741001";
 const MOVIE = "9223372036854775807", CINEMA = "9007199254740993";
 export function isCustomerReadPath(path: string) { return /^\/api\/v1\/(movies(?:\/\d+)?|genres|cinemas(?:\/\d+)?|showtimes(?:\/\d+(?:\/seats)?)?)$/.test(path); }
+export function isCustomerHoldPath(path: string) { return /^\/api\/v1\/showtimes\/\d+\/seat-holds(?:\/\d+)?$/.test(path); }
 
 // Contract-shaped HTTP fixtures only. Production adapters never import this file.
 export async function mockDiscoveryReads(page: Page) {
+  let ownedSeats: () => string[] = () => [];
+  let serverNow: () => Promise<string> = async () => "2030-01-01T02:00:00Z";
   const failures = new Set<string>();
   const cinemas = [{ id: CINEMA, name: "Smart Cinema Landmark", address: "Ho Chi Minh City", contact: null, operatingInformation: null }, { id: "102", name: "Smart Cinema Nguyen Trai", address: "Ho Chi Minh City", contact: null, operatingInformation: null }];
   const dates = Array.from({ length: 7 }, (_, day) => `2030-01-0${day + 1}`);
@@ -32,6 +35,7 @@ export async function mockDiscoveryReads(page: Page) {
       const unavailable = row === "C" && position === 2 || row === "E" && position === 7;
       return { id: String(BigInt("9007199254742000") + BigInt(rowIndex * 10 + position)), row, number: row === "E" ? `${position}-${position + 1}` : String(position), type: row === "E" ? "COUPLE" : "STANDARD", guestCount: row === "E" ? 2 : 1, availability: booked ? "BOOKED" : unavailable || scenario === "unavailable" ? "UNAVAILABLE" : "AVAILABLE" };
     }));
-    return route.fulfill({ json: { showtimeId: id, movieId: MOVIE, cinemaId: CINEMA, hallId: item.hall.id, serverTime: "2030-01-01T02:00:00Z", units: scenario === "empty" ? [] : units } });
+    return route.fulfill({ json: { showtimeId: id, movieId: MOVIE, cinemaId: CINEMA, hallId: item.hall.id, serverTime: await serverNow(), units: scenario === "empty" ? [] : units.map(unit => ownedSeats().includes(unit.id) ? { ...unit, availability: "HELD" } : unit) } });
   });
+  return { setHoldOverlay(seats: () => string[], now: () => Promise<string>) { ownedSeats = seats; serverNow = now; } };
 }

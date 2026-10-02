@@ -1,6 +1,6 @@
 import type { ShowtimeOption } from "@/features/showtime/showtime.types";
 
-// Whole-unit UI projection. Availability comes from reads; selection stays local.
+// Whole-unit UI projection. Public availability and owned Holds have separate reads.
 export type SeatUnit = {
   id: string;
   hallId: string;
@@ -11,7 +11,7 @@ export type SeatUnit = {
   type: "STANDARD" | "VIP" | "COUPLE";
   availability: "AVAILABLE" | "HELD" | "BOOKED" | "UNAVAILABLE";
 };
-export type SeatMap = { showtimeId: string; hallId: string; units: SeatUnit[] };
+export type SeatMap = { showtimeId: string; hallId: string; serverTime?: string; units: SeatUnit[] };
 export type SeatPreviewScenario = "default" | "empty" | "error" | "unavailable";
 export type SeatSelectionService = { load: (showtime: ShowtimeOption, signal: AbortSignal) => Promise<SeatMap> };
 export type SeatPreviewSelection = { unitIds: string[]; expiresAt: number | null };

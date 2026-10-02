@@ -106,4 +106,26 @@ Final QA gates passed: 49 unit tests, 73 Playwright tests, TypeScript, lint, pro
 
 Backend handoff order: discovery and Hall/Showtime seat eligibility; authoritative Hold ownership/expiry/realtime; owned Booking/Concessions/Promotion snapshots and cancellation; Payment initiation/freeze/verification; Ticket issuance, owned history and secure Booking QR resolution. Define string IDs and ProblemDetail semantics in each contract. Auth numeric userId needs a coordinated serialization audit.
 
-Deferred Customer capabilities still include Cinema-first discovery (FR-SHOWTIME-007), VIP and actual HELD Seat data (FR-SEAT-003/004), ownership denial, real Hold races, cancel-pending action (FR-BOOKING-011 / UC-CUS-022), frozen composition and trusted Payment states. These are service-dependent SRS gaps, not authorization to simulate them with new fake endpoints. Full production completion still follows the definition above.
+At the historical final-QA milestone, discovery and authoritative Hold were deferred. Current real integrations now cover Movie-first discovery, VIP/HELD Seat data, authenticated ownership, atomic Hold races and reconciliation. Remaining Customer capabilities include Cinema-first discovery (FR-SHOWTIME-007), owned Booking integration/cancel-pending action (FR-BOOKING-011 / UC-CUS-022), frozen composition and trusted Payment states. These dependencies do not authorize fake endpoints. Full production completion still follows the definition above.
+
+## Authoritative Seat Hold integration — 2026-10-02
+
+Customer discovery/map reads remain real. Seat Selection now uses normal
+Customer JWTs and existing Seat/Hold v1.0 + v1.1: atomic whole-set POST, separate
+owned GET, exact-ID release, server expiresAt projection and reload/error/expiry
+reconciliation. Unheld drafts and owned Holds are visually distinct; COUPLE
+remains one unit/Hold for two guests, VIP is one guest. No local countdown
+authority, invented endpoint or migration is added.
+
+The future Booking handoff carries exact string Hold origins and original
+deadline. Existing Concession/Summary/Payment routes retain their explicitly
+local preview behavior and do not attach Holds, create Booking, determine real
+totals, initiate Payment or issue anything. VIP fixture pricing remains
+unsupported. See the [development guide](../development/customer-seat-hold-frontend.md)
+and [latest report](../reports/2026-10-02_customer-authoritative-seat-hold-frontend_report.md).
+
+Exact next separately authorized integration: **Customer Booking creation
+frontend using authoritative Hold handoff**. Backend must revalidate owner,
+whole set, original expiry/cutoff and current eligibility before attaching;
+frontend must then use the returned real Booking identity, snapshots and total.
+Do not automatically advance Concession/Promotion/Payment integration.

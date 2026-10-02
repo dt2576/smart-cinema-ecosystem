@@ -27,9 +27,9 @@ IDs below are source screen IDs, not canvas instance IDs. Source inventory remai
 | Shared header — account menu / logout | Smart Cinema - Authenticated Account Menu | `14dc6c1445a747b88c866508463e9879` | IMPLEMENTED API-CONNECTED COMPONENT | Menu state, no new route; profile link and logout |
 | `/movies` — list/search/filter | Smart Cinema - Movie Listing | `fe57105a74494ca4807f61ae495f7c29` | IMPLEMENTED API CLIENT; BROWSER FIXTURES VERIFIED | Public PUBLISHED-only catalog; only contracted query controls |
 | `/movies/[movieId]` — detail | Smart Cinema - Movie Detail | `16dbe62e3be744e6ab4123fc004283e3` | IMPLEMENTED API CLIENT; BROWSER FIXTURES VERIFIED | Public detail DTO; no cast/prices or inferred screening availability |
-| `/movies/[movieId]/cinemas` — choose Cinema | Smart Cinema - Cinema Selection | `8de77c4d95c141f9947a4f7bf4cad7c9` | MOCK UI IMPLEMENTED; BROWSER VERIFIED | Real Movie context; isolated local Cinema options; navigation to Showtime preview. Live eligibility awaits backend contract |
-| `/movies/[movieId]/cinemas/[cinemaId]/showtimes` — choose Showtime | Smart Cinema - Showtime Selection | `a808fb16fcad452696636be952ea70b1` | MOCK UI IMPLEMENTED; BROWSER VERIFIED | Preserve Movie/Cinema context; local dates/Hall groups and availability; navigation to Seat preview; backend eligibility remains deferred |
-| `/showtimes/[showtimeId]/seats` — Seat Map / Hold | Smart Cinema - Seat Selection | `fdea388b4b24406799ab087b31239835` | MOCK UI IMPLEMENTED | STANDARD/COUPLE preview; indivisible Couple unit; local countdown only. VIP and real Holds/availability remain outside this slice |
+| `/movies/[movieId]/cinemas` — choose Cinema | Smart Cinema - Cinema Selection | `8de77c4d95c141f9947a4f7bf4cad7c9` | REAL PUBLIC READ IMPLEMENTED | Real Movie/Cinema eligibility and navigation to Showtime discovery |
+| `/movies/[movieId]/cinemas/[cinemaId]/showtimes` — choose Showtime | Smart Cinema - Showtime Selection | `a808fb16fcad452696636be952ea70b1` | REAL PUBLIC READ IMPLEMENTED | Server dates/zone/Hall grouping and eligibility; navigation to real Seat map |
+| `/showtimes/[showtimeId]/seats` — Seat Map / Hold | Smart Cinema - Seat Selection | `fdea388b4b24406799ab087b31239835` | AUTHORITATIVE HOLD INTEGRATED | Real public map + authenticated owned Hold acquire/release/reload; STANDARD/VIP one guest, whole COUPLE two; server expiry; Continue remains pre-Booking handoff |
 | `/bookings/[bookingId]/concessions` — Concessions | Smart Cinema - Food & Drinks | `602baa042d22404d8b31d461351aa42d` | MOCK UI IMPLEMENTED at static `/bookings/preview/concessions`; production route deferred | Optional POPCORN/DRINK/COMBO, local quantities/subtotal; authoritative catalog and Booking remain deferred |
 | Same Concessions flow — Hold expired state | Smart Cinema - Food & Drinks (Seat Hold Expired) | `1017f7c1f77943579d9bb1bee37f7718` | PREVIEW STATE IMPLEMENTED | Stop progression; return to Seat Selection; original local deadline never extends; real Hold ownership remains deferred |
 | `/bookings/[bookingId]/summary` — review | Smart Cinema - Booking Summary / Review Order | `52aa55f16d2640d68efb6c399d5fb990` | MOCK UI IMPLEMENTED at static `/bookings/preview/summary`; production route deferred | Screening, whole Seat Units/guest count, Concessions, sample Seat/Concession subtotals, discount and grand total; all non-authoritative |
@@ -111,8 +111,25 @@ See the [implementation plan](../customer-frontend-implementation-plan-v1.0.md) 
 
 The final [Customer QA report](../../reports/2026-09-28_customer-frontend-final-qa_report.md) reconciles all 17 canonical IDs and 16 route patterns, desktop/mobile navigation and all existing feature tests. No source screen ID or Stitch reference was changed. Auth/Profile browser coverage supersedes earlier source-only verification; old intermediate preview-handoff descriptions are historical.
 
-Every canonical presentation has a route, embedded panel/dialog or shared component. This does not mean every production state is available. Ownership denied, live HELD/VIP Seat data, authoritative contention/reconnect, cancel-pending Booking, frozen composition and verified Payment/issuance require future backend contracts. The four owned-Booking checkout URL patterns remain deliberately absent; no current link targets them.
+Every canonical presentation has a route, embedded panel/dialog or shared component. This does not mean every production state is available. Current real discovery/Seat/Hold integration supports HELD/VIP units, owned acquisition/release and authoritative contention/reconciliation. Owned Booking checkout, cancel-pending Booking, frozen composition and verified Payment/issuance remain frontend integration dependencies. The four owned-Booking checkout URL patterns remain deliberately absent; no current link targets them.
 
-Only Auth/Profile and Movie/Genre modules call backend APIs. All downstream adapters remain local. Movie/Genre and domain fixture IDs are strings; Auth still follows its existing numeric userId response/storage contract and requires a coordinated bigint serialization decision. Payment Result is not connected to fixture Ticket issuance: customers can navigate to My Bookings, but those examples are independent of the checkout preview.
+Auth/Profile, Movie/Genre, Movie-first Cinema/Showtime/Seat-map discovery and Customer Seat Hold modules call existing backend APIs. Adapters after Hold handoff remain local previews. Movie/Genre, discovery, Hold and domain fixture IDs are strings; Auth still follows its existing numeric userId response/storage contract and requires a coordinated bigint serialization decision. Payment Result is not connected to fixture Ticket issuance: customers can navigate to My Bookings, but those examples are independent of the checkout preview.
 
 Current UI fixes: Profile status truthfulness and Movie return, account-menu Escape/focus, removal of the nonfunctional Remember me control, and Home Showtime recovery with clearly labeled sample locations/offers. No new Customer feature or endpoint was added. Freeze readiness applies to the current UI/preview scope only; production readiness remains blocked on service integration and live acceptance.
+
+## Customer authoritative Hold reconciliation — 2026-10-02
+
+The Seat route now integrates existing authenticated [Hold contracts](../../api/seat-hold-contract-v1.0.md)
+with [v1.1](../../api/seat-hold-contract-v1.1.md). Draft selection is not an
+entitlement. Atomic whole-set acquisition, owned GET restoration, original
+server expiry, explicit release and conflict/retry states replace local Hold
+authority. Anonymous login resumption preserves a draft only. Public HELD does
+not establish ownership. See the [current guide](../../development/customer-seat-hold-frontend.md)
+and [implementation report](../../reports/2026-10-02_customer-authoritative-seat-hold-frontend_report.md).
+
+Earlier mock/clear-on-return descriptions above are historical preview evidence
+for Seat acquisition only; owned Holds now restore on Seat reentry/reload.
+Downstream Concession through Payment/history/Ticket/QR remains preview-only.
+Continue carries exact Hold origins/deadline in memory for future Booking
+integration, creates no Booking and makes no authoritative pricing claim.
+Canonical Stitch IDs/designs are unchanged.

@@ -1,4 +1,5 @@
-import { mockDiscoveryReads, isCustomerReadPath } from "./helpers/customer-discovery";
+import { mockCustomerHolds, confirmSelectedHolds } from "./helpers/customer-holds";
+import { mockDiscoveryReads, isCustomerReadPath, isCustomerHoldPath } from "./helpers/customer-discovery";
 import { test, expect, type Page } from "@playwright/test";
 import { resolve } from "node:path";
 
@@ -8,7 +9,8 @@ const SHOWTIME_ID = "9007199254741001";
 const SEATS = `/showtimes/${SHOWTIME_ID}/seats?movieId=${MOVIE_ID}&cinemaId=${CINEMA_ID}&date=2030-01-01`;
 const CONCESSIONS = "/bookings/preview/concessions";
 async function enter(page: Page, scenario = "default", time = "09:00:00") {
-  await mockDiscoveryReads(page);
+  const discovery = await mockDiscoveryReads(page);
+  await mockCustomerHolds(page, discovery);
   await page.addInitScript(() => {
     new MutationObserver(() => {
       if (document.body?.textContent?.includes("Loading Concessions...")) document.documentElement.dataset.concessionLoadingObserved = "true";
@@ -20,6 +22,7 @@ async function enter(page: Page, scenario = "default", time = "09:00:00") {
   await page.goto(`${SEATS}&concessionPreview=${scenario}`);
   await page.getByRole("button", { name: "E1-2, Couple, 2 guests, Available", exact: true }).click();
   await page.getByRole("button", { name: "A1, Standard, 1 guest, Available", exact: true }).click();
+  await confirmSelectedHolds(page);
   await page.getByRole("button", { name: "Continue to Concessions" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-concession-loading-observed", "true");
   await expect(page.getByRole("heading", { name: "Food & Drinks", exact: true })).toBeVisible();
@@ -51,8 +54,8 @@ test("Concessions retain screening and whole Seat Units, filter categories and c
   await next.click();
   await expect(page.getByRole("region", { name: "Selected Concessions" })).toContainText("Movie Combo × 1");
   await expect(page.getByRole("region", { name: "Selected Concessions" })).toContainText("120,000");
-  await expect(page.getByText(/No Seat Hold, Booking or Payment has been created/)).toBeVisible();
-  expect(apiPaths.every(isCustomerReadPath)).toBe(true);
+  await expect(page.getByText(/No Booking or Payment has been created/)).toBeVisible();
+  expect(apiPaths.every(path => isCustomerReadPath(path) || isCustomerHoldPath(path))).toBe(true);
 });
 
 test("changing add-ons cannot extend deadline; expiry blocks summary and requires Seat reselection", async ({ page }, testInfo) => {

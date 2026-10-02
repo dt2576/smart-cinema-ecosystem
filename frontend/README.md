@@ -50,3 +50,12 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Customer Seat Holds
+
+Seat Selection uses real public discovery/map and authenticated Customer Hold
+APIs. Confirm the whole draft with **Hold selected Seats**; reload restores
+owned Holds without renewing their server expiry. Continue carries a future
+Booking handoff to the current Concession preview and creates no Booking.
+See [the current guide](../docs/development/customer-seat-hold-frontend.md) for
+authentication, release, reconciliation and verification commands.
