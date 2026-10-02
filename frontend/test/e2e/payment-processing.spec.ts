@@ -18,7 +18,7 @@ async function enter(page: Page, time = "09:00:00", addOns = true) {
   await page.getByRole("button", { name: "E1-2, Couple, 2 guests, Available", exact: true }).click();
   await page.getByRole("button", { name: "A1, Standard, 1 guest, Available", exact: true }).click();
   await confirmSelectedHolds(page);
-  await page.getByRole("button", { name: "Continue to Concessions" }).click();
+  await page.getByRole("button", { name: "Preview Concessions" }).click();
   if (addOns) await page.getByRole("button", { name: "Increase Movie Combo" }).click();
   await page.getByRole("button", { name: "Continue to Booking Summary" }).click();
   if (addOns) {

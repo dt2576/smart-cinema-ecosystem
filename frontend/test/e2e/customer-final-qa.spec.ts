@@ -74,7 +74,7 @@ for (const mobile of [false, true]) test(`complete Customer journey keeps bounda
   await page.getByRole("button", { name: "A1, Standard, 1 guest, Available", exact: true }).click();
   await capture(page, info, "06-seats");
   await confirmSelectedHolds(page);
-  await page.getByRole("button", { name: "Continue to Concessions" }).click();
+  await page.getByRole("button", { name: "Preview Concessions" }).click();
   const countdown = page.getByRole("timer", { name: "Preview time remaining", exact: true });
   await expect(countdown).toHaveText("10:00");
   await page.getByRole("button", { name: "Increase Movie Combo", exact: true }).click();

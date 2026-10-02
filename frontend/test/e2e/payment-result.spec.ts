@@ -6,6 +6,7 @@ import { resolve } from "node:path";
 const MOVIE_ID = "9223372036854775807";
 const CINEMA_ID = "9007199254740993";
 const RESULT = "/bookings/preview/payment/result";
+const METHOD = "/bookings/preview/payment";
 const PROCESSING = "/bookings/preview/payment/processing";
 const SEATS = `/showtimes/9007199254741001/seats?movieId=${MOVIE_ID}&cinemaId=${CINEMA_ID}&date=2030-01-01`;
 
@@ -19,7 +20,7 @@ async function enter(page: Page, time = "09:00:00", addOns = true) {
   await page.getByRole("button", { name: "E1-2, Couple, 2 guests, Available", exact: true }).click();
   await page.getByRole("button", { name: "A1, Standard, 1 guest, Available", exact: true }).click();
   await confirmSelectedHolds(page);
-  await page.getByRole("button", { name: "Continue to Concessions" }).click();
+  await page.getByRole("button", { name: "Preview Concessions" }).click();
   if (addOns) await page.getByRole("button", { name: "Increase Movie Combo" }).click();
   await page.getByRole("button", { name: "Continue to Booking Summary" }).click();
   if (addOns) {
@@ -78,6 +79,8 @@ test("failed result retries the same reviewed preview and permits method changes
   await expect(page.getByRole("heading", { name: "Payment failed preview", exact: true })).toBeVisible();
   await expect(page.getByRole("complementary", { name: "Payment Result summary" })).toContainText("324,000");
   await page.getByRole("button", { name: "Back to Payment Methods", exact: true }).click();
+  await expect(page).toHaveURL(METHOD);
+  await expect(page.getByRole("radio", { name: "VNPay · Available preview", exact: true })).toBeVisible();
   await page.goBack();
   await expect(page.getByRole("heading", { name: "Complete the Processing preview first", exact: true })).toBeVisible();
   await page.getByRole("link", { name: "Back to Payment Methods", exact: true }).click();
@@ -158,4 +161,3 @@ test("canonical Result layout adapts to desktop/mobile for all three states with
     await expect(page.getByRole("heading", { name: "Payment Processing", exact: true })).toBeVisible();
   }
 });
-

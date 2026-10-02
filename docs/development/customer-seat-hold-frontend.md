@@ -52,26 +52,20 @@ revalidates publication, parents, physical sellability and cutoff after locks.
 Explicit release remains server-controlled, including stale/terminal identities.
 There is no realtime push transport or frontend concurrency lock substitute.
 
-## Exact boundary before Booking
+## Booking handoff (current integration)
 
-Continue performs a fresh owned-Hold/map read, requiring the complete selected
-set to be currently usable. It carries string Showtime/Hold IDs, exact original
-origin records, serverTime and earliest ISO expiresAt in memory, matching the
-future [Booking create request](../api/booking-contract-v1.0.md#3-create-request-and-retry).
-It creates no Booking and attaches/consumes nothing.
+Primary **Create Booking & review** freshly reloads owned Holds/map and sends the
+complete exact string Hold set through the existing Booking API. It attaches
+origins atomically and opens the real owned Summary with server identity,
+Seat snapshots, exact total and Booking expiry. Attached Holds are excluded from
+independent owned reads and cannot be individually released/reused; returning
+shows public HELD/disabled units and Return to Booking, with no renewal.
 
-The existing static `/bookings/preview/concessions` may display that context.
-Concession/Promotion/prices/totals/Payment remain local demonstrations; their
-actions do not renew Holds. Their memory context clears on reload/exit, while
-real owned Holds can be restored on Seat Selection. Downstream preview countdowns
-are display-only projections of the carried original timestamp; they do not
-revalidate ownership or authorize checkout. VIP has no invented demo price and
-the existing Summary preview rejects unsupported VIP fixture pricing.
-
-Next separately authorized task: **Customer Booking creation frontend integration
-using authoritative Hold handoff**, with server revalidation/attachment and
-authoritative Booking amount/deadline. Do not infer Booking, Payment, Ticket or
-Booking QR issuance from this preview.
+The secondary **Preview Concessions** action remains a separate local design
+flow. Its quantities, Promotion, prices and Payment simulations are not persisted.
+No Payment/Ticket/QR is created by either action. See the
+[Booking integration guide](customer-booking-creation-frontend.md) for exact-set
+unknown-response recovery, owned GET reload/auth, snapshots/deadline and limits.
 
 ## Verification
 

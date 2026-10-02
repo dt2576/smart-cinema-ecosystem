@@ -1,35 +1,47 @@
 # Current AI handoff
 
-Last reconciled: 2026-10-02, Asia/Ho_Chi_Minh. **Customer authoritative Seat Hold frontend COMPLETE**: final full regression, real Customer/Neon/browser verification and preservation PASS. No commit is implied. Read [project context](project-context.md), [AGENTS.md](../../AGENTS.md), workflows/conventions and Git status first. Current implementation status here supersedes historical local-Hold descriptions in stable context/older reports; no stable architecture/domain decision changed.
+Last reconciled: 2026-10-02, Asia/Ho_Chi_Minh. **Customer Booking creation frontend COMPLETE**: full regression, real owned Hold → one Neon Booking/browser Summary and preservation PASS. No commit is implied. Read [project context](project-context.md), [AGENTS.md](../../AGENTS.md), workflows/conventions and Git status first. Current status here supersedes older preview/pre-Booking descriptions; no stable architecture/domain decision changed.
 
 ## Current milestone
 
-Flyway head: **V12**, [migration](../../backend/src/main/resources/db/migration/V12__guard_admin_showtime_configuration.sql). **No migration or backend change in the Hold frontend task; no V13.** All V1–V12 source and applied Neon checksums are unchanged. Historical reports/contracts, BRD/SRS and Stitch references are preserved.
+Flyway head: **V12**, [migration](../../backend/src/main/resources/db/migration/V12__guard_admin_showtime_configuration.sql). **No migration or backend change in this frontend task; no V13.** All V1–V12 source/applied Neon checksums and historical contracts/reports/requirements/Stitch are unchanged.
 
-Latest evidence: [Hold frontend report](../reports/2026-10-02_customer-authoritative-seat-hold-frontend_report.md)
-and [current development guide](../development/customer-seat-hold-frontend.md).
-Read both [Seat/Hold v1.0](../api/seat-hold-contract-v1.0.md) and
-[v1.1 delta](../api/seat-hold-contract-v1.1.md), plus
-[current Customer screen map](../ui-ux/screen-spec/customer-screen-map-v1.0.md) and
+Latest evidence: [Booking frontend report](../reports/2026-10-02_customer-booking-creation-frontend_report.md),
+[current guide](../development/customer-booking-creation-frontend.md),
+[screen map](../ui-ux/screen-spec/customer-screen-map-v1.0.md),
 [implementation plan](../ui-ux/customer-frontend-implementation-plan-v1.0.md).
+Read [Booking v1.0](../api/booking-contract-v1.0.md) plus additive
+[v1.1](../api/booking-contract-v1.1.md), [v1.2](../api/booking-contract-v1.2.md),
+[v1.3](../api/booking-contract-v1.3.md), and both
+[Seat/Hold v1.0](../api/seat-hold-contract-v1.0.md) and [v1.1](../api/seat-hold-contract-v1.1.md).
 
-- Movie/Genre and Movie→Cinema→Showtime→Seat map use existing public APIs.
-  Seat Selection now uses normal Customer JWTs for existing atomic whole-set
-  POST, owned GET and exact-ID DELETE. No userId/role/timestamp/TTL/price authority
-  is sent; stored roles never grant ownership. Public HELD does not identify an owner.
-- Draft selection is separate from server-confirmed owned Holds. COUPLE is one
-  indivisible unit/Hold for two guests; STANDARD/VIP one guest. Pending gates,
-  conflict/uncertain-response reconciliation, safe errors and anonymous normal
-  login resumption are implemented. No mock fallback after API failure.
-- Countdown projects serverTime with monotonic elapsed time and exact earliest
-  expiresAt. Entry/reentry/reload, expiry, focus/visibility and visible-page
-  polling reload server truth without POST/renewal. Continue freshly reads
-  owned/map truth, preserving exact string Hold origins and original deadline.
-- Continue only opens the existing Concession preview with an in-memory future
-  Booking handoff. No Booking creation/attachment, Payment/provider write,
-  authoritative frontend price or issuance exists. Downstream preview context
-  clears on reload/exit; returning to Seat Selection restores real owned Holds.
-  No acquisition/reservation should ever be inferred from a downstream preview.
+- Movie/Genre → Cinema → Showtime → Seat map remain real public reads. Existing
+  authenticated Customer Holds remain PostgreSQL-authoritative, atomic whole-set,
+  separate owned GET/exact-ID release, server deadline and reload reconciliation.
+- Primary **Create Booking & review** freshly confirms exact owned Hold origins,
+  POSTs the complete Showtime/Hold set once, then opens real
+  `/bookings/{bookingId}/summary` only after the server confirms identity.
+  No client owner/role/status/price/time authority, fake API or mock fallback.
+- Server whole-unit type/prices/totals and Booking expiry are authoritative.
+  STANDARD/VIP one unit/guest; COUPLE one Booking Seat/two guests. Exact
+  numeric(19,4) strings retain zero/fractions. Current screening labels are
+  referenced metadata; the response supplies no currency/display timezone.
+  Summary uses explicit UTC and never guesses a local query date from UTC.
+- Owned GET restores direct/reloaded Summary even if public catalog hides the
+  screening. Normal Customer login safely resumes the validated local Summary.
+  Backend current role/account/ownership rules remain authoritative.
+- Attached Holds remain ACTIVE with original expiry, excluded from standalone
+  owned reads and forbidden individual release/reuse. Back shows HELD/disabled
+  units, See Booking and Return to Booking, with no automatic writes/renewal.
+- Pending/unknown creation gates changes. No automatic Booking POST retry.
+  Explicit Recover Booking uses only the exact saved complete set under the
+  existing eligible-unexpired-PENDING same-owner contract. A per-tab untrusted
+  hint grants no ownership; unknown identity cannot be rediscovered once that
+  recovery window expires because no Booking list endpoint exists.
+- Real Summary stops before Concession/Promotion/Payment integration. Separate
+  secondary Preview Concessions retains the static design demonstration only.
+  Its quantities/codes/prices never modify a real Booking. No Payment/VNPAY,
+  freeze, PAID, consumption, sold_at or Ticket/Booking QR is initiated by this UI.
 
 **Admin Showtime Management and real Customer READ integration are implemented.**
 Read the [latest contract](../api/admin-showtime-contract-v1.0.md),
@@ -43,22 +55,56 @@ stopped at authorization; the separate accepted task resolved that gate and appr
 - New/retimed end comes from persisted Movie duration; occupied_until=end; booking_cut_off=start. Exact nonnegative numeric(19,4), including zero/fractions. Price/status-only edits preserve saved times. Half-open existing Hall exclusion remains the concurrency backstop.
 - Create DRAFT/SCHEDULED/OPEN_FOR_BOOKING. DRAFT→SCHEDULED/OPEN_FOR_BOOKING/CANCELLED, SCHEDULED→OPEN_FOR_BOOKING/CANCELLED, OPEN_FOR_BOOKING→CANCELLED. Same-state safe future edits only. Any Hold/Booking history freezes commercial/schedule/lifecycle. No Admin STARTED/ENDED, regressions or cancelled reopening.
 - Runtime gets only guarded configuration writer EXECUTE. No direct Showtime/membership DML, initializer execution, configuration-owner inheritance/SET, HTTP role switching or disabled trigger. Managed bootstrap SET/schema CREATE is revoked before commit. After-commit technical audit follows existing Admin pattern.
-- Customer READ remains as implemented in the Admin Showtime slice. The subsequent Hold frontend integration above replaces local acquisition/countdown only; all downstream checkout/history/Ticket/QR adapters remain previews.
+- Customer READ remains as implemented in the Admin Showtime slice. The subsequent Hold frontend integration above replaces local acquisition/countdown only; primary seat-only Booking creation/owned Summary is now real; composition/Payment/history/Ticket/QR integrations remain separate previews.
 
 ## Verification and live data
 
-Latest backend full `mvn verify`: **294 PASS**, zero failures/errors/skips, PostgreSQL 18.4, jar/repackage PASS, completed 2026-10-02 03:40:17 +07:00. Includes fresh/upgrade, grants, strict input/auth, Hold/Booking/Payment origin, expiry/ownership/cutoff/concurrency, sale/settlement/Ticket integrity and string-safe domain IDs. Historical upgrade tests retain pinned versions.
+Latest full `mvn verify`: **294 PASS**, 50 suites, zero failures/errors/skips,
+dedicated local PostgreSQL regression with all existing integration flags,
+jar/repackage PASS, completed 2026-10-02 16:14:17 +07. No backend edits.
+Final-source TypeScript/ESLint/build and **81/81 unit tests PASS**. Accepted full
+Playwright **115/115 PASS**, installed Edge, one worker, retries=0, 6.4 minutes.
+Fourteen new Booking browser scenarios plus all prior Customer/Admin regression.
+After the final type-only test-helper import convention correction, TypeScript,
+ESLint and the 14 Booking scenarios passed again, retries=0, 20.7 seconds;
+application runtime source was unchanged.
+Final docs/link/whitespace/report/handoff checks PASS. **320 protected original
+backend/contract/design/requirement/Stitch/report/stable-context files unchanged.**
+HTTP test simulators are separate from actual no-interception live proof.
 
-Frontend TypeScript/ESLint/production build and **70 unit tests PASS**. Final-tree full Playwright **101/101 PASS**, installed Edge, one worker, retries=0, 5.8 minutes, including 14 Seat scenarios and all existing Customer/Admin tests. Documentation/local links/UTF-8/EOF/whitespace/report/handoff/secret checks PASS. **314 protected original backend/contract/design/requirement/Stitch/report files unchanged.** Test HTTP fixtures remain separate from actual browser/Neon evidence.
+**Real Neon V12 PASS:** normal `.env` startup validated twelve migrations,
+required no migration/reseed and passed Hibernate validate. Verification-only
+process overrides disabled Hold cleanup/VNPAY to preserve original history;
+application defaults/source are unchanged. Existing isolated normal QA Customers
+were reused through ordinary login; no Admin credentials or database bypass.
 
-**Latest real Neon V12 PASS:** normal `mvn spring-boot:run` imported ignored `.env`; Flyway validated twelve migrations with no migration required, Hibernate validate/startup passed. No reseed. Cleanup and VNPAY were disabled only for verification processes; application defaults/source are unchanged. Two isolated normal QA Customers were registered through existing Auth API; no Admin credentials, fabricated identities, database bypass or provider calls.
+Normal real browser Home → Movies → Movie Detail → Cinema → Showtime → Seat →
+owned Holds → **one server Booking** → Summary. Existing Showtime **12**, Movie
+**4**, Cinema **1**, Hall **1**, 2026-10-04 19:00 Asia/Ho_Chi_Minh:
 
-Existing Showtime **12**, Movie **4**, Cinema **1**, Hall **1**, **2026-10-04 19:00 Asia/Ho_Chi_Minh**, 45 units/50 guests/five COUPLE units:
-
-- Actual simultaneous A/B Seat 1 requests: **200/409**, one Hold; retry retained ID/deadline, owned GET isolated, foreign release 404, own/repeated release 204 and map AVAILABLE.
-- Real normal Customer browser, no interception: Movie→Cinema→Showtime→map; STANDARD 1/A1 + COUPLE 41/E1-2 acquired atomically as Holds 2/3, **2 units/3 guests**. Server earliest expiry **2026-10-02 04:25:26.350704 +07** retained after reload, verified through exact origin/expiry comparison. Whole COUPLE release and VIP 31/D1 addition retained existing earliest deadline; clear/release restored availability.
-- Desktop 1440×1000/mobile 390×844, map-contained scrolling, no document overflow and accurate summary/countdown passed. Stale second-Customer submission reconciled another-owner HELD/zero owned with continuation blocked. Actual host suspension later caused session/Hold expiry; ownership claims stopped safely. Final normal Customer API reads confirm zero active verification Holds and restored STANDARD/VIP/COUPLE availability.
-- Final read-only audit: original catalog/hierarchy/schedules/membership/financial/transaction/evidence/audit/prior-Hold row fingerprints and all applied V1–V12 checksums unchanged. Exactly **five** verification Holds retained RELEASED/EXPIRED, unattached. Expected Customer registration/Auth activity only; no Booking/Payment, consumption, sold_at, Ticket/QR or destructive cleanup.
+- STANDARD Seat **1/A1**, VIP **31/D1**, whole COUPLE **41/E1-2**, atomically
+  acquired as Holds **6/7/8**, then attached by one normal UI create operation to
+  Booking **1**, initially PENDING. **3 Seat Units / 4 guests**; each saved price
+  `90000.0000`, aggregate `270000.0000`; no Concessions/Promotion/Payment.
+- Exact original Hold/Booking expiry **2026-10-02T10:09:36.316360Z** retained
+  after owned Summary reload and mobile browser Back/keyboard Return to Booking.
+  Own independent Hold GET omitted attached origins; map HELD; all three units
+  and fresh Create disabled on Back. Attached individual release **409**, foreign
+  Customer detail **404**, anonymous **401**, owned GET **200**.
+- Desktop 1440×1000/mobile 390×844 visual/keyboard checks PASS; no document
+  overflow, complete COUPLE and exact amounts/deadline. Browser console errors
+  empty. Live screenshots are linked in the report under ignored verification
+  output, with initial PENDING and final retained terminal-state evidence.
+- Safe cleanup used existing owned **DELETE Booking** (logical cancellation,
+  **204**, no physical delete). Final Booking **1 CANCELLED**, three snapshots
+  retained, Holds **6/7/8 RELEASED** with identical original expiry/attachment,
+  Seats **1/31/41 AVAILABLE**. Exactly one verification Booking remains.
+- Final read-only audit: original catalog/hierarchy/schedules/membership,
+  prior Holds/Bookings/Seat lines and all financial/Payment/Ticket/Promotion/
+  Concession/evidence/reconciliation/audit fingerprints plus V1–V12 checksums
+  unchanged. No payment_started_at/paid_at/sold_at/CONSUMED/usage/Ticket/QR,
+  provider/external financial activity or destructive cleanup. Expected Auth
+  login/token activity is separate. Earlier five verification Holds are unchanged.
 
 ### Prior Admin Showtime evidence — preserved historical context
 
@@ -68,11 +114,18 @@ Final verification Showtime is **CANCELLED**, Admin read-only; Customer query om
 
 ## Exact next recommended task — not authorization
 
-**Customer Booking creation frontend integration using the authoritative Hold handoff.** Read Booking v1.0 plus all current additive revisions (latest v1.3) and Seat/Hold v1.0 + v1.1. Use owned authenticated creation from exact valid Hold identities; let the backend revalidate/attach the complete whole-unit set, cutoff/expiry and composition. Replace preview Booking identity/Seat price/aggregate deadline with returned authoritative values. Preserve original Hold origins, string IDs and COUPLE guest semantics. Scope subsequent Concession/Promotion/Payment integrations separately; never infer PAID, consume Holds or issue Ticket/QR from local preview. **Do not begin automatically.**
+**Integrate real Concession composition into the existing unpaid Booking.**
+Read [Concession v1.0](../api/concession-composition-contract-v1.0.md), Booking
+v1.0 through v1.3 and this latest frontend guide/report. Use the actual active
+catalog and owned PENDING/pre-first-Payment edit APIs, immutable name/price
+snapshots and authoritative recalculated totals. Preserve original Seat origins
+and Booking deadline; no preview fixture authority, invented endpoint or Payment
+write. Then scope **Promotion integration**, followed by **Payment initiation**,
+as separate tasks. **Do not begin automatically.**
 
 ## Remaining limitations and dependencies
 
-- Seat acquisition/release/countdown now uses authoritative APIs. Concession, Booking Summary/Promotion, Payment Method/Processing/Result and My Bookings/Tickets/QR remain preview adapters. VIP Hold/map is real; existing Summary demo fixtures price STANDARD/COUPLE only. Do not fabricate a VIP checkout price or treat demo totals as server totals.
+- Seat/Hold and seat-only Booking creation/owned Summary now use authoritative APIs. Concession composition, Promotion, Payment and My Bookings/Tickets/QR remain preview integrations. VIP Booking snapshots are real; old Summary demo pricing supports STANDARD/COUPLE only and must never determine persisted prices.
 - No bulk-release/replacement endpoint exists: clear uses sequential exact-ID releases, stops on failure and reconciles remaining ownership. No implicit release or renewal on navigation. Polling/operations reconcile rather than realtime push; reads are not a final Booking guarantee. Downstream previews carry original expiry but cannot prove continuing ownership.
 - Automatic STARTED/ENDED progression, operational cancellation with history/refunds, Manager scoped authoring, Delete, layout reshaping and durable searchable Admin audit remain outside this task. Cinema-first behavioral contract remains unresolved; Movie-first real discovery is implemented.
 - Legacy Auth response/session userId is numeric; new domain IDs are decimal strings. Do not claim global ID safety.
@@ -86,8 +139,8 @@ Final verification Showtime is **CANCELLED**, Admin read-only; Customer query om
 | [Admin Showtime v1.0](../api/admin-showtime-contract-v1.0.md), [latest report](../reports/2026-10-02_admin-showtime-management_report.md) | Current V12 authoring plus Customer real READ slice |
 | [Admin configuration](../api/admin-cinema-configuration-contract-v1.0.md), [V11 report](../reports/2026-10-01_v11-admin-cinema-configuration_report.md) | Protected Cinema/Hall/Seat; final historical verification Cinema 4/Hall 7/Seats 271–273 remain INACTIVE |
 | [Admin Movie](../api/admin-movie-contract-v1.0.md), [live Movie report](../reports/2026-10-01_live-neon-admin-and-cinema-management-preflight_report.md) | Existing management; historical verification Movie 12 remains UNPUBLISHED |
-| [Discovery v1.0](../api/customer-discovery-contract-v1.0.md), [Seat/Hold v1.0](../api/seat-hold-contract-v1.0.md), [v1.1 delta](../api/seat-hold-contract-v1.1.md), [latest frontend report](../reports/2026-10-02_customer-authoritative-seat-hold-frontend_report.md) | Real Customer read/Hold frontend; read both Hold versions for Booking handoff |
-| [Booking v1.3](../api/booking-contract-v1.3.md), [Payment initiation](../api/payment-initiation-contract-v1.0.md) | Existing backend first-attempt/freeze, no frontend checkout integration |
+| [Discovery v1.0](../api/customer-discovery-contract-v1.0.md), [Seat/Hold v1.0](../api/seat-hold-contract-v1.0.md), [v1.1 delta](../api/seat-hold-contract-v1.1.md), [Hold frontend report](../reports/2026-10-02_customer-authoritative-seat-hold-frontend_report.md) | Real Customer read/Hold and Booking frontend; latest evidence/guide above |
+| [Booking v1.3](../api/booking-contract-v1.3.md), [Payment initiation](../api/payment-initiation-contract-v1.0.md) | Backend first-attempt/freeze; real seat-only Booking frontend stops before composition/Payment |
 | [Promotion v1.1](../api/promotion-composition-contract-v1.1.md), [Concession](../api/concession-composition-contract-v1.0.md) | Authoritative pre-Payment backend composition |
 | [VNPAY v1.1](../api/vnpay-sandbox-payment-contract-v1.1.md), [v1.0](../api/vnpay-sandbox-payment-contract-v1.0.md), [report](../reports/2026-09-30_vnpay-sandbox-payment-backend_report.md) | Local protected result/finalization paths; real merchant certification pending |
 | [Integrity v1.2](../db/integrity-enforcement-design-v1.2.md), [v1.1](../db/integrity-enforcement-design-v1.1.md), [dictionary](../db/physical-data-dictionary-v1.0.md) | Ordered guards, snapshots, protected paid finalization |

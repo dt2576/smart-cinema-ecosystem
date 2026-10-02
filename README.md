@@ -165,8 +165,9 @@ Admin also manages [Cinema/Hall/Seat configuration](docs/development/admin-cinem
 and [Showtimes](docs/development/admin-showtime-management.md) at
 <http://localhost:3000/admin/showtimes>. V12 authoring atomically initializes
 membership and protects transactional history. Customer Cinema/Showtime/Seat-map
-reads use real APIs; Seat selection/countdown and downstream checkout remain
-explicit local previews with no real Hold or Booking.
+reads use real APIs; Seat selection uses authoritative authenticated Holds, then
+[real Booking creation and owned Summary](docs/development/customer-booking-creation-frontend.md).
+Concession/Promotion/Payment and history/Ticket/QR integrations remain separate previews.
 
 Provision a dedicated development Admin with **`pnpm admin:dev`** after setting
 local `DEV_ADMIN_*` inputs in ignored `backend/.env`. Registration and demo seed

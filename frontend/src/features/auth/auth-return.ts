@@ -7,3 +7,9 @@ export function seatLoginReturn(value: string | null): string | null {
     || url.searchParams.getAll("date").length !== 1 || !/^\d{4}-\d{2}-\d{2}$/.test(url.searchParams.get("date") ?? "")) return null;
   return url.pathname + url.search;
 }
+
+export function customerLoginReturn(value: string | null): string | null {
+  const match = value?.match(/^\/bookings\/([1-9][0-9]{0,18})\/summary$/);
+  if (match && (match[1].length < 19 || match[1] <= "9223372036854775807")) return value;
+  return seatLoginReturn(value);
+}

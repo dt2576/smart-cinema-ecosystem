@@ -23,7 +23,7 @@ async function enter(page: Page, scenario = "default", time = "09:00:00") {
   await page.getByRole("button", { name: "E1-2, Couple, 2 guests, Available", exact: true }).click();
   await page.getByRole("button", { name: "A1, Standard, 1 guest, Available", exact: true }).click();
   await confirmSelectedHolds(page);
-  await page.getByRole("button", { name: "Continue to Concessions" }).click();
+  await page.getByRole("button", { name: "Preview Concessions" }).click();
   await expect(page.locator("html")).toHaveAttribute("data-concession-loading-observed", "true");
   await expect(page.getByRole("heading", { name: "Food & Drinks", exact: true })).toBeVisible();
 }

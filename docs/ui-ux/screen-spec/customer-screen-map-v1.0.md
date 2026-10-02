@@ -1,7 +1,7 @@
 # Canonical Customer Screen Map v1.0
 
 Date: 2026-09-25.
-Status: Canonical reference selection; Final Customer QA reconciliation updated 2026-09-28. No Stitch edits.
+Status: Canonical reference selection; latest real Booking integration reconciliation 2026-10-02. No Stitch edits.
 Project: Smart Cinema Ecosystem, `1208499799798658711`.
 
 ## 1. Authority and classification
@@ -29,11 +29,11 @@ IDs below are source screen IDs, not canvas instance IDs. Source inventory remai
 | `/movies/[movieId]` — detail | Smart Cinema - Movie Detail | `16dbe62e3be744e6ab4123fc004283e3` | IMPLEMENTED API CLIENT; BROWSER FIXTURES VERIFIED | Public detail DTO; no cast/prices or inferred screening availability |
 | `/movies/[movieId]/cinemas` — choose Cinema | Smart Cinema - Cinema Selection | `8de77c4d95c141f9947a4f7bf4cad7c9` | REAL PUBLIC READ IMPLEMENTED | Real Movie/Cinema eligibility and navigation to Showtime discovery |
 | `/movies/[movieId]/cinemas/[cinemaId]/showtimes` — choose Showtime | Smart Cinema - Showtime Selection | `a808fb16fcad452696636be952ea70b1` | REAL PUBLIC READ IMPLEMENTED | Server dates/zone/Hall grouping and eligibility; navigation to real Seat map |
-| `/showtimes/[showtimeId]/seats` — Seat Map / Hold | Smart Cinema - Seat Selection | `fdea388b4b24406799ab087b31239835` | AUTHORITATIVE HOLD INTEGRATED | Real public map + authenticated owned Hold acquire/release/reload; STANDARD/VIP one guest, whole COUPLE two; server expiry; Continue remains pre-Booking handoff |
-| `/bookings/[bookingId]/concessions` — Concessions | Smart Cinema - Food & Drinks | `602baa042d22404d8b31d461351aa42d` | MOCK UI IMPLEMENTED at static `/bookings/preview/concessions`; production route deferred | Optional POPCORN/DRINK/COMBO, local quantities/subtotal; authoritative catalog and Booking remain deferred |
-| Same Concessions flow — Hold expired state | Smart Cinema - Food & Drinks (Seat Hold Expired) | `1017f7c1f77943579d9bb1bee37f7718` | PREVIEW STATE IMPLEMENTED | Stop progression; return to Seat Selection; original local deadline never extends; real Hold ownership remains deferred |
-| `/bookings/[bookingId]/summary` — review | Smart Cinema - Booking Summary / Review Order | `52aa55f16d2640d68efb6c399d5fb990` | MOCK UI IMPLEMENTED at static `/bookings/preview/summary`; production route deferred | Screening, whole Seat Units/guest count, Concessions, sample Seat/Concession subtotals, discount and grand total; all non-authoritative |
-| Same Summary route — Promotion | Smart Cinema - Booking Summary / Review Order | `52aa55f16d2640d68efb6c399d5fb990` | EMBEDDED PREVIEW IMPLEMENTED | Local apply/remove/invalid/expired/ineligible/error/retry fixtures; real eligibility and server totals remain deferred |
+| `/showtimes/[showtimeId]/seats` — Seat Map / Hold | Smart Cinema - Seat Selection | `fdea388b4b24406799ab087b31239835` | AUTHORITATIVE HOLD INTEGRATED | Real public map + authenticated owned Hold acquire/release/reload; STANDARD/VIP one guest, whole COUPLE two; server expiry; primary Create Booking uses exact owned Hold origins |
+| `/bookings/[bookingId]/concessions` — Concessions | Smart Cinema - Food & Drinks | `602baa042d22404d8b31d461351aa42d` | MOCK UI IMPLEMENTED at static `/bookings/preview/concessions`; production route deferred | Optional POPCORN/DRINK/COMBO preview; real Concession catalog/composition frontend deferred; seat-only Booking now real |
+| Same Concessions flow — Hold expired state | Smart Cinema - Food & Drinks (Seat Hold Expired) | `1017f7c1f77943579d9bb1bee37f7718` | PREVIEW STATE IMPLEMENTED | Stop preview progression; return to real Seat Selection; carried original server expiry never extends; preview does not revalidate ownership |
+| `/bookings/[bookingId]/summary` — review | Smart Cinema - Booking Summary / Review Order | `52aa55f16d2640d68efb6c399d5fb990` | REAL OWNED BOOKING SUMMARY IMPLEMENTED; static design preview remains separate | Server Booking identity/status, whole Seat lines, guest count, exact price snapshots/totals/deadline; GET reload/direct entry; stops before real Payment |
+| Same Summary route — Promotion | Smart Cinema - Booking Summary / Review Order | `52aa55f16d2640d68efb6c399d5fb990` | STATIC EMBEDDED PREVIEW; REAL SUMMARY READ-ONLY | Local apply/remove fixtures belong only to `/bookings/preview/summary`; real Summary reads persisted Promotion snapshot without applying/removing |
 | `/bookings/[bookingId]/payment` — method selection | Smart Cinema - Payment Method Selection | `0cc11f6226c74b6291ef49660e63f748` | MOCK UI IMPLEMENTED at static `/bookings/preview/payment`; production route deferred | Typed sample methods, single available selection, reviewed Promotion/total and original Seat deadline; no Payment initiation or freeze |
 | Same Payment route — processing/verification | Smart Cinema - Payment Processing & Verification | `777b204432ad4fba84065c10697951e9` | MOCK UI IMPLEMENTED at static `/bookings/preview/payment/processing` | Local processing/verifying and outcome simulation; pending is unresolved and success is explicitly not server-verified |
 | `/bookings/[bookingId]/payment/result` — result | Smart Cinema - Payment Result & Order Confirmation | `b023e6ffbd0c424d9244aaa8393c442c` | MOCK UI IMPLEMENTED at static `/bookings/preview/payment/result`; production route deferred | Success/failed/pending demo outcomes with reviewed context; exclude all issued/verified/paid claims and QR content. Future real issuance follows one Booking QR per Booking |
@@ -133,3 +133,29 @@ Downstream Concession through Payment/history/Ticket/QR remains preview-only.
 Continue carries exact Hold origins/deadline in memory for future Booking
 integration, creates no Booking and makes no authoritative pricing claim.
 Canonical Stitch IDs/designs are unchanged.
+
+## Authoritative Booking reconciliation — 2026-10-02
+
+The primary Seat action now creates a real seat-only Booking through existing
+POST `/api/v1/bookings`, using the exact complete owned Hold set. The canonical
+Summary ID `52aa55f16d2640d68efb6c399d5fb990` is reused at
+`/bookings/[bookingId]/summary`, with authenticated owned GET on reload/direct
+entry. Server identity, immutable Seat prices/type, totals and Booking deadline
+replace preview authority on this route. Current referenced screening labels
+are displayed as such. Exact four-decimal amounts are preserved; no currency
+or local display timezone is guessed from absent DTO fields.
+
+Attached Holds are not freely editable: Seat back navigation shows HELD/disabled
+units and Return to Booking, with no release, re-creation or expiry renewal.
+Explicit unknown-outcome recovery retries only the exact saved origin set under
+the existing backend contract. Public catalog hiding does not replace owned GET.
+Normal Customer login resumes the validated Summary link.
+
+Promotion controls remain embedded only in the static design preview. The real
+Summary renders existing persisted composition read-only and disables Payment
+integration. Preview Concessions is a clearly separate secondary Seat action;
+no local quantity/code/price alters a real Booking. Earlier pre-Booking statements
+above describe historical preview coverage and are superseded for the primary
+route by this section. Stitch IDs/designs are preserved. See the
+[current guide](../../development/customer-booking-creation-frontend.md) and
+[report](../../reports/2026-10-02_customer-booking-creation-frontend_report.md).

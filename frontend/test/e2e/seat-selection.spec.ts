@@ -27,7 +27,7 @@ test("draft selection is separate from atomic owned Holds and whole COUPLE relea
   const summary = page.getByRole("complementary", { name: "Seat selection summary" });
   await expect(summary).toContainText("2 Seat Units · 3 guests");
   await expect(summary).toContainText("0 server-confirmed owned Holds");
-  await expect(page.getByRole("button", { name: "Continue to Concessions" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Create Booking & review" })).toBeDisabled();
   await confirmSelectedHolds(page);
   expect(state.posts).toEqual([["9007199254742041", "9007199254742001"]]);
   await expect(summary).toContainText("2 server-confirmed owned Holds");
@@ -62,7 +62,7 @@ test("reload/back/forward restore owned identities and original expiry; Continue
   await expect(page.getByRole("button", { name: "E1-2, Couple, 2 guests, Held by you", exact: true })).toBeVisible();
   await expect(page.getByRole("timer")).toHaveText(/08:5[7-9]|09:00/);
   expect(state.holds).toEqual(original); expect(state.posts).toHaveLength(1);
-  await page.getByRole("button", { name: "Continue to Concessions" }).click();
+  await page.getByRole("button", { name: "Preview Concessions" }).click();
   await expect(page.getByRole("heading", { name: "Food & Drinks", exact: true })).toBeVisible();
   await expect(page.getByText(/No Booking or Payment is created/)).toBeVisible();
   await page.goBack();
@@ -82,7 +82,7 @@ test("adding units never renews existing deadline; expiry reconciles without aut
   expect(state.holds.every(hold => hold.expiresAt === deadline)).toBe(true);
   await page.clock.fastForward(301000);
   await expect(page.getByRole("complementary", { name: "Seat selection summary" })).toContainText("0 server-confirmed owned Holds");
-  await expect(page.getByRole("button", { name: "Continue to Concessions" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Create Booking & review" })).toBeDisabled();
   await expect(page.getByRole("button", { name: couple, exact: true })).toBeEnabled();
   expect(state.posts).toHaveLength(2); expect(state.holds).toHaveLength(0);
 });
@@ -95,7 +95,7 @@ test("conflicting multi-unit acquisition grants nothing and refreshes the other-
   await expect(page.getByRole("complementary", { name: "Seat selection summary" }).getByRole("alert")).toContainText("Seat selection conflict");
   await expect(page.getByRole("button", { name: "E1-2, Couple, 2 guests, Held", exact: true })).toBeDisabled();
   expect(state.posts).toHaveLength(1); expect(state.holds).toHaveLength(0);
-  await expect(page.getByRole("button", { name: "Continue to Concessions" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Create Booking & review" })).toBeDisabled();
 });
 
 test("rapid actions are gated and failed release preserves the owned Hold until confirmed", async ({ page }) => {
@@ -103,9 +103,9 @@ test("rapid actions are gated and failed release preserves the owned Hold until 
   let resolveRequest!: () => void; state.delay = new Promise<void>(resolve => { resolveRequest = resolve; });
   const hold = page.getByRole("button", { name: "Hold selected Seats", exact: true });
   await hold.click(); await expect(hold).toBeDisabled();
-  await expect(page.getByRole("button", { name: "Continue to Concessions" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Create Booking & review" })).toBeDisabled();
   expect(state.posts).toHaveLength(1); resolveRequest();
-  await expect(page.getByRole("button", { name: "Continue to Concessions" })).toBeEnabled();
+  await expect(page.getByRole("button", { name: "Create Booking & review" })).toBeEnabled();
   state.failRelease = true;
   await page.getByRole("button", { name: "E1-2, Couple, 2 guests, Held by you", exact: true }).click();
   await expect(page.getByRole("complementary", { name: "Seat selection summary" }).getByRole("alert")).toContainText("could not be reached or confirmed");
@@ -119,7 +119,7 @@ test("lost acquisition response is reconciled by GET without blindly repeating P
   const state = await prepare(page); await page.goto(ROUTE); await page.getByRole("button", { name: seat, exact: true }).click();
   state.lostResponse = true; await page.getByRole("button", { name: "Hold selected Seats", exact: true }).click();
   await expect(page.getByRole("button", { name: "A1, Standard, 1 guest, Held by you", exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Continue to Concessions" })).toBeEnabled(); expect(state.posts).toHaveLength(1);
+  await expect(page.getByRole("button", { name: "Create Booking & review" })).toBeEnabled(); expect(state.posts).toHaveLength(1);
 });
 
 test("safe 400/401/403/404/409 errors never expose internals or create a preview Hold", async ({ page }) => {
@@ -128,7 +128,7 @@ test("safe 400/401/403/404/409 errors never expose internals or create a preview
     await page.getByRole("button", { name: seat, exact: true }).click();
     state.failNext = status; await page.getByRole("button", { name: "Hold selected Seats", exact: true }).click();
     await expect(page.getByRole("complementary", { name: "Seat selection summary" }).getByRole("alert")).toBeVisible(); await expect(page.getByText("private SQL must not reach the UI")).toHaveCount(0);
-    await expect(page.getByRole("button", { name: "Continue to Concessions" })).toBeDisabled(); expect(state.holds).toHaveLength(0);
+    await expect(page.getByRole("button", { name: "Create Booking & review" })).toBeDisabled(); expect(state.holds).toHaveLength(0);
     if (status !== 401) await page.getByRole("button", { name: "Clear selection / release Holds" }).click();
   }
   await expect(page.getByRole("button", { name: "Sign in again" })).toBeVisible();
@@ -148,10 +148,10 @@ test("unconfirmed owned read blocks continuation and retry restores the same dea
   const original = structuredClone(state.holds);
   await page.route(`**/api/v1/showtimes/${SHOWTIME_ID}/seat-holds`, async route => { await route.abort("failed"); await page.unroute(`**/api/v1/showtimes/${SHOWTIME_ID}/seat-holds`); });
   await page.getByRole("button", { name: "Refresh Seat availability" }).click();
-  await expect(page.getByRole("button", { name: "Continue to Concessions" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Create Booking & review" })).toBeDisabled();
   await expect(page.getByRole("button", { name: "A1, Standard, 1 guest, Last confirmed Hold", exact: true })).toBeDisabled();
   await page.getByRole("button", { name: "Refresh Seat availability" }).click();
-  await expect(page.getByRole("button", { name: "Continue to Concessions" })).toBeEnabled();
+  await expect(page.getByRole("button", { name: "Create Booking & review" })).toBeEnabled();
   expect(state.holds).toEqual(original); expect(state.posts).toHaveLength(1);
 });
 
@@ -171,7 +171,7 @@ test("Showtime becoming ineligible rejects a write then blocks continuation afte
   await page.route(`**/api/v1/showtimes/${SHOWTIME_ID}/seats`, route => route.fulfill({ status: 404, json: { detail: "unavailable" } }));
   await page.getByRole("button", { name: "Hold selected Seats", exact: true }).click();
   await expect(page.getByRole("complementary", { name: "Seat selection summary" }).getByRole("alert")).toContainText("Seat selection conflict");
-  await expect(page.getByRole("button", { name: "Continue to Concessions" })).toBeDisabled(); expect(state.holds).toHaveLength(0);
+  await expect(page.getByRole("button", { name: "Create Booking & review" })).toBeDisabled(); expect(state.holds).toHaveLength(0);
 });
 
 test("server cutoff projection blocks new Holds even with an unexpired grant", async ({ page }) => {
@@ -180,7 +180,7 @@ test("server cutoff projection blocks new Holds even with an unexpired grant", a
   expect(state.holds[0].expiresAt).toBe("2030-01-01T03:00:00.000Z");
   await page.clock.fastForward(61000);
   await expect(page.getByRole("complementary", { name: "Seat selection summary" }).getByRole("alert")).toContainText("booking cutoff has passed");
-  await expect(page.getByRole("button", { name: "Continue to Concessions" })).toBeDisabled(); expect(state.posts).toHaveLength(1);
+  await expect(page.getByRole("button", { name: "Create Booking & review" })).toBeDisabled(); expect(state.posts).toHaveLength(1);
 });
 
 test("STANDARD/VIP/COUPLE remain whole and keyboard/mobile have no page overflow", async ({ page }, info) => {

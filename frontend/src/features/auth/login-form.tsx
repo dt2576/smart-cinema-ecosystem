@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { AuthApiError, login } from "@/features/auth/auth-api";
 import { useAuth } from "@/features/auth/auth-context";
-import { seatLoginReturn } from "@/features/auth/auth-return";
+import { customerLoginReturn } from "@/features/auth/auth-return";
 
 type LoginErrors = {
   email?: string;
@@ -45,7 +45,7 @@ export function LoginForm() {
     try {
       const session = await login({ email, password });
       establishSession(session);
-      const returnTo = seatLoginReturn(new URLSearchParams(window.location.search).get("returnTo"));
+      const returnTo = customerLoginReturn(new URLSearchParams(window.location.search).get("returnTo"));
       router.replace(session.user.role === "CUSTOMER" && returnTo ? returnTo : session.user.role === "ADMIN" ? "/admin" : "/");
     } catch (error) {
       if (error instanceof AuthApiError) {

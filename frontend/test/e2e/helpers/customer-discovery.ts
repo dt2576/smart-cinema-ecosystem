@@ -33,7 +33,7 @@ export async function mockDiscoveryReads(page: Page) {
       const position = row === "E" ? index * 2 + 1 : index + 1;
       const booked = row === "A" && position === 3 || row === "B" && position === 5 || row === "E" && position === 3;
       const unavailable = row === "C" && position === 2 || row === "E" && position === 7;
-      return { id: String(BigInt("9007199254742000") + BigInt(rowIndex * 10 + position)), row, number: row === "E" ? `${position}-${position + 1}` : String(position), type: row === "E" ? "COUPLE" : "STANDARD", guestCount: row === "E" ? 2 : 1, availability: booked ? "BOOKED" : unavailable || scenario === "unavailable" ? "UNAVAILABLE" : "AVAILABLE" };
+      return { id: String(BigInt("9007199254742000") + BigInt(rowIndex * 10 + position)), row, number: row === "E" ? `${position}-${position + 1}` : String(position), type: row === "E" ? "COUPLE" : row === "D" ? "VIP" : "STANDARD", guestCount: row === "E" ? 2 : 1, availability: booked ? "BOOKED" : unavailable || scenario === "unavailable" ? "UNAVAILABLE" : "AVAILABLE" };
     }));
     return route.fulfill({ json: { showtimeId: id, movieId: MOVIE, cinemaId: CINEMA, hallId: item.hall.id, serverTime: await serverNow(), units: scenario === "empty" ? [] : units.map(unit => ownedSeats().includes(unit.id) ? { ...unit, availability: "HELD" } : unit) } });
   });

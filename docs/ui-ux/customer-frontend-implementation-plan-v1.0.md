@@ -106,7 +106,7 @@ Final QA gates passed: 49 unit tests, 73 Playwright tests, TypeScript, lint, pro
 
 Backend handoff order: discovery and Hall/Showtime seat eligibility; authoritative Hold ownership/expiry/realtime; owned Booking/Concessions/Promotion snapshots and cancellation; Payment initiation/freeze/verification; Ticket issuance, owned history and secure Booking QR resolution. Define string IDs and ProblemDetail semantics in each contract. Auth numeric userId needs a coordinated serialization audit.
 
-At the historical final-QA milestone, discovery and authoritative Hold were deferred. Current real integrations now cover Movie-first discovery, VIP/HELD Seat data, authenticated ownership, atomic Hold races and reconciliation. Remaining Customer capabilities include Cinema-first discovery (FR-SHOWTIME-007), owned Booking integration/cancel-pending action (FR-BOOKING-011 / UC-CUS-022), frozen composition and trusted Payment states. These dependencies do not authorize fake endpoints. Full production completion still follows the definition above.
+At the historical final-QA milestone, discovery and authoritative Hold were deferred. Current real integrations now cover Movie-first discovery, VIP/HELD Seat data, authenticated ownership, atomic Hold races and reconciliation. Remaining Customer capabilities include Cinema-first discovery (FR-SHOWTIME-007), real Concession/Promotion composition, owned history/cancel-pending action (FR-BOOKING-011 / UC-CUS-022), frozen composition and trusted Payment states. These dependencies do not authorize fake endpoints. Full production completion still follows the definition above.
 
 ## Authoritative Seat Hold integration — 2026-10-02
 
@@ -129,3 +129,34 @@ frontend using authoritative Hold handoff**. Backend must revalidate owner,
 whole set, original expiry/cutoff and current eligibility before attaching;
 frontend must then use the returned real Booking identity, snapshots and total.
 Do not automatically advance Concession/Promotion/Payment integration.
+
+## Authoritative Booking integration — 2026-10-02
+
+Primary flow now reaches real authenticated seat-only Booking creation and owned
+`/bookings/[bookingId]/summary` from the exact fresh Hold origins. Existing V12
+backend gates remain the authority for complete-set attachment, ownership,
+cutoff/expiry, immutable prices and aggregate deadline. COUPLE remains one
+Booking Seat/two guests. GET restores Summary on reload/direct entry and after
+public catalog hiding; safe normal login resumption is implemented.
+
+Summary displays exact server numeric(19,4) strings, current screening metadata,
+saved Seat type/prices, status and deadline. No local price adjustment, currency
+conversion, deadline renewal or payment authority is added. Attached origins
+are excluded from editable owned Holds; back navigation restores HELD/disabled
+units and Return to Booking without mutation. Duplicate creation is gated;
+unknown responses require explicit retry of only the same complete saved set
+under the current eligible-PENDING exact-set contract.
+
+Real Summary stops before Concession/Promotion/Payment integration. The existing
+static design flow is accessible only through the separate Preview Concessions
+secondary action, with explicit non-persistence messaging. No preview action
+modifies the real Booking. Earlier future/pre-Booking descriptions are historical
+coverage and superseded for this primary flow. No backend/schema/contract or
+Stitch change. Details: [guide](../development/customer-booking-creation-frontend.md),
+[report](../reports/2026-10-02_customer-booking-creation-frontend_report.md).
+
+Exact next separately authorized task: **Integrate real Concession composition
+into the existing unpaid Booking**, then Promotion integration and Payment
+initiation as separate tasks. Owned history, cancellation UI and trusted
+Payment/Ticket/QR integration remain deferred; previews are not production
+completion. Do not advance these automatically.
