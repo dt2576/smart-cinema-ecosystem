@@ -12,16 +12,16 @@ export function getPaymentResultPresentation(result: PaymentResultPreview): Paym
   if (!createPaymentResultPreview(result.outcome, result.scenario)) return null;
   switch (result.outcome) {
     case "success": return {
-      title: "Payment success preview", tone: "success", resumeLabel: "Back to Processing preview",
-      message: "Confirmation-style demonstration only. This success is not server-verified. No Booking has been paid and no Tickets have been issued.",
+      title: "Thanh toán thành công — mẫu", tone: "success", resumeLabel: "Về xử lý mẫu",
+      message: "Chỉ minh họa giao diện xác nhận. Thành công này chưa được máy chủ xác minh. Chưa thanh toán đơn đặt vé hay phát hành vé.",
     };
     case "failed": return {
-      title: "Payment failed preview", tone: "error", resumeLabel: "Retry processing preview",
-      message: "The local simulation returned a failed outcome. No money was charged. You can retry the preview or choose another sample method while the original preview remains valid.",
+      title: "Thanh toán thất bại — mẫu", tone: "error", resumeLabel: "Thử lại xử lý mẫu",
+      message: "Mô phỏng trả về thất bại. Chưa thu tiền. Bạn có thể thử lại hoặc chọn phương thức mẫu khác khi bản xem trước gốc còn hiệu lực.",
     };
     case "pending": return {
-      title: "Payment pending preview", tone: "pending", resumeLabel: "Return to verification preview",
-      message: "Verification is unresolved in this demonstration. Pending is neither success nor failure. Return to Processing to check the same local preview; no real provider is being queried.",
+      title: "Thanh toán chờ xử lý — mẫu", tone: "pending", resumeLabel: "Về xác minh mẫu",
+      message: "Chưa có kết quả xác minh trong ví dụ này. Chờ xử lý không có nghĩa là thành công hay thất bại. Quay về xử lý để kiểm tra cùng bản xem trước; không truy vấn nhà cung cấp thật.",
     };
   }
 }

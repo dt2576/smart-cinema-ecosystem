@@ -10,7 +10,7 @@ export async function mockCustomerBookings(page: Page, holds: Awaited<ReturnType
   let now = "2030-01-01T02:00:00Z";
   await page.route(/\/api\/v1\/bookings(?:\/\d+)?$/, async route => {
     try { now = await page.evaluate(() => new Date(Date.now()).toISOString()); } catch { /* Aborted previous document. */ }
-    if (route.request().headers().authorization !== "Bearer qa-access") return route.fulfill({ status: 401, json: { detail: "Sign in required" } });
+    if (route.request().headers().authorization !== "Bearer qa-access") return route.fulfill({ status: 401, json: { detail: "Cần đăng nhập" } });
     if (route.request().method() === "GET") {
       state.reads++;
       if (state.readError) return route.fulfill({ status: state.readError, json: { detail: "private SQL owner information" } });
@@ -34,7 +34,7 @@ export async function mockCustomerBookings(page: Page, holds: Awaited<ReturnType
       return { id: String(BigInt("9007199254771001") + BigInt(index)), seatId: origin!.seatId, holdId: origin!.id, row: couple ? "E" : vip ? "D" : "A", number: couple ? "1-2" : "1", type: couple ? "COUPLE" as const : vip ? "VIP" as const : "STANDARD" as const, guestCount: couple ? 2 : 1, unitPrice: "90001.4321", finalPrice: "90001.4321" };
     });
     const scaled = BigInt("900014321") * BigInt(seats.length), raw = scaled.toString().padStart(5, "0"), amount = `${raw.slice(0, -4)}.${raw.slice(-4)}`;
-    state.booking = { id: BOOKING_ID, bookingCode: "SERVER-BOOKING-REF", status: "PENDING", showtimeId: input.showtimeId, movieId: "9223372036854775807", movieTitle: "Seat Journey", cinemaId: "9007199254740993", cinemaName: "Smart Cinema Landmark", hallId: "90071992547409931", hallName: "Hall 1", startsAt: "2030-01-01T03:00:00Z", createdAt: now, expiresAt: new Date(Math.min(...origins.map(origin => Date.parse(origin!.expiresAt)))).toISOString(), serverTime: now, seatUnitCount: seats.length, guestCount: seats.reduce((sum, seat) => sum + seat.guestCount, 0), seatAmount: amount, concessionAmount: "0.0000", subtotal: amount, discount: "0.0000", finalAmount: amount, seats, concessions: [], promotion: null, paymentStartedAt: null };
+    state.booking = { id: BOOKING_ID, bookingCode: "SERVER-BOOKING-REF", status: "PENDING", showtimeId: input.showtimeId, movieId: "9223372036854775807", movieTitle: "Seat Journey", cinemaId: "9007199254740993", cinemaName: "Smart Cinema Landmark", hallId: "90071992547409931", hallName: "Phòng chiếu 1", startsAt: "2030-01-01T03:00:00Z", createdAt: now, expiresAt: new Date(Math.min(...origins.map(origin => Date.parse(origin!.expiresAt)))).toISOString(), serverTime: now, seatUnitCount: seats.length, guestCount: seats.reduce((sum, seat) => sum + seat.guestCount, 0), seatAmount: amount, concessionAmount: "0.0000", subtotal: amount, discount: "0.0000", finalAmount: amount, seats, concessions: [], promotion: null, paymentStartedAt: null };
     holds.attachedHolds = origins.map(origin => origin!); holds.holds = holds.holds.filter(hold => !input.holdIds.includes(hold.id));
     if (state.lostResponse) { state.lostResponse = false; return route.abort("failed"); }
     return route.fulfill({ json: state.booking });

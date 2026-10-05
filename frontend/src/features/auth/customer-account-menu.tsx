@@ -29,13 +29,13 @@ export function CustomerAccountMenu() {
     <summary className="flex min-h-11 list-none items-center gap-2 rounded-lg bg-panel-high px-2 font-heading text-sm font-semibold text-foreground transition-colors hover:bg-panel-hover [&::-webkit-details-marker]:hidden">
       <span className="hidden max-w-40 truncate pl-2 sm:block">{user.fullName}</span>
       <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-bold text-on-action" aria-hidden="true">{getInitials(user.fullName)}</span>
-      <span className="sr-only">Open account menu</span>
+      <span className="sr-only">Mở menu tài khoản</span>
     </summary>
     <div className="absolute right-0 top-[calc(100%+0.5rem)] z-50 min-w-52 overflow-hidden rounded-lg border border-outline/40 bg-panel p-2 shadow-2xl shadow-black/40">
       <p className="truncate px-3 py-2 text-xs text-muted sm:hidden">{user.fullName}</p>
-      {user.role === "ADMIN" && <Link href="/admin" onClick={() => menuRef.current?.removeAttribute("open")} className="flex min-h-11 items-center rounded-md px-3 font-heading text-sm font-semibold text-accent hover:bg-panel-high">Admin area</Link>}
-      <Link href="/profile" onClick={() => menuRef.current?.removeAttribute("open")} className="flex min-h-11 items-center rounded-md px-3 font-heading text-sm font-semibold text-foreground hover:bg-panel-high">My Profile</Link>
-      <button type="button" onClick={() => void logout()} className="flex min-h-11 w-full items-center rounded-md px-3 text-left font-heading text-sm font-semibold text-error hover:bg-panel-high">Logout</button>
+      {user.role === "ADMIN" && <Link href="/admin" onClick={() => menuRef.current?.removeAttribute("open")} className="flex min-h-11 items-center rounded-md px-3 font-heading text-sm font-semibold text-accent hover:bg-panel-high">Khu vực quản trị</Link>}
+      <Link href="/profile" onClick={() => menuRef.current?.removeAttribute("open")} className="flex min-h-11 items-center rounded-md px-3 font-heading text-sm font-semibold text-foreground hover:bg-panel-high">Hồ sơ của tôi</Link>
+      <button type="button" onClick={() => void logout()} className="flex min-h-11 w-full items-center rounded-md px-3 text-left font-heading text-sm font-semibold text-error hover:bg-panel-high">Đăng xuất</button>
     </div>
   </details>;
 }
@@ -50,7 +50,7 @@ export function CustomerLogoutButton({ onLogout, className = "" }: { onLogout?: 
     router.replace("/");
   }
 
-  return <button type="button" onClick={() => void logout()} className={className}>Logout</button>;
+  return <button type="button" onClick={() => void logout()} className={className}>Đăng xuất</button>;
 }
 
 function getInitials(fullName: string) {

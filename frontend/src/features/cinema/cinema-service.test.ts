@@ -22,7 +22,7 @@ test("empty, unavailable and error/retry states are deterministic adapter scenar
   assert.deepEqual(await createMockCinemaService("empty", 0).listForMovie("1", signal), []);
   assert.equal((await createMockCinemaService("unavailable", 0).listForMovie("1", signal)).some(option => option.selectionState === "AVAILABLE"), false);
   const retryable = createMockCinemaService("error", 0);
-  await assert.rejects(retryable.listForMovie("1", signal), /couldn’t load/);
+  await assert.rejects(retryable.listForMovie("1", signal), /Không thể tải/);
   assert.equal((await retryable.listForMovie("1", signal)).length, 4);
   assert.equal(parseCinemaPreviewState("unknown"), "default");
 });
@@ -33,7 +33,7 @@ test("adapter cancellation does not consume the retryable error scenario", async
   const request = service.listForMovie("1", controller.signal);
   controller.abort();
   await assert.rejects(request, { name: "AbortError" });
-  await assert.rejects(service.listForMovie("1", new AbortController().signal), /couldn’t load/);
+  await assert.rejects(service.listForMovie("1", new AbortController().signal), /Không thể tải/);
 });
 
 test("only selectable Cinema options produce a typed handoff with both string identities", async () => {

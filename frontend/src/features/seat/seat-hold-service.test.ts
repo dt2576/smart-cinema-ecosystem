@@ -3,7 +3,7 @@ import test from "node:test";
 const { holdClock, projectedServerNow, usableOwnedHolds, bookingHoldHandoff } = await import("./seat-hold-service" + ".ts") as typeof import("./seat-hold-service");
 const { seatLoginReturn } = await import("../auth/auth-return" + ".ts") as typeof import("../auth/auth-return");
 const time = "2030-01-01T02:00:00Z", now = Date.parse(time);
-const showtime = { id: "9007199254740993", movieId: "1", cinemaId: "2", hall: { id: "3", name: "Hall" }, startsAt: "2030-01-01T03:00:00Z", bookingCutOff: "2030-01-01T02:45:00Z" };
+const showtime = { id: "9007199254740993", movieId: "1", cinemaId: "2", hall: { id: "3", name: "Phòng chiếu" }, startsAt: "2030-01-01T03:00:00Z", bookingCutOff: "2030-01-01T02:45:00Z" };
 const map = { showtimeId: showtime.id, hallId: "3", units: [{ id: "9007199254740994", showtimeId: showtime.id, hallId: "3", type: "COUPLE" as const, availability: "HELD" as const, row: "E", number: "1-2", column: 1 }] };
 const hold = { id: "9007199254740995", showtimeId: showtime.id, seatId: map.units[0].id, status: "ACTIVE" as const, createdAt: time, expiresAt: "2030-01-01T02:10:00Z" };
 const batch = { serverTime: time, holds: [hold] };

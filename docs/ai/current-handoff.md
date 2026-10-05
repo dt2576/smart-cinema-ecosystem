@@ -1,8 +1,10 @@
 # Current AI handoff
 
-Last reconciled: 2026-10-02, Asia/Ho_Chi_Minh. **Customer Booking creation frontend COMPLETE**: full regression, real owned Hold → one Neon Booking/browser Summary and preservation PASS. No commit is implied. Read [project context](project-context.md), [AGENTS.md](../../AGENTS.md), workflows/conventions and Git status first. Current status here supersedes older preview/pre-Booking descriptions; no stable architecture/domain decision changed.
+Last reconciled: 2026-10-03, Asia/Ho_Chi_Minh. **Vietnamese frontend localization COMPLETE**. Primary frontend language: **Vietnamese** across implemented Customer, Auth, Admin and preview screens. The prior Customer Booking creation milestone and its real owned Hold → one Neon Booking/browser Summary evidence remain accepted. No commit is implied. Read [project context](project-context.md), [AGENTS.md](../../AGENTS.md), workflows/conventions and Git status first. Current status here supersedes older English UI labels and preview/pre-Booking descriptions; no stable architecture/domain decision changed.
 
 ## Current milestone
+
+Localization evidence: [dated report](../reports/2026-10-03_frontend-vietnamese-localization_report.md) and [current guide](../development/frontend-vietnamese-localization.md). Existing API/status/role/seat-type values remain unchanged; shared display labels map to Vietnamese. Exact Booking money and explicit UTC remain authoritative. Preview VND formatting is Vietnamese. Safe errors, validation and accessible names are localized. Final-source TypeScript, ESLint, production build, **84/84 unit tests**, full **115/115 Playwright scenarios** (one worker, no retries/skips) and backend **294 tests** passed. Desktop/mobile production screenshots and existing keyboard/overflow checks passed. Prior Booking evidence below is preserved separately.
 
 Flyway head: **V12**, [migration](../../backend/src/main/resources/db/migration/V12__guard_admin_showtime_configuration.sql). **No migration or backend change in this frontend task; no V13.** All V1–V12 source/applied Neon checksums and historical contracts/reports/requirements/Stitch are unchanged.
 
@@ -18,7 +20,7 @@ Read [Booking v1.0](../api/booking-contract-v1.0.md) plus additive
 - Movie/Genre → Cinema → Showtime → Seat map remain real public reads. Existing
   authenticated Customer Holds remain PostgreSQL-authoritative, atomic whole-set,
   separate owned GET/exact-ID release, server deadline and reload reconciliation.
-- Primary **Create Booking & review** freshly confirms exact owned Hold origins,
+- Primary **Tạo đơn đặt vé & xem thông tin** freshly confirms exact owned Hold origins,
   POSTs the complete Showtime/Hold set once, then opens real
   `/bookings/{bookingId}/summary` only after the server confirms identity.
   No client owner/role/status/price/time authority, fake API or mock fallback.
@@ -32,7 +34,7 @@ Read [Booking v1.0](../api/booking-contract-v1.0.md) plus additive
   Backend current role/account/ownership rules remain authoritative.
 - Attached Holds remain ACTIVE with original expiry, excluded from standalone
   owned reads and forbidden individual release/reuse. Back shows HELD/disabled
-  units, See Booking and Return to Booking, with no automatic writes/renewal.
+  units, Vietnamese Booking recovery/return links, with no automatic writes/renewal.
 - Pending/unknown creation gates changes. No automatic Booking POST retry.
   Explicit Recover Booking uses only the exact saved complete set under the
   existing eligible-unexpired-PENDING same-owner contract. A per-tab untrusted
@@ -59,7 +61,11 @@ stopped at authorization; the separate accepted task resolved that gate and appr
 
 ## Verification and live data
 
-Latest full `mvn verify`: **294 PASS**, 50 suites, zero failures/errors/skips,
+Localization verification: final-source TypeScript/ESLint/build PASS, unit **84/84 PASS**, full installed-Edge Playwright **115/115 PASS**, retries=0, one worker and normal timeouts. Backend `mvn verify` **294 PASS**, zero failures/errors/skips, completed 2026-10-02T19:42:54+07:00 using the existing dedicated local database and integration flags. Strict UTF-8/authorized-scope checks passed for all 118 changed/created files; 54 local Markdown links and whitespace/report/convention reconciliation passed. No backend, migration, API, requirement, historical-report or Stitch change. Browser localization QA renders the actual production frontend with isolated API fixtures; no new live Neon transaction or deployment occurred. Localization is accepted; stop before Concession integration.
+
+### Prior Booking verification and live data — preserved historical context
+
+Prior full `mvn verify`: **294 PASS**, 50 suites, zero failures/errors/skips,
 dedicated local PostgreSQL regression with all existing integration flags,
 jar/repackage PASS, completed 2026-10-02 16:14:17 +07. No backend edits.
 Final-source TypeScript/ESLint/build and **81/81 unit tests PASS**. Accepted full
@@ -114,7 +120,7 @@ Final verification Showtime is **CANCELLED**, Admin read-only; Customer query om
 
 ## Exact next recommended task — not authorization
 
-**Integrate real Concession composition into the existing unpaid Booking.**
+**Real Customer Concession composition integration into the existing unpaid Booking.**
 Read [Concession v1.0](../api/concession-composition-contract-v1.0.md), Booking
 v1.0 through v1.3 and this latest frontend guide/report. Use the actual active
 catalog and owned PENDING/pre-first-Payment edit APIs, immutable name/price

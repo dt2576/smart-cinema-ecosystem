@@ -33,7 +33,7 @@ test("Payment method empty/unavailable/error/retry fixtures preserve cancellatio
   const request = service.list(controller.signal);
   controller.abort();
   await assert.rejects(request, { name: "AbortError" });
-  await assert.rejects(service.list(signal()), /could not load/);
+  await assert.rejects(service.list(signal()), /Không thể tải/);
   assert.equal((await service.list(signal())).length, 3);
   await assert.rejects(service.list(controller.signal), { name: "AbortError" });
 });

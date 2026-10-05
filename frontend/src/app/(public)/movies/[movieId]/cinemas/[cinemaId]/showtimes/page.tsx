@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { ShowtimeSelectionScreen } from "@/features/showtime/showtime-selection-screen";
 import { MovieLoading } from "@/features/movie/movie-feedback";
 
-export const metadata: Metadata = { title: "Select Showtime | Smart Cinema" };
+export const metadata: Metadata = { title: "Chọn suất chiếu | Smart Cinema" };
 
 export default async function ShowtimeSelectionPage({ params }: { params: Promise<{ movieId: string; cinemaId: string }> }) {
   const { movieId, cinemaId } = await params;

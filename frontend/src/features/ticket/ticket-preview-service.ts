@@ -17,7 +17,7 @@ export function createMockTicketPreviewService(scenario: "default" | "empty" | "
       const timer = setTimeout(() => { signal.removeEventListener("abort", abort); resolve(); }, delayMs);
       signal.addEventListener("abort", abort, { once: true });
     });
-    if (scenario === "error" && !failed) { failed = true; throw new Error("Sample Tickets could not load. Please try again."); }
+    if (scenario === "error" && !failed) { failed = true; throw new Error("Không thể tải vé mẫu. Vui lòng thử lại."); }
     return scenario === "empty" ? [] : structuredClone(TICKETS.filter(ticket => ticket.bookingId === bookingId));
   } };
 }

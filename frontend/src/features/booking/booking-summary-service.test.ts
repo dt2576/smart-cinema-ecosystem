@@ -8,7 +8,7 @@ const units: SeatUnit[] = [
   { id: "9223372036854775806", hallId: "9007199254740993", showtimeId: "9007199254740994", row: "E", number: "1-2", column: 1, type: "COUPLE", availability: "AVAILABLE" },
   { id: "9223372036854775807", hallId: "9007199254740993", showtimeId: "9007199254740994", row: "A", number: "1", column: 1, type: "STANDARD", availability: "AVAILABLE" },
 ];
-const item: ConcessionItem = { id: "9007199254741001", name: "Movie Combo", category: "COMBO", price: 120000, available: true, image: "combo", description: "Sample" };
+const item: ConcessionItem = { id: "9007199254741001", name: "Combo xem phim", category: "COMBO", price: 120000, available: true, image: "combo", description: "Sample" };
 const signal = () => new AbortController().signal;
 
 test("summary prices whole Couple units, preserves identities and sums optional concessions", () => {
@@ -41,7 +41,7 @@ test("local Promotion fixtures support applied, invalid, expired and ineligible 
     const service = createMockPromotionService(0);
     assert.deepEqual(await service.apply(" demo10 ", 360009, signal()), { outcome: "APPLIED", code: "DEMO10", baseAmount: 360009, discount: 36000 });
     for (const [code, outcome] of [["bad", "INVALID"], ["", "INVALID"], ["DEMOEXPIRED", "EXPIRED"], ["DEMOINELIGIBLE", "INELIGIBLE"]]) assert.equal((await service.apply(code, 240000, signal())).outcome, outcome);
-    await assert.rejects(service.apply("DEMO10", -1, signal()), /amount is invalid/);
+    await assert.rejects(service.apply("DEMO10", -1, signal()), /Số tiền xem trước không hợp lệ/);
   } finally { globalThis.fetch = original; }
 });
 
@@ -51,7 +51,7 @@ test("Promotion retry/cancellation does not mutate input amounts or consume an a
   const pending = service.apply("DEMORETRY", 240000, controller.signal);
   controller.abort();
   await assert.rejects(pending, { name: "AbortError" });
-  await assert.rejects(service.apply("DEMORETRY", 240000, signal()), /could not load/);
+  await assert.rejects(service.apply("DEMORETRY", 240000, signal()), /Không thể tải/);
   assert.deepEqual(await service.apply("DEMORETRY", 240000, signal()), { outcome: "APPLIED", code: "DEMORETRY", baseAmount: 240000, discount: 24000 });
   await assert.rejects(service.apply("DEMO10", 240000, controller.signal), { name: "AbortError" });
 });

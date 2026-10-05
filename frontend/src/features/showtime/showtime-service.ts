@@ -8,11 +8,11 @@ export function showtimeDate(value: string | number, timeZone = SHOWTIME_PREVIEW
 }
 
 export function formatShowtimeTime(value: string, timeZone = SHOWTIME_PREVIEW_TIME_ZONE): string {
-  return new Intl.DateTimeFormat("en-GB", { timeZone, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(value));
+  return new Intl.DateTimeFormat("vi-VN", { timeZone, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(value));
 }
 
 export function formatShowtimeDate(value: string): string {
-  return new Intl.DateTimeFormat("en-GB", { timeZone: SHOWTIME_PREVIEW_TIME_ZONE, weekday: "short", day: "numeric", month: "short" }).format(new Date(`${value}T12:00:00+07:00`));
+  return new Intl.DateTimeFormat("vi-VN", { timeZone: SHOWTIME_PREVIEW_TIME_ZONE, weekday: "short", day: "numeric", month: "short" }).format(new Date(`${value}T12:00:00+07:00`));
 }
 
 export function parseShowtimePreviewState(value: string | null): ShowtimePreviewState {
@@ -40,7 +40,7 @@ export function createMockShowtimeService(state: ShowtimePreviewState = "default
         const timer = setTimeout(() => { signal.removeEventListener("abort", abort); resolve(); }, delayMs);
         signal.addEventListener("abort", abort, { once: true });
       });
-      if (state === "error" && !failed) { failed = true; throw new Error("Showtimes couldn’t load. Please try again."); }
+      if (state === "error" && !failed) { failed = true; throw new Error("Không thể tải suất chiếu. Vui lòng thử lại."); }
       const today = showtimeDate(now());
       const midnight = Date.parse(`${today}T00:00:00+07:00`);
       // Seven days is a fixture window, not a product booking-window rule.
@@ -53,7 +53,7 @@ export function createMockShowtimeService(state: ShowtimePreviewState = "default
           const hall = slot < 4 ? "1" : "2";
           items.push({
             id: `${cinemaId}${day}${slot}`, movieId, cinemaId,
-            hall: { id: `${cinemaId}${hall}`, name: `Hall ${hall}` },
+            hall: { id: `${cinemaId}${hall}`, name: `Phòng chiếu ${hall}` },
             startsAt: `${state === "past" ? today : date}T${String(state === "past" ? 0 : hour).padStart(2, "0")}:00:00+07:00`,
             hasAvailableSeats: state !== "sold-out" && slot !== 2,
           });

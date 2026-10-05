@@ -9,7 +9,7 @@ const input = { showtimeId: "9007199254741001", holdIds: [holdId] };
 const signal = () => new AbortController().signal;
 const booking: Booking = {
   id, bookingCode: "SERVER-BOOKING", status: "PENDING", showtimeId: input.showtimeId,
-  movieId: "9007199254741002", movieTitle: "Movie", cinemaId: "1", cinemaName: "Cinema", hallId: "2", hallName: "Hall",
+  movieId: "9007199254741002", movieTitle: "Phim", cinemaId: "1", cinemaName: "Rạp chiếu phim", hallId: "2", hallName: "Phòng chiếu",
   startsAt: "2030-01-01T03:00:00Z", createdAt: "2030-01-01T02:00:00Z", expiresAt: "2030-01-01T02:09:00Z", serverTime: "2030-01-01T02:00:00Z",
   seatUnitCount: 1, guestCount: 2, seatAmount: "90001.4321", concessionAmount: "0.0000", subtotal: "90001.4321", discount: "0.0000", finalAmount: "90001.4321",
   seats: [{ id: "9007199254741003", seatId: "9007199254741004", holdId, row: "E", number: "1-2", type: "COUPLE", guestCount: 2, unitPrice: "90001.4321", finalPrice: "90001.4321" }],

@@ -44,7 +44,7 @@ test("Concession empty, unavailable, error retry and cancellation", async () => 
   const pending = service.list(controller.signal);
   controller.abort();
   await assert.rejects(pending, { name: "AbortError" });
-  await assert.rejects(service.list(signal()), /try loading/);
+  await assert.rejects(service.list(signal()), /thử tải lại/);
   assert.equal((await service.list(signal())).length, 6);
   await assert.rejects(service.list(controller.signal), { name: "AbortError" });
 });

@@ -21,8 +21,8 @@ test("Home uses one bounded catalog request, preserves server order/string IDs a
   const requests: URL[] = [];
   page.on("request", request => { if (new URL(request.url()).pathname === "/api/v1/movies") requests.push(new URL(request.url())); });
   await page.goto("/");
-  const firstRow = page.getByRole("region", { name: "Explore Movies", exact: true });
-  const secondRow = page.getByRole("region", { name: "More to Explore", exact: true });
+  const firstRow = page.getByRole("region", { name: "Khám phá phim", exact: true });
+  const secondRow = page.getByRole("region", { name: "Khám phá thêm", exact: true });
   await expect(firstRow.getByRole("article")).toHaveCount(5);
   await expect(secondRow.getByRole("article")).toHaveCount(4);
   await expect(firstRow.getByRole("heading", { level: 3 })).toHaveText(movies.slice(0, 5).map(movie => movie.title));
@@ -30,14 +30,14 @@ test("Home uses one bounded catalog request, preserves server order/string IDs a
   expect(requests).toHaveLength(1);
   expect(Object.fromEntries(requests[0].searchParams)).toEqual({ page: "0", size: "9", sort: "title,asc" });
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(movies[0].title);
-  for (const name of ["Now Showing", "Coming Soon", "Opening Soon", "In Theatres Now", "Dune: Part Two"]) await expect(page.getByText(name, { exact: true })).toHaveCount(0);
-  await expect(page.getByRole("link", { name: "Explore Movies", exact: true })).toHaveAttribute("href", "/movies");
-  await expect(page.getByRole("link", { name: "View All Movies" })).toHaveAttribute("href", "/movies");
-  await expect(page.getByRole("link", { name: "Browse the Catalog" })).toHaveAttribute("href", "/movies");
-  await expect(page.getByRole("navigation", { name: "Main navigation" }).getByRole("link", { name: "Movies", exact: true })).toHaveAttribute("href", "/movies");
-  await expect(page.getByRole("navigation", { name: "Footer navigation" }).getByRole("link", { name: "Movies", exact: true })).toHaveAttribute("href", "/movies");
-  await expect(page.getByRole("region", { name: movies[0].title }).getByRole("link", { name: "View Details", exact: true })).toHaveAttribute("href", `/movies/${BIG_ID}`);
-  await firstRow.getByRole("link", { name: `View details for ${movies[0].title}` }).click();
+  for (const name of ["Now Hiệning", "Coming Soon", "Opening Soon", "In Theatres Now", "Dune: Part Two"]) await expect(page.getByText(name, { exact: true })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Khám phá phim", exact: true })).toHaveAttribute("href", "/movies");
+  await expect(page.getByRole("link", { name: "Xem tất cả phim" })).toHaveAttribute("href", "/movies");
+  await expect(page.getByRole("link", { name: "Duyệt danh sách phim" })).toHaveAttribute("href", "/movies");
+  await expect(page.getByRole("navigation", { name: "Điều hướng chính" }).getByRole("link", { name: "Phim", exact: true })).toHaveAttribute("href", "/movies");
+  await expect(page.getByRole("navigation", { name: "Điều hướng chân trang" }).getByRole("link", { name: "Phim", exact: true })).toHaveAttribute("href", "/movies");
+  await expect(page.getByRole("region", { name: movies[0].title }).getByRole("link", { name: "Xem chi tiết", exact: true })).toHaveAttribute("href", `/movies/${BIG_ID}`);
+  await firstRow.getByRole("link", { name: `Xem chi tiết phim ${movies[0].title}` }).click();
   await expect(page).toHaveURL(new RegExp(`/movies/${BIG_ID}$`));
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(movies[0].title);
 });
@@ -48,13 +48,13 @@ test("loading and empty responses use a neutral hero with no sample Movie or fab
   const ready = new Promise<void>(resolve => { release = resolve; });
   await page.route("**/api/v1/movies?**", async route => { await ready; await route.fulfill({ json: envelope([]) }); });
   await page.goto("/");
-  await expect(page.getByRole("status", { name: "Loading Movies" })).toBeVisible();
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Your next story starts here");
+  await expect(page.getByRole("status", { name: "Đang tải phim" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Câu chuyện tiếp theo của bạn bắt đầu tại đây");
   await expect(page.locator('a[href^="/movies/"]')).toHaveCount(0);
   release();
-  await expect(page.getByRole("heading", { name: "The next story is on its way" })).toBeVisible();
-  await expect(page.getByRole("region", { name: "Explore Movies", exact: true }).getByRole("article")).toHaveCount(0);
-  await page.getByRole("link", { name: "View All Movies" }).click();
+  await expect(page.getByRole("heading", { name: "Câu chuyện tiếp theo đang đến" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Khám phá phim", exact: true }).getByRole("article")).toHaveCount(0);
+  await page.getByRole("link", { name: "Xem tất cả phim" }).click();
   await expect(page).toHaveURL(/\/movies$/);
 });
 
@@ -64,13 +64,13 @@ test("Home server failures retry, and a short catalog never pads with mock Movie
   let attempts = 0;
   await page.route("**/api/v1/movies?**", route => route.fulfill(++attempts === 1 ? { status: 503, body: "temporary" } : { json: envelope(movies.slice(0, 1)) }));
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: "Movies couldn’t load" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Không thể tải phim" })).toBeVisible();
   await expect(page.locator('a[href^="/movies/"]')).toHaveCount(0);
-  await page.getByRole("button", { name: "Try again" }).click();
+  await page.getByRole("button", { name: "Thử lại" }).click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(movies[0].title);
-  await expect(page.getByRole("region", { name: "Explore Movies", exact: true }).getByRole("article")).toHaveCount(1);
-  await expect(page.getByRole("region", { name: "More to Explore", exact: true }).getByRole("article")).toHaveCount(0);
-  await expect(page.getByText("Poster unavailable", { exact: true })).toBeVisible();
+  await expect(page.getByRole("region", { name: "Khám phá phim", exact: true }).getByRole("article")).toHaveCount(1);
+  await expect(page.getByRole("region", { name: "Khám phá thêm", exact: true }).getByRole("article")).toHaveCount(0);
+  await expect(page.getByText("Chưa có áp phích", { exact: true })).toBeVisible();
   expect(attempts).toBe(2);
 });
 
@@ -79,11 +79,11 @@ test("network failure and nullable media recover without Movie-specific hero fac
   let attempts = 0;
   await page.route("**/api/v1/movies?**", route => ++attempts === 1 ? route.abort() : route.fulfill({ json: { ...envelope(), items: [{ ...movies[0], posterUrl: null, ageRating: null, genres: [] }] } }));
   await page.goto("/");
-  await expect(page.getByText(/Check your connection/)).toBeVisible();
-  await page.getByRole("button", { name: "Try again" }).click();
+  await expect(page.getByText(/Kiểm tra kết nối/)).toBeVisible();
+  await page.getByRole("button", { name: "Thử lại" }).click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(movies[0].title);
   await expect(page.getByRole("region", { name: movies[0].title }).getByRole("img")).toHaveCount(0);
-  await expect(page.getByText("Poster unavailable", { exact: true })).toBeVisible();
+  await expect(page.getByText("Chưa có áp phích", { exact: true })).toBeVisible();
 });
 
 test("existing authenticated account menu/profile/logout behavior survives Home integration", async ({ page }) => {
@@ -96,10 +96,10 @@ test("existing authenticated account menu/profile/logout behavior survives Home 
   let revoked = false;
   await page.route("**/api/v1/auth/token-revocations", route => { revoked = true; return route.fulfill({ status: 204 }); });
   await page.goto("/");
-  await page.locator("summary").filter({ hasText: "Open account menu" }).click();
-  await expect(page.getByRole("link", { name: "My Profile", exact: true })).toHaveAttribute("href", "/profile");
-  await page.getByRole("button", { name: "Logout", exact: true }).click();
-  await expect(page.getByRole("link", { name: "Sign In", exact: true })).toBeVisible();
+  await page.locator("summary").filter({ hasText: "Mở menu tài khoản" }).click();
+  await expect(page.getByRole("link", { name: "Hồ sơ của tôi", exact: true })).toHaveAttribute("href", "/profile");
+  await page.getByRole("button", { name: "Đăng xuất", exact: true }).click();
+  await expect(page.getByRole("link", { name: "Đăng nhập", exact: true })).toBeVisible();
   expect(revoked).toBe(true);
   expect(await page.evaluate(() => localStorage.getItem("smart-cinema.auth-session"))).toBeNull();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(movies[0].title);
@@ -108,9 +108,9 @@ test("existing authenticated account menu/profile/logout behavior survives Home 
 test("Home retains its hero and two responsive Movie rows with keyboard and mobile navigation", async ({ page }, testInfo) => {
   await mockHome(page);
   await page.goto("/");
-  await expect(page.getByRole("region", { name: "More to Explore", exact: true }).getByRole("article")).toHaveCount(4);
+  await expect(page.getByRole("region", { name: "Khám phá thêm", exact: true }).getByRole("article")).toHaveCount(4);
   await page.keyboard.press("Tab");
-  await expect(page.getByRole("link", { name: "Skip to content" })).toBeFocused();
+  await expect(page.getByRole("link", { name: "Chuyển đến nội dung" })).toBeFocused();
   await page.keyboard.press("Enter");
   await expect.poll(() => page.locator('#home img').evaluateAll(images => images.every(image => (image as HTMLImageElement).naturalWidth > 0))).toBe(true);
   await page.screenshot({ path: testInfo.outputPath("home-desktop.png"), fullPage: true });
@@ -118,7 +118,7 @@ test("Home retains its hero and two responsive Movie rows with keyboard and mobi
   await page.emulateMedia({ reducedMotion: "reduce" });
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path: testInfo.outputPath("home-mobile.png"), fullPage: true });
-  await page.getByRole("button", { name: "Open navigation" }).click();
-  await page.getByRole("navigation", { name: "Mobile navigation" }).getByRole("link", { name: "Movies", exact: true }).click();
+  await page.getByRole("button", { name: "Mở menu điều hướng" }).click();
+  await page.getByRole("navigation", { name: "Điều hướng trên điện thoại" }).getByRole("link", { name: "Phim", exact: true }).click();
   await expect(page).toHaveURL(/\/movies$/);
 });

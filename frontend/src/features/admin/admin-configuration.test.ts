@@ -9,8 +9,8 @@ test("hierarchy API preserves bigint strings and only calls approved Admin resou
   const id = "9007199254740993";
   const calls: { url: string; method?: string; body?: string; credentials?: RequestCredentials }[] = [];
   globalThis.fetch = async (url, options) => { calls.push({ url: String(url), method: options?.method, body: options?.body as string, credentials: options?.credentials }); return Response.json({ id, cinemaId: id }); };
-  const cinema = { name: "Branch", address: "Address", contact: null, operatingInformation: null, status: "ACTIVE" as const };
-  const hall = { name: "Hall", capacity: 2, type: "Configured", status: "ACTIVE" as const };
+  const cinema = { name: "Branch", address: "Địa chỉ", contact: null, operatingInformation: null, status: "ACTIVE" as const };
+  const hall = { name: "Phòng chiếu", capacity: 2, type: "Configured", status: "ACTIVE" as const };
   const couple = { row: "B", number: "1-2", type: "COUPLE" as const, physicalStatus: "ACTIVE" as const };
   assert.equal((await api.saveAdminCinema("token", undefined, cinema)).id, id);
   await api.getAdminCinemas("token"); await api.getAdminCinema("token", id); await api.saveAdminCinema("token", id, cinema);
@@ -27,5 +27,5 @@ test("guest capacity counts COUPLE as exactly one two-guest unit", () => {
 });
 test("configuration conflicts remain safe ProblemDetail errors", async () => {
   globalThis.fetch = async () => Response.json({ detail: "Referenced Seat is protected." }, { status: 409 });
-  await assert.rejects(api.updateAdminSeat("token", "9007199254740993", { row: "B", number: "1-2", type: "COUPLE", physicalStatus: "INACTIVE" }), (error: unknown) => error instanceof api.AdminApiError && error.status === 409 && error.message === "Referenced Seat is protected.");
+  await assert.rejects(api.updateAdminSeat("token", "9007199254740993", { row: "B", number: "1-2", type: "COUPLE", physicalStatus: "INACTIVE" }), (error: unknown) => error instanceof api.AdminApiError && error.status === 409 && error.message === "Dữ liệu đã thay đổi hoặc thao tác bị xung đột. Vui lòng kiểm tra và thử lại.");
 });

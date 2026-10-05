@@ -35,7 +35,7 @@ test("QR reuse loads same Ticket context without consuming QR or changing Ticket
 test("Ticket adapter supports empty, retry and abort without mutations", async () => {
   assert.deepEqual(await createMockTicketPreviewService("empty", 0).listForBooking("9007199254741101", signal()), []);
   const service = createMockTicketPreviewService("error", 0);
-  await assert.rejects(service.listForBooking("9007199254741101", signal()), /could not load/);
+  await assert.rejects(service.listForBooking("9007199254741101", signal()), /Không thể tải/);
   assert.equal((await service.listForBooking("9007199254741101", signal())).length, 3);
   const controller = new AbortController();
   const pending = service.listForBooking("9007199254741101", controller.signal);

@@ -1,5 +1,7 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+Primary frontend language: **Vietnamese** across the implemented Customer, Auth, Admin and preview screens. See the [localization guide](../docs/development/frontend-vietnamese-localization.md) for terminology, display labels, safe errors, date/money formatting and preserved API/domain boundaries. Later sections retain the history of the initial scaffold; use the [current handoff](../docs/ai/current-handoff.md) for current functionality.
+
 ## Getting Started
 
 First, run the development server:

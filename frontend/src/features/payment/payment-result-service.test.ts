@@ -21,13 +21,13 @@ test("result handling is pure and local; pending stays unresolved and success ne
     const before = JSON.stringify(pending);
     for (let i = 0; i < 3; i++) {
       assert.equal(getPaymentResultPresentation(pending)?.tone, "pending");
-      assert.match(getPaymentResultPresentation(pending)!.message, /neither success nor failure/);
+      assert.match(getPaymentResultPresentation(pending)!.message, /không có nghĩa là thành công hay thất bại/);
     }
     assert.equal(JSON.stringify(pending), before);
     const success = getPaymentResultPresentation({ outcome: "success", scenario: "success" })!;
-    assert.match(success.message, /not server-verified/);
-    assert.match(success.message, /No Booking has been paid/);
-    assert.equal(getPaymentResultPresentation({ outcome: "failed", scenario: "failed" })?.resumeLabel, "Retry processing preview");
+    assert.match(success.message, /chưa được máy chủ xác minh/);
+    assert.match(success.message, /Chưa thanh toán đơn đặt vé/);
+    assert.equal(getPaymentResultPresentation({ outcome: "failed", scenario: "failed" })?.resumeLabel, "Thử lại xử lý mẫu");
     assert.equal(getPaymentResultPresentation({ outcome: "success", scenario: "pending" } as PaymentResultPreview), null);
   } finally { globalThis.fetch = original; }
 });

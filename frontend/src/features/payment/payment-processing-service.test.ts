@@ -38,6 +38,6 @@ test("retryable simulation errors can recover; cancelled runs do not consume the
   const controller = new AbortController();
   controller.abort();
   await assert.rejects(service.run(controller.signal, () => {}), { name: "AbortError" });
-  await assert.rejects(service.run(new AbortController().signal, () => {}), /no payment was attempted/);
+  await assert.rejects(service.run(new AbortController().signal, () => {}), /chưa thực hiện thanh toán/);
   assert.equal(await service.run(new AbortController().signal, () => {}), "success");
 });

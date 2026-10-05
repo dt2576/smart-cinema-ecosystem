@@ -3,9 +3,9 @@ import type { PaymentMethodPreview, PaymentMethodScenario, PaymentMethodService,
 
 // These UI fixtures do not establish a configured production provider or external integration.
 const SAMPLE_METHODS: PaymentMethodPreview[] = [
-  { id: "preview-vnpay", name: "VNPay", label: "VNP", description: "Sample gateway option. No redirect or payment request will be made.", available: true },
-  { id: "preview-momo", name: "MoMo", label: "MoMo", description: "Sample provider option. No account connection or wallet access.", available: true },
-  { id: "preview-other", name: "Other configured provider", label: "Other", description: "Unavailable in this demonstration. Live methods require a configured backend provider.", available: false },
+  { id: "preview-vnpay", name: "VNPay", label: "VNP", description: "Cổng thanh toán mẫu. Không chuyển trang hay gửi yêu cầu thanh toán.", available: true },
+  { id: "preview-momo", name: "MoMo", label: "MoMo", description: "Nhà cung cấp mẫu. Không kết nối tài khoản hay truy cập ví.", available: true },
+  { id: "preview-other", name: "Nhà cung cấp khác đã cấu hình", label: "Khác", description: "Không khả dụng trong ví dụ này. Phương thức thật cần cấu hình nhà cung cấp trên máy chủ.", available: false },
 ];
 
 export function parsePaymentMethodScenario(value: string | null): PaymentMethodScenario {
@@ -21,7 +21,7 @@ export function createMockPaymentMethodService(scenario: PaymentMethodScenario =
       const timer = setTimeout(() => { signal.removeEventListener("abort", abort); resolve(); }, delayMs);
       signal.addEventListener("abort", abort, { once: true });
     });
-    if (scenario === "error" && !failed) { failed = true; throw new Error("Sample payment methods could not load. Please try again."); }
+    if (scenario === "error" && !failed) { failed = true; throw new Error("Không thể tải phương thức thanh toán mẫu. Vui lòng thử lại."); }
     return scenario === "empty" ? [] : SAMPLE_METHODS.map(method => ({ ...method, available: method.available && scenario !== "unavailable" }));
   } };
 }

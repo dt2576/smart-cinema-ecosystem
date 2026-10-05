@@ -5,7 +5,7 @@ const { AdminApiError, createAdminMovie, getAdminIdentity, getAdminMovie, getAdm
 const originalFetch = globalThis.fetch;
 afterEach(() => { globalThis.fetch = originalFetch; });
 const id = "9007199254740993";
-const content = { title: "Movie", duration: 120, releaseDate: null, ageRating: null, language: null, posterUrl: null, trailerUrl: null, description: null, genreIds: [id] };
+const content = { title: "Phim", duration: 120, releaseDate: null, ageRating: null, language: null, posterUrl: null, trailerUrl: null, description: null, genreIds: [id] };
 
 test("Admin reads use bearer authorization, no cache and string IDs", async () => {
   const requests: { url: string; options: RequestInit | undefined }[] = [];
@@ -35,7 +35,7 @@ test("content writes and publication remain separate and preserve Genre IDs", as
 test("authorization and validation ProblemDetail are preserved", async () => {
   for (const status of [400, 401, 403, 404, 409, 503]) {
     globalThis.fetch = async () => Response.json({ detail: "Cannot save", errors: { title: "Required" } }, { status });
-    await assert.rejects(createAdminMovie("token", content), error => error instanceof AdminApiError && error.status === status && error.fieldErrors.title === "Required");
+    await assert.rejects(createAdminMovie("token", content), error => error instanceof AdminApiError && error.status === status && error.fieldErrors.title === "Không được để trống.");
   }
 });
 test("network and malformed response errors remain retryable", async () => {

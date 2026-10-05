@@ -39,7 +39,7 @@ const session: AuthSession = {
   expiresAt: Date.now() + 60_000,
   refreshToken: "test-refresh-token",
   refreshExpiresAt: Date.now() + 3_600_000,
-  user: { id: 1, email: "customer@example.com", fullName: "Nguyen Van A", role: "CUSTOMER" },
+  user: { id: 1, email: "customer@example.com", fullName: "Nguyễn Văn A", role: "CUSTOMER" },
 };
 
 test("logout clears the complete stored session and notifies AuthProvider subscribers", () => {

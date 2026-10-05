@@ -7,12 +7,12 @@ export function isSeatHoldId(id: unknown): id is string {
 export class SeatHoldApiError extends Error {
   readonly status: number;
   constructor(status: number) {
-    super(status === 400 ? "Invalid Seat selection. Refresh the map and choose again."
-      : status === 401 ? "Your session has ended. Sign in again to manage your Holds."
-      : status === 403 ? "An active Customer account is required to manage these Holds."
-      : status === 404 ? "This Hold or Showtime is no longer available. Refresh to check your selection."
-      : status === 409 ? "Seat selection conflict. A Seat may be held, unavailable, attached to a Booking, or past the booking cutoff. Refresh and choose again."
-      : "Seat service could not be reached or confirmed. Refresh before retrying.");
+    super(status === 400 ? "Lựa chọn ghế không hợp lệ. Cập nhật sơ đồ và chọn lại."
+      : status === 401 ? "Phiên đăng nhập đã kết thúc. Đăng nhập lại để quản lý ghế đang giữ."
+      : status === 403 ? "Cần tài khoản khách hàng đang hoạt động để quản lý ghế đang giữ."
+      : status === 404 ? "Lượt giữ ghế hoặc suất chiếu không còn khả dụng. Cập nhật để kiểm tra lựa chọn."
+      : status === 409 ? "Lựa chọn ghế bị xung đột. Ghế có thể đang được giữ, không khả dụng, đã gắn với đơn đặt vé hoặc quá hạn đặt vé. Cập nhật và chọn lại."
+      : "Không thể kết nối hoặc xác nhận dịch vụ ghế. Cập nhật trước khi thử lại.");
     this.name = "SeatHoldApiError";
     this.status = status;
   }

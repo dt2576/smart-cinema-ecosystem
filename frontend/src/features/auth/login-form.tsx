@@ -30,13 +30,13 @@ export function LoginForm() {
     const password = String(formData.get("password") ?? "");
     const nextErrors: LoginErrors = {};
 
-    if (!email) nextErrors.email = "Enter your email address.";
-    else if (!EMAIL_PATTERN.test(email)) nextErrors.email = "Enter a valid email address.";
-    if (!password) nextErrors.password = "Enter your password.";
+    if (!email) nextErrors.email = "Nhập địa chỉ email của bạn.";
+    else if (!EMAIL_PATTERN.test(email)) nextErrors.email = "Nhập địa chỉ email hợp lệ.";
+    if (!password) nextErrors.password = "Nhập mật khẩu của bạn.";
 
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) {
-      setStatus("Check the highlighted fields and try again.");
+      setStatus("Kiểm tra các trường được đánh dấu và thử lại.");
       return;
     }
 
@@ -55,7 +55,7 @@ export function LoginForm() {
         });
         setStatus(error.message);
       } else {
-        setStatus("Something went wrong. Please try again.");
+        setStatus("Đã xảy ra lỗi. Vui lòng thử lại.");
       }
     } finally {
       setIsSubmitting(false);
@@ -65,7 +65,7 @@ export function LoginForm() {
   return (
     <form noValidate onSubmit={handleSubmit} aria-busy={isSubmitting} className="space-y-5">
       <div className="space-y-2">
-        <label htmlFor="email" className="block font-heading text-xs font-semibold uppercase tracking-wider text-muted">Email Address</label>
+        <label htmlFor="email" className="block font-heading text-xs font-semibold uppercase tracking-wider text-muted">Địa chỉ email</label>
         <input
           id="email"
           name="email"
@@ -82,8 +82,8 @@ export function LoginForm() {
 
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-4">
-          <label htmlFor="password" className="font-heading text-xs font-semibold uppercase tracking-wider text-muted">Password</label>
-          <span className="font-heading text-xs font-semibold text-accent" aria-disabled="true">Forgot password?</span>
+          <label htmlFor="password" className="font-heading text-xs font-semibold uppercase tracking-wider text-muted">Mật khẩu</label>
+          <span className="font-heading text-xs font-semibold text-accent" aria-disabled="true">Quên mật khẩu?</span>
         </div>
         <div className="relative">
           <input
@@ -94,17 +94,17 @@ export function LoginForm() {
             aria-invalid={Boolean(errors.password)}
             aria-describedby={errors.password ? "password-error" : undefined}
             onChange={() => { if (errors.password) setErrors(current => ({ ...current, password: undefined })); setStatus(""); }}
-            placeholder="Enter your password"
+            placeholder="Nhập mật khẩu của bạn"
             className="h-12 w-full rounded-lg bg-panel-high px-4 pr-12 text-foreground outline-none transition focus:bg-panel-hover focus:ring-2 focus:ring-action aria-[invalid=true]:ring-2 aria-[invalid=true]:ring-error"
           />
-          <button type="button" onClick={() => setShowPassword(value => !value)} aria-label={showPassword ? "Hide password" : "Show password"} aria-pressed={showPassword} className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-muted hover:text-foreground">
+          <button type="button" onClick={() => setShowPassword(value => !value)} aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"} aria-pressed={showPassword} className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-muted hover:text-foreground">
             <Icon name={showPassword ? "eye-off" : "eye"} />
           </button>
         </div>
         {errors.password && <p id="password-error" className="text-sm text-error">{errors.password}</p>}
       </div>
 
-      <Button type="submit" disabled={isSubmitting} className="w-full py-3 uppercase tracking-wider shadow-lg shadow-action/20">{isSubmitting ? "Signing In..." : "Sign In"} <Icon name="arrow" /></Button>
+      <Button type="submit" disabled={isSubmitting} className="w-full py-3 uppercase tracking-wider shadow-lg shadow-action/20">{isSubmitting ? "Đang đăng nhập..." : "Đăng nhập"} <Icon name="arrow" /></Button>
       {status && <p role="status" className="text-center text-sm leading-6 text-muted">{status}</p>}
     </form>
   );

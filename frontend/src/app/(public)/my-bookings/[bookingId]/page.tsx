@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { BookingDetailPreview } from "@/features/booking/booking-detail-preview";
 import { BookingHistoryLoading, BookingPreviewHeading } from "@/features/booking/booking-history-shared";
 
-export const metadata: Metadata = { title: "Booking & Tickets Preview | Smart Cinema", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "Đặt vé & vé — bản xem trước | Smart Cinema", robots: { index: false, follow: false } };
 
 export default async function BookingDetailPage({ params }: { params: Promise<{ bookingId: string }> }) {
   const { bookingId } = await params;

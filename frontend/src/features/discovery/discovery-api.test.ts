@@ -4,14 +4,14 @@ const { DiscoveryApiError, getCinemasForMovie, getCinema, getShowtimes, getShowt
 const fetchBefore = globalThis.fetch;
 afterEach(() => { globalThis.fetch = fetchBefore; });
 const id = "9007199254740993", signal = new AbortController().signal;
-const showtime = { id, movieId: id, cinemaId: id, hall: { id, name: "Hall" }, startsAt: "2030-01-01T10:00:00Z" };
+const showtime = { id, movieId: id, cinemaId: id, hall: { id, name: "Phòng chiếu" }, startsAt: "2030-01-01T10:00:00Z" };
 test("public adapters use existing GET resources, string IDs and server timezone", async () => {
   const urls: string[] = [];
   globalThis.fetch = async (url, options) => {
     urls.push(String(url)); assert.equal(options?.method ?? "GET", "GET"); assert.equal(options?.credentials, "omit");
     assert.equal(new Headers(options?.headers).has("Authorization"), false);
-    if (String(url).includes("/cinemas?")) return Response.json([{ id, name: "Cinema", address: "Address", contact: null, operatingInformation: null }]);
-    if (String(url).includes("/cinemas/")) return Response.json({ id, name: "Cinema", address: "Address" });
+    if (String(url).includes("/cinemas?")) return Response.json([{ id, name: "Rạp chiếu phim", address: "Địa chỉ", contact: null, operatingInformation: null }]);
+    if (String(url).includes("/cinemas/")) return Response.json({ id, name: "Rạp chiếu phim", address: "Địa chỉ" });
     if (String(url).includes("/showtimes?")) return Response.json({ timeZone: "America/New_York", date: "2030-01-01", dates: ["2030-01-01"], serverTime: "2030-01-01T00:00Z", items: [showtime] });
     return Response.json(showtime);
   };
@@ -32,7 +32,7 @@ test("real Seat map preserves whole COUPLE, VIP and authoritative held/sold stat
 });
 test("read failures preserve ProblemDetail, retryability and cancellation", async () => {
   for (const status of [400, 404, 409, 503]) {
-    globalThis.fetch = async () => Response.json({ detail: "Unavailable" }, { status });
+    globalThis.fetch = async () => Response.json({ detail: "Không khả dụng" }, { status });
     await assert.rejects(getCinema(id, signal), error => error instanceof DiscoveryApiError && error.status === status);
   }
   globalThis.fetch = async () => { throw new Error("network"); };

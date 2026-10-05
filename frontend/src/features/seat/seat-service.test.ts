@@ -4,7 +4,7 @@ import type { ShowtimeOption } from "@/features/showtime/showtime.types";
 
 const { createMockSeatService, toggleSeatUnit, createConcessionPreviewHandoff, SEAT_PREVIEW_DURATION_MS, parseSeatPreviewScenario } = await import("./seat-service" + ".ts") as typeof import("./seat-service");
 const NOW = Date.parse("2030-01-01T09:00:00+07:00");
-const showtime: ShowtimeOption = { id: "900719925474099301", movieId: "9223372036854775807", cinemaId: "9007199254740993", hall: { id: "90071992547409931", name: "Hall 1" }, startsAt: "2030-01-01T10:00:00+07:00", hasAvailableSeats: true };
+const showtime: ShowtimeOption = { id: "900719925474099301", movieId: "9223372036854775807", cinemaId: "9007199254740993", hall: { id: "90071992547409931", name: "Phòng chiếu 1" }, startsAt: "2030-01-01T10:00:00+07:00", hasAvailableSeats: true };
 const signal = () => new AbortController().signal;
 
 test("Seat mock has isolated fixtures and whole couple units without a network dependency", async () => {
@@ -61,6 +61,6 @@ test("empty, unavailable and retry scenarios honor request cancellation", async 
   const request = service.load(showtime, controller.signal);
   controller.abort();
   await assert.rejects(request, { name: "AbortError" });
-  await assert.rejects(service.load(showtime, signal()), /couldn’t load/);
+  await assert.rejects(service.load(showtime, signal()), /Không thể tải/);
   assert.equal((await service.load(showtime, signal())).units.length, 36);
 });

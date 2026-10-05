@@ -27,9 +27,9 @@ test("Movie 404 is a uniform unavailable state and ProblemDetail 400 supplies fi
   const original = globalThis.fetch;
   try {
     globalThis.fetch = async () => Response.json({ detail: "private hidden reason" }, { status: 404 });
-    await assert.rejects(getMovie("12"), (error: unknown) => error instanceof MovieApiError && error.status === 404 && error.message === "This Movie is unavailable.");
+    await assert.rejects(getMovie("12"), (error: unknown) => error instanceof MovieApiError && error.status === 404 && error.message === "Phim này không khả dụng.");
     globalThis.fetch = async () => Response.json({ detail: "Invalid sort." }, { status: 400 });
-    await assert.rejects(getMovies("sort=bad"), /Invalid sort/);
+    await assert.rejects(getMovies("sort=bad"), /Kiểm tra bộ lọc/);
   } finally { globalThis.fetch = original; }
 });
 
@@ -39,9 +39,9 @@ test("transient, network and non-JSON failures stay errors rather than empty suc
     globalThis.fetch = async () => new Response("internal proxy details", { status: 503 });
     await assert.rejects(getGenres(), (error: unknown) => error instanceof MovieApiError && error.status === 503 && !error.message.includes("internal"));
     globalThis.fetch = async () => { throw new TypeError("network failed"); };
-    await assert.rejects(getMovies(""), /Check your connection/);
+    await assert.rejects(getMovies(""), /Kiểm tra kết nối/);
     globalThis.fetch = async () => new Response("not JSON");
-    await assert.rejects(getMovies(""), /read this response/);
+    await assert.rejects(getMovies(""), /đọc phản hồi này/);
   } finally { globalThis.fetch = original; }
 });
 

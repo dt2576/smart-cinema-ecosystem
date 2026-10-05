@@ -92,12 +92,12 @@ export function useSeatHolds(showtime: ShowtimeOption, token: string | undefined
       const fresh = await read(current.signal);
       if (current.signal.aborted) return null;
       setError(operationError);
-      if (operationError) setMessage(operation === "release" ? "Release was not fully confirmed. Your remaining owned Holds are shown below." : "The request was not confirmed. Selection has been reconciled with the server.");
-      else if (operation === "acquire") setMessage("Seat Holds confirmed by the server. Their original deadlines will not be renewed.");
-      else if (operation === "release") setMessage("Release confirmed. Remaining Holds keep their original deadlines.");
+      if (operationError) setMessage(operation === "release" ? "Chưa xác nhận trả toàn bộ ghế. Các ghế còn lại bạn đang giữ hiển thị bên dưới." : "Chưa xác nhận yêu cầu. Lựa chọn đã được đối chiếu với máy chủ.");
+      else if (operation === "acquire") setMessage("Máy chủ đã xác nhận ghế đang giữ. Hạn gốc không được gia hạn.");
+      else if (operation === "release") setMessage("Đã xác nhận trả ghế. Ghế còn đang giữ giữ nguyên hạn gốc.");
       return operationError ? null : fresh;
     } catch (failure) {
-      if (!current.signal.aborted) { setError(operationError ?? safeError(failure)); setConfirmed(false); setMessage("Hold state could not be confirmed. Refresh before continuing or retrying a change."); }
+      if (!current.signal.aborted) { setError(operationError ?? safeError(failure)); setConfirmed(false); setMessage("Chưa thể xác nhận tình trạng giữ ghế. Cập nhật trước khi tiếp tục hoặc thử thay đổi lại."); }
       return null;
     } finally {
       if (controller.current === current) { controller.current = null; setBusy(false); }
@@ -119,7 +119,7 @@ export function useSeatHolds(showtime: ShowtimeOption, token: string | undefined
   useEffect(() => {
     if (deadline && now >= Date.parse(deadline) && !busy && expiredDeadline.current !== deadline) {
       expiredDeadline.current = deadline;
-      setMessage("Your Hold deadline has passed. Refreshing server availability; no automatic renewal.");
+      setMessage("Thời gian giữ ghế đã hết. Đang cập nhật tình trạng từ máy chủ; không tự động gia hạn.");
       void run("refresh");
     }
   }, [deadline, now, busy, run]);

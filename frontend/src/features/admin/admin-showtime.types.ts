@@ -16,16 +16,16 @@ function localParts(instant: Date, timeZone: string) {
 }
 export function showtimeLocalInput(instant: string, timeZone: string) { return localParts(new Date(instant), timeZone); }
 export function showtimeLocalInstant(value: string, timeZone: string): string {
-  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) throw new Error("Enter a valid date and time.");
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) throw new Error("Nhập ngày và giờ hợp lệ.");
   const wall = Date.parse(`${value}:00Z`);
-  if (!Number.isFinite(wall) || new Date(wall).toISOString().slice(0, 16) !== value) throw new Error("Enter a valid date and time.");
+  if (!Number.isFinite(wall) || new Date(wall).toISOString().slice(0, 16) !== value) throw new Error("Nhập ngày và giờ hợp lệ.");
   const offsets = new Set<number>();
   for (let hours = -36; hours <= 36; hours += 6) {
     const sample = wall + hours * 3600000;
     offsets.add(Date.parse(`${localParts(new Date(sample), timeZone)}:00Z`) - sample);
   }
   const matches = [...offsets].map(offset => wall - offset).filter(candidate => localParts(new Date(candidate), timeZone) === value);
-  if (matches.length !== 1) throw new Error("This local time is missing or ambiguous in the configured timezone. Choose another time.");
+  if (matches.length !== 1) throw new Error("Giờ này không tồn tại hoặc không xác định duy nhất trong múi giờ cấu hình. Vui lòng chọn giờ khác.");
   return new Date(matches[0]).toISOString();
 }
 export function validShowtimePrice(value: string) { return /^[0-9]+(\.[0-9]{1,4})?$/.test(value) && BigInt(value.split(".")[0]) < BigInt("1000000000000000"); }

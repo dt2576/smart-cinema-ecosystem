@@ -11,7 +11,7 @@ export function useMovieRequest<T>(load: (signal: AbortSignal) => Promise<T>) {
     let active = true;
     load(controller.signal).then(
       data => { if (active) setResult({ load, attempt, data }); },
-      error => { if (active) setResult({ load, attempt, error: error instanceof Error ? error : new Error("Please try again.") }); },
+      error => { if (active) setResult({ load, attempt, error: error instanceof Error ? error : new Error("Vui lòng thử lại.") }); },
     );
     return () => { active = false; controller.abort(); };
   }, [load, attempt]);

@@ -1,4 +1,5 @@
 import type { AdminIdentity, AdminMovie, AdminMovieContent, AdminMoviePage, MoviePublicationStatus } from "@/features/admin/admin-movie.types";
+import { presentationError, presentationFieldErrors } from "@/lib/presentation-errors";
 
 export class AdminApiError extends Error {
   readonly status: number;
@@ -18,14 +19,14 @@ export async function adminRequest<T>(path: string, token: string, method = "GET
     });
   } catch (error) {
     if (signal?.aborted) throw error;
-    throw new AdminApiError(0, "Unable to reach Admin management. Please try again.");
+    throw new AdminApiError(0, "Không thể kết nối đến trang quản trị. Vui lòng thử lại.");
   }
   if (!response.ok) {
     const problem = await response.json().catch(() => null);
-    throw new AdminApiError(response.status, typeof problem?.detail === "string" ? problem.detail : "Admin management failed. Please try again.", problem?.errors ?? {});
+    throw new AdminApiError(response.status, presentationError(response.status, problem?.detail), presentationFieldErrors(problem?.errors));
   }
   try { return await response.json() as T; }
-  catch { throw new AdminApiError(502, "Unable to read the server response. Please try again."); }
+  catch { throw new AdminApiError(502, "Không thể đọc phản hồi từ máy chủ. Vui lòng thử lại."); }
 }
 
 const request = adminRequest;

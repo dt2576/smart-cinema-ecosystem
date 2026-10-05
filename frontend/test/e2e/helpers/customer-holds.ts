@@ -21,11 +21,11 @@ export async function mockCustomerHolds(page: Page, discovery: Awaited<ReturnTyp
   await page.route(/\/api\/v1\/showtimes\/\d+\/seat-holds(?:\/\d+)?$/, async route => {
     const request = route.request(), method = request.method(), path = new URL(request.url()).pathname;
     const now = await time(); state.holds = state.holds.filter(hold => Date.parse(hold.expiresAt) > Date.parse(now));
-    if (request.headers().authorization !== "Bearer qa-access") return route.fulfill({ status: 401, json: { detail: "Sign in required" } });
+    if (request.headers().authorization !== "Bearer qa-access") return route.fulfill({ status: 401, json: { detail: "Cần đăng nhập" } });
     if (method === "GET") return route.fulfill({ json: { serverTime: now, holds: state.closed ? [] : state.holds } });
     if (method === "DELETE") {
       const id = path.split("/").at(-1)!; state.deletes.push(id);
-      if (state.attachedHolds.some(hold => hold.id === id)) return route.fulfill({ status: 409, json: { detail: "Attached Hold" } });
+      if (state.attachedHolds.some(hold => hold.id === id)) return route.fulfill({ status: 409, json: { detail: "Attached thuộc bạn, đã được máy chủ xác nhận" } });
       if (state.failRelease) { state.failRelease = false; return route.fulfill({ status: 503, json: { detail: "Temporary release failure" } }); }
       state.holds = state.holds.filter(hold => hold.id !== id);
       return route.fulfill({ status: 204 });
@@ -43,6 +43,6 @@ export async function mockCustomerHolds(page: Page, discovery: Awaited<ReturnTyp
   return state;
 }
 export async function confirmSelectedHolds(page: Page) {
-  await page.getByRole("button", { name: "Hold selected Seats", exact: true }).click();
-  await expect(page.getByRole("button", { name: "Create Booking & review", exact: true })).toBeEnabled();
+  await page.getByRole("button", { name: "Giữ ghế đã chọn", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Tạo đơn đặt vé & xem thông tin", exact: true })).toBeEnabled();
 }

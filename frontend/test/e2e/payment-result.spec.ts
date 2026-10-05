@@ -17,30 +17,30 @@ async function enter(page: Page, time = "09:00:00", addOns = true) {
   await page.route(`**/api/v1/movies/${MOVIE_ID}`, route => route.fulfill({ json: { id: MOVIE_ID, title: "Result Journey", duration: 125, releaseDate: "2029-01-01", ageRating: "T13", language: "English", posterUrl: "https://media.example.test/processing.jpg", status: "PUBLISHED", genres: [], description: null, trailerUrl: null } }));
   await page.route("https://media.example.test/**", route => route.fulfill({ path: resolve("public/images/movies/dune-part-two.jpg") }));
   await page.goto(SEATS);
-  await page.getByRole("button", { name: "E1-2, Couple, 2 guests, Available", exact: true }).click();
-  await page.getByRole("button", { name: "A1, Standard, 1 guest, Available", exact: true }).click();
+  await page.getByRole("button", { name: "E1-2, Ghế đôi, 2 khách, Còn trống", exact: true }).click();
+  await page.getByRole("button", { name: "A1, Ghế thường, 1 khách, Còn trống", exact: true }).click();
   await confirmSelectedHolds(page);
-  await page.getByRole("button", { name: "Preview Concessions" }).click();
-  if (addOns) await page.getByRole("button", { name: "Increase Movie Combo" }).click();
-  await page.getByRole("button", { name: "Continue to Booking Summary" }).click();
+  await page.getByRole("button", { name: "Xem trước bắp nước" }).click();
+  if (addOns) await page.getByRole("button", { name: "Tăng Combo xem phim" }).click();
+  await page.getByRole("button", { name: "Tiếp tục xem thông tin đặt vé" }).click();
   if (addOns) {
-    await page.getByRole("textbox", { name: "Promotion code", exact: true }).fill("DEMO10");
-    await page.getByRole("button", { name: "Apply Promotion", exact: true }).click();
-    await expect(page.getByRole("status")).toContainText("DEMO10 applied");
+    await page.getByRole("textbox", { name: "Mã khuyến mãi", exact: true }).fill("DEMO10");
+    await page.getByRole("button", { name: "Áp dụng khuyến mãi", exact: true }).click();
+    await expect(page.getByRole("status")).toContainText("DEMO10 đã áp dụng");
   }
-  await page.getByRole("button", { name: "Continue to Payment Method" }).click();
-  await page.getByRole("radio", { name: "MoMo · Available preview", exact: true }).check();
-  await page.getByRole("button", { name: "Continue to Payment Processing" }).click();
+  await page.getByRole("button", { name: "Tiếp tục chọn phương thức thanh toán" }).click();
+  await page.getByRole("radio", { name: "MoMo · Bản xem trước khả dụng", exact: true }).check();
+  await page.getByRole("button", { name: "Tiếp tục xử lý thanh toán mẫu" }).click();
   await expect(page).toHaveURL(PROCESSING);
-  await expect(page.getByRole("heading", { name: "Payment Processing", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Xử lý thanh toán", exact: true })).toBeVisible();
 }
 
 async function finish(page: Page, outcome: "success" | "failed" | "pending") {
-  await page.getByLabel("Demo outcome", { exact: true }).selectOption(outcome);
-  await page.getByRole("button", { name: "Start processing preview", exact: true }).click();
-  await page.getByRole("button", { name: "Continue to Payment Result preview", exact: true }).click();
+  await page.getByLabel("Kết quả mô phỏng", { exact: true }).selectOption(outcome);
+  await page.getByRole("button", { name: "Bắt đầu xử lý mẫu", exact: true }).click();
+  await page.getByRole("button", { name: "Tiếp tục xem kết quả thanh toán mẫu", exact: true }).click();
   await expect(page).toHaveURL(RESULT);
-  await expect(page.getByRole("heading", { name: `Payment ${outcome} preview`, exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: `Thanh toán ${outcome === "success" ? "thành công" : outcome === "failed" ? "thất bại" : "chờ xử lý"} — mẫu`, exact: true })).toBeVisible();
 }
 
 test("success is a confirmation-style preview with complete context, whole Couple units and no issuance or provider calls", async ({ page }) => {
@@ -51,16 +51,16 @@ test("success is a confirmation-style preview with complete context, whole Coupl
   });
   await enter(page);
   await finish(page, "success");
-  const screening = page.getByRole("region", { name: "Reviewed screening and selections" });
-  for (const text of ["Result Journey", "Smart Cinema Landmark", "Hall 1", "10:00", "2 Seat Units · 3 guests", "E1-2", "Couple, 2 guests, one unit", "Movie Combo × 1"]) await expect(screening).toContainText(text);
-  const summary = page.getByRole("complementary", { name: "Payment Result summary" });
-  for (const text of ["MoMo (preview)", "240,000", "120,000", "36,000", "324,000", "DEMO10 applied", "NON-AUTHORITATIVE", "Not an amount paid or a receipt."]) await expect(summary).toContainText(text);
-  await expect(page.getByRole("status")).toContainText("not server-verified");
-  await expect(page.getByRole("status")).toContainText("No Booking has been paid");
-  await expect(screening).toContainText("No real Payment Transaction, Booking ID, Ticket or Booking QR exists");
-  await expect(page.getByRole("link", { name: /View Tickets|Download|Booking QR/ })).toHaveCount(0);
+  const screening = page.getByRole("region", { name: "Suất chiếu và lựa chọn đã kiểm tra" });
+  for (const text of ["Result Journey", "Smart Cinema Landmark", "Phòng chiếu 1", "10:00", "2 ghế · 3 khách", "E1-2", "Ghế đôi, 2 khách, một ghế", "Combo xem phim × 1"]) await expect(screening).toContainText(text);
+  const summary = page.getByRole("complementary", { name: "Tóm tắt kết quả thanh toán" });
+  for (const text of ["MoMo (bản xem trước)", "240.000", "120.000", "36.000", "324.000", "DEMO10 đã áp dụng", "SỐ TIỀN MINH HỌA", "Không phải số tiền đã thanh toán hay biên nhận."]) await expect(summary).toContainText(text);
+  await expect(page.getByRole("status")).toContainText("chưa được máy chủ xác minh");
+  await expect(page.getByRole("status")).toContainText("Chưa thanh toán đơn đặt vé");
+  await expect(screening).toContainText("Chưa có giao dịch thanh toán thật, mã đặt vé, vé hay mã QR đặt vé.");
+  await expect(page.getByRole("link", { name: /Xem vé|Tải xuống|Mã QR đặt vé/ })).toHaveCount(0);
   await expect(page.getByRole("img", { name: /QR/ })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: /retry/i })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /thử lại/i })).toHaveCount(0);
   await expect(page.getByRole("timer")).toHaveText("10:00");
   expect(unexpected).toEqual([]);
 });
@@ -69,75 +69,75 @@ test("failed result retries the same reviewed preview and permits method changes
   await enter(page);
   await finish(page, "failed");
   await page.clock.setFixedTime(new Date("2030-01-01T09:03:00+07:00"));
-  await page.getByRole("button", { name: "Retry processing preview", exact: true }).click();
+  await page.getByRole("button", { name: "Thử lại xử lý mẫu", exact: true }).click();
   await expect(page).toHaveURL(PROCESSING);
-  await expect(page.getByLabel("Demo outcome", { exact: true })).toHaveValue("failed");
+  await expect(page.getByLabel("Kết quả mô phỏng", { exact: true })).toHaveValue("failed");
   await expect(page.getByRole("timer")).toHaveText("07:00");
-  await page.getByRole("button", { name: "Retry processing preview", exact: true }).click();
-  await expect(page.getByRole("button", { name: "Preview in progress...", exact: true })).toBeDisabled();
-  await page.getByRole("button", { name: "Continue to Payment Result preview", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Payment failed preview", exact: true })).toBeVisible();
-  await expect(page.getByRole("complementary", { name: "Payment Result summary" })).toContainText("324,000");
-  await page.getByRole("button", { name: "Back to Payment Methods", exact: true }).click();
+  await page.getByRole("button", { name: "Thử lại xử lý mẫu", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Bản xem trước đang chạy...", exact: true })).toBeDisabled();
+  await page.getByRole("button", { name: "Tiếp tục xem kết quả thanh toán mẫu", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Thanh toán thất bại — mẫu", exact: true })).toBeVisible();
+  await expect(page.getByRole("complementary", { name: "Tóm tắt kết quả thanh toán" })).toContainText("324.000");
+  await page.getByRole("button", { name: "Về phương thức thanh toán", exact: true }).click();
   await expect(page).toHaveURL(METHOD);
-  await expect(page.getByRole("radio", { name: "VNPay · Available preview", exact: true })).toBeVisible();
+  await expect(page.getByRole("radio", { name: "VNPay · Bản xem trước khả dụng", exact: true })).toBeVisible();
   await page.goBack();
-  await expect(page.getByRole("heading", { name: "Complete the Processing preview first", exact: true })).toBeVisible();
-  await page.getByRole("link", { name: "Back to Payment Methods", exact: true }).click();
-  await page.getByRole("radio", { name: "VNPay · Available preview", exact: true }).check();
-  await page.getByRole("button", { name: "Continue to Payment Processing" }).click();
-  await expect(page.getByRole("status")).toHaveText("Ready to preview processing");
+  await expect(page.getByRole("heading", { name: "Hoàn tất xử lý mẫu trước", exact: true })).toBeVisible();
+  await page.getByRole("link", { name: "Về phương thức thanh toán", exact: true }).click();
+  await page.getByRole("radio", { name: "VNPay · Bản xem trước khả dụng", exact: true }).check();
+  await page.getByRole("button", { name: "Tiếp tục xử lý thanh toán mẫu" }).click();
+  await expect(page.getByRole("status")).toHaveText("Sẵn sàng xem xử lý mẫu");
   await expect(page.getByRole("timer")).toHaveText("07:00");
 });
 
 test("pending stays unresolved across history and recheck; query values cannot promote it to success", async ({ page }) => {
   await enter(page, "09:00:00", false);
   await finish(page, "pending");
-  await expect(page.getByRole("status")).toContainText("neither success nor failure");
-  await expect(page.getByRole("region", { name: "Reviewed screening and selections" })).toContainText("No add-ons selected.");
+  await expect(page.getByRole("status")).toContainText("không có nghĩa là thành công hay thất bại");
+  await expect(page.getByRole("region", { name: "Suất chiếu và lựa chọn đã kiểm tra" })).toContainText("Chưa chọn món đi kèm.");
   await page.evaluate(() => history.replaceState(null, "", `${location.pathname}?outcome=success&total=1`));
-  await expect(page.getByRole("heading", { name: "Payment pending preview", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Thanh toán chờ xử lý — mẫu", exact: true })).toBeVisible();
   await page.clock.setFixedTime(new Date("2030-01-01T09:04:00+07:00"));
-  await page.getByRole("button", { name: "Return to verification preview", exact: true }).click();
-  await expect(page.getByLabel("Demo outcome", { exact: true })).toHaveValue("pending");
-  await page.getByRole("button", { name: "Check preview again", exact: true }).click();
-  await page.getByRole("button", { name: "Continue to Payment Result preview", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Payment pending preview", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Về xác minh mẫu", exact: true }).click();
+  await expect(page.getByLabel("Kết quả mô phỏng", { exact: true })).toHaveValue("pending");
+  await page.getByRole("button", { name: "Kiểm tra lại bản xem trước", exact: true }).click();
+  await page.getByRole("button", { name: "Tiếp tục xem kết quả thanh toán mẫu", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Thanh toán chờ xử lý — mẫu", exact: true })).toBeVisible();
   await expect(page.getByRole("timer")).toHaveText("06:00");
-  await expect(page.getByRole("complementary", { name: "Payment Result summary" })).toContainText("240,000");
+  await expect(page.getByRole("complementary", { name: "Tóm tắt kết quả thanh toán" })).toContainText("240.000");
 });
 
 test("original expiry and Showtime start block Result retry or verification without rewriting the demo outcome", async ({ page }) => {
   await enter(page);
   await finish(page, "failed");
   await page.clock.setFixedTime(new Date("2030-01-01T09:10:00+07:00"));
-  await expect(page.getByRole("main").getByRole("alert")).toContainText("Preview expired or Showtime unavailable");
-  await expect(page.getByRole("button", { name: "Retry processing preview", exact: true })).toBeDisabled();
-  await expect(page.getByRole("button", { name: "Back to Payment Methods", exact: true })).toBeDisabled();
-  await page.getByRole("link", { name: "Return to Seat Selection", exact: true }).click();
-  await expect(page.getByRole("timer")).toHaveText("Not started");
+  await expect(page.getByRole("main").getByRole("alert")).toContainText("Bản xem trước hết hạn hoặc suất chiếu không khả dụng");
+  await expect(page.getByRole("button", { name: "Thử lại xử lý mẫu", exact: true })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Về phương thức thanh toán", exact: true })).toBeDisabled();
+  await page.getByRole("link", { name: "Quay lại chọn ghế", exact: true }).click();
+  await expect(page.getByRole("timer")).toHaveText("Chưa bắt đầu");
   await page.goBack();
-  await expect(page.getByRole("heading", { name: "Complete the Processing preview first", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Hoàn tất xử lý mẫu trước", exact: true })).toBeVisible();
   await enter(page, "09:59:00", false);
   await finish(page, "pending");
   await page.clock.setFixedTime(new Date("2030-01-01T10:00:00+07:00"));
-  await expect(page.getByRole("main").getByRole("alert")).toContainText("Showtime unavailable");
-  await expect(page.getByRole("button", { name: "Return to verification preview", exact: true })).toBeDisabled();
-  await expect(page.getByRole("heading", { name: "Payment pending preview", exact: true })).toBeVisible();
+  await expect(page.getByRole("main").getByRole("alert")).toContainText("suất chiếu không khả dụng");
+  await expect(page.getByRole("button", { name: "Về xác minh mẫu", exact: true })).toBeDisabled();
+  await expect(page.getByRole("heading", { name: "Thanh toán chờ xử lý — mẫu", exact: true })).toBeVisible();
 });
 
 test("direct Result URLs, reload and leaving the preview cannot create or restore an outcome", async ({ page }) => {
   await page.goto(`${RESULT}?status=success&bookingId=fake&method=preview-momo&total=1`);
-  await expect(page.getByRole("heading", { name: "Complete the Processing preview first", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Hoàn tất xử lý mẫu trước", exact: true })).toBeVisible();
   await enter(page);
   await finish(page, "success");
   await page.reload();
-  await expect(page.getByRole("heading", { name: "Complete the Processing preview first", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Hoàn tất xử lý mẫu trước", exact: true })).toBeVisible();
   await enter(page, "09:00:00", false);
   await finish(page, "failed");
-  await page.getByRole("link", { name: "Back to Home", exact: true }).click();
+  await page.getByRole("link", { name: "Về trang chủ", exact: true }).click();
   await page.goBack();
-  await expect(page.getByRole("heading", { name: "Complete the Processing preview first", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Hoàn tất xử lý mẫu trước", exact: true })).toBeVisible();
 });
 
 test("canonical Result layout adapts to desktop/mobile for all three states with keyboard recovery", async ({ page }, testInfo) => {
@@ -154,10 +154,10 @@ test("canonical Result layout adapts to desktop/mobile for all three states with
     await page.screenshot({ path: testInfo.outputPath(`payment-result-${outcome}-mobile.png`), fullPage: true });
     if (outcome === "success") await page.goBack();
     else {
-      const resume = page.getByRole("button", { name: outcome === "failed" ? "Retry processing preview" : "Return to verification preview", exact: true });
+      const resume = page.getByRole("button", { name: outcome === "failed" ? "Thử lại xử lý mẫu" : "Về xác minh mẫu", exact: true });
       await resume.focus();
       await page.keyboard.press("Enter");
     }
-    await expect(page.getByRole("heading", { name: "Payment Processing", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Xử lý thanh toán", exact: true })).toBeVisible();
   }
 });

@@ -2,12 +2,12 @@ import type { ConcessionItem, ConcessionPreviewScenario, ConcessionQuantities, C
 
 // Sample selling prices in whole VND; this is not a Booking price snapshot.
 const SAMPLE_ITEMS: ConcessionItem[] = [
-  { id: "9007199254741001", name: "Movie Combo", description: "Popcorn and two refreshing drinks.", category: "COMBO", price: 120000, image: "combo", available: true },
-  { id: "9007199254741002", name: "Classic Popcorn", description: "A classic companion for your movie.", category: "POPCORN", price: 55000, image: "popcorn", available: true },
-  { id: "9007199254741003", name: "Caramel Popcorn", description: "Popcorn with a sweet caramel coating.", category: "POPCORN", price: 65000, image: "caramel", available: false },
-  { id: "9007199254741004", name: "Cola", description: "A refreshing fizzy drink.", category: "DRINK", price: 35000, image: "cola", available: true },
-  { id: "9007199254741005", name: "Lemon Lime", description: "Bright citrus refreshment.", category: "DRINK", price: 35000, image: "lemon-lime", available: true },
-  { id: "9007199254741006", name: "Mineral Water", description: "Simple, refreshing bottled water.", category: "DRINK", price: 20000, image: "water", available: true },
+  { id: "9007199254741001", name: "Combo xem phim", description: "Bắp rang và hai ly nước giải khát.", category: "COMBO", price: 120000, image: "combo", available: true },
+  { id: "9007199254741002", name: "Bắp rang truyền thống", description: "Món quen thuộc cho buổi xem phim.", category: "POPCORN", price: 55000, image: "popcorn", available: true },
+  { id: "9007199254741003", name: "Bắp rang caramel", description: "Bắp rang phủ caramel ngọt ngào.", category: "POPCORN", price: 65000, image: "caramel", available: false },
+  { id: "9007199254741004", name: "Cola", description: "Nước ngọt có ga mát lạnh.", category: "DRINK", price: 35000, image: "cola", available: true },
+  { id: "9007199254741005", name: "Chanh tươi", description: "Hương chanh tươi mát.", category: "DRINK", price: 35000, image: "lemon-lime", available: true },
+  { id: "9007199254741006", name: "Nước khoáng", description: "Nước đóng chai thanh mát.", category: "DRINK", price: 20000, image: "water", available: true },
 ];
 
 export function parseConcessionPreviewScenario(value: string | null): ConcessionPreviewScenario {
@@ -23,7 +23,7 @@ export function createMockConcessionService(scenario: ConcessionPreviewScenario 
       const timer = setTimeout(() => { signal.removeEventListener("abort", abort); resolve(); }, delayMs);
       signal.addEventListener("abort", abort, { once: true });
     });
-    if (scenario === "error" && !failed) { failed = true; throw new Error("Please try loading the sample menu again."); }
+    if (scenario === "error" && !failed) { failed = true; throw new Error("Vui lòng thử tải lại thực đơn mẫu."); }
     return scenario === "empty" ? [] : SAMPLE_ITEMS.map(item => ({ ...item, available: item.available && scenario !== "unavailable" }));
   } };
 }
@@ -48,5 +48,5 @@ export function changeConcessionQuantity(items: ConcessionItem[], quantities: Co
 }
 
 export function formatConcessionPrice(value: number): string {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "VND", maximumFractionDigits: 0 }).format(value);
+  return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND", maximumFractionDigits: 0 }).format(value);
 }

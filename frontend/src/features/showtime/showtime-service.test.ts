@@ -17,7 +17,7 @@ test("Showtime mock preserves string context, dates, Hall grouping and has no ne
     assert.equal(new Set(schedule.items.map(item => item.hall.id)).size, 2);
     assert.ok(schedule.items.every(item => item.movieId === "9223372036854775807" && item.cinemaId === "9007199254740993"));
     schedule.items[0].hall.name = "Changed";
-    assert.equal((await service.list("1", "2", signal())).items[0].hall.name, "Hall 1");
+    assert.equal((await service.list("1", "2", signal())).items[0].hall.name, "Phòng chiếu 1");
   } finally { globalThis.fetch = original; }
 });
 
@@ -50,6 +50,6 @@ test("empty, sold-out, past and retry fixtures are explicit; aborted requests do
   const request = service.list("1", "2", controller.signal);
   controller.abort();
   await assert.rejects(request, { name: "AbortError" });
-  await assert.rejects(service.list("1", "2", signal()), /couldn’t load/);
+  await assert.rejects(service.list("1", "2", signal()), /Không thể tải/);
   assert.ok((await service.list("1", "2", signal())).items.length > 0);
 });

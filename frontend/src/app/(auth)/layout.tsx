@@ -3,16 +3,16 @@ import Link from "next/link";
 import { CinemaBrand } from "@/components/layout/site-header";
 import { Icon } from "@/components/ui/icon";
 
-const FOOTER_LINKS = ["Admissions Policy", "Age Ratings & ID", "Accessibility Standards", "Terms & Privacy"];
+const FOOTER_LINKS = ["Quy định vào rạp", "Độ tuổi xem phim & giấy tờ", "Tiêu chuẩn tiếp cận", "Điều khoản & quyền riêng tư"];
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
     <div className="relative isolate flex min-h-screen flex-col overflow-hidden bg-canvas">
       <header className="relative z-10 bg-canvas/85 shadow-md backdrop-blur-xl">
         <div className="mx-auto flex h-20 w-full max-w-7xl items-center justify-between px-4 lg:px-10">
-          <Link href="/" aria-label="Smart Cinema home"><CinemaBrand /></Link>
+          <Link href="/" aria-label="Trang chủ Smart Cinema"><CinemaBrand /></Link>
           <div className="flex items-center gap-6">
-            <span className="hidden font-heading text-xs font-semibold uppercase tracking-wider text-muted md:inline">Assistance &amp; Support</span>
+            <span className="hidden font-heading text-xs font-semibold uppercase tracking-wider text-muted md:inline">Trợ giúp &amp; hỗ trợ</span>
             <span className="flex size-10 items-center justify-center rounded-full bg-accent text-on-action shadow-lg shadow-action/20"><Icon name="user" width={18} height={18} /></span>
           </div>
         </div>
@@ -27,10 +27,10 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
 
       <footer className="relative z-10 bg-canvas py-8">
         <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-5 px-4 text-center md:flex-row md:text-left lg:px-10">
-          <nav aria-label="Policy navigation" className="flex flex-wrap justify-center gap-x-7 gap-y-3 md:justify-start">
+          <nav aria-label="Điều hướng chính sách" className="flex flex-wrap justify-center gap-x-7 gap-y-3 md:justify-start">
             {FOOTER_LINKS.map(label => <span key={label} className="font-heading text-xs font-semibold uppercase tracking-wider text-muted">{label}</span>)}
           </nav>
-          <p className="text-xs text-muted">© 2025 Smart Cinema Group Inc. All rights reserved.</p>
+          <p className="text-xs text-muted">© 2025 Smart Cinema Group Inc. Bảo lưu mọi quyền.</p>
         </div>
       </footer>
     </div>

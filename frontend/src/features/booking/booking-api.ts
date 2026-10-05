@@ -12,12 +12,12 @@ export class BookingApiError extends Error {
   readonly status: number;
   readonly outcomeUncertain: boolean;
   constructor(status: number, outcomeUncertain = false) {
-    super(status === 400 ? "Invalid Booking request. Return to Seat Selection and refresh your Holds."
-      : status === 401 ? "Your session has ended. Sign in again to access your Booking."
-      : status === 403 ? "An active Customer account is required for this Booking operation."
-      : status === 404 ? "Booking or Showtime unavailable. Only your own eligible Booking can be accessed."
-      : status === 409 ? "Booking could not be accepted. A Hold may have expired, been released, belong to another Customer or already be attached; the Showtime may be unavailable or past cutoff. Refresh server availability before choosing again."
-      : "Booking service could not be reached or confirmed. No local Booking will be substituted.");
+    super(status === 400 ? "Yêu cầu đặt vé không hợp lệ. Quay lại chọn ghế và cập nhật ghế đang giữ."
+      : status === 401 ? "Phiên đăng nhập đã kết thúc. Đăng nhập lại để xem đơn đặt vé."
+      : status === 403 ? "Cần tài khoản khách hàng đang hoạt động để thực hiện thao tác đặt vé này."
+      : status === 404 ? "Đơn đặt vé hoặc suất chiếu không khả dụng. Bạn chỉ có thể truy cập đơn hợp lệ của mình."
+      : status === 409 ? "Không thể đặt vé. Ghế đang giữ có thể đã hết hạn, được trả lại, thuộc khách khác hoặc đã gắn với đơn đặt vé; suất chiếu có thể không khả dụng hoặc đã qua hạn đặt vé. Cập nhật tình trạng ghế trước khi chọn lại."
+      : "Không thể kết nối hoặc xác nhận dịch vụ đặt vé. Không tạo đơn thay thế trên thiết bị.");
     this.name = "BookingApiError"; this.status = status; this.outcomeUncertain = outcomeUncertain;
   }
 }

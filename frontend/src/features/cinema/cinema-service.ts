@@ -2,10 +2,10 @@ import type { CinemaHandoff, CinemaOption, CinemaPreviewState, CinemaSelectionSe
 
 // Local fixtures only. No network endpoints or real Movie/Cinema eligibility are inferred.
 const OPTIONS: CinemaOption[] = [
-  { id: "9007199254740993", name: "Smart Cinema Landmark", address: "Sample branch · Binh Thanh, Ho Chi Minh City", contact: "Contact information coming soon", operatingInformation: "Sample hours: 09:00–23:00", selectionState: "AVAILABLE" },
-  { id: "102", name: "Smart Cinema Nguyen Trai", address: "Sample branch · District 1, Ho Chi Minh City", contact: "Contact information coming soon", operatingInformation: "Sample hours: 09:00–23:00", selectionState: "AVAILABLE" },
-  { id: "103", name: "Smart Cinema Riverside", address: "Sample branch · District 7, Ho Chi Minh City", contact: "Contact information coming soon", operatingInformation: "This sample branch is closed", selectionState: "CLOSED" },
-  { id: "104", name: "Smart Cinema West Lake", address: "Sample branch · Tay Ho, Hanoi", contact: "Contact information coming soon", operatingInformation: "This sample branch is unavailable", selectionState: "UNAVAILABLE" },
+  { id: "9007199254740993", name: "Smart Cinema Landmark", address: "Rạp mẫu · Bình Thạnh, TP. Hồ Chí Minh", contact: "Sắp có thông tin liên hệ", operatingInformation: "Giờ mẫu: 09:00–23:00", selectionState: "AVAILABLE" },
+  { id: "102", name: "Smart Cinema Nguyen Trai", address: "Rạp mẫu · Quận 1, TP. Hồ Chí Minh", contact: "Sắp có thông tin liên hệ", operatingInformation: "Giờ mẫu: 09:00–23:00", selectionState: "AVAILABLE" },
+  { id: "103", name: "Smart Cinema Riverside", address: "Rạp mẫu · Quận 7, TP. Hồ Chí Minh", contact: "Sắp có thông tin liên hệ", operatingInformation: "Rạp mẫu này đã đóng cửa", selectionState: "CLOSED" },
+  { id: "104", name: "Smart Cinema West Lake", address: "Rạp mẫu · Tây Hồ, Hà Nội", contact: "Sắp có thông tin liên hệ", operatingInformation: "Rạp mẫu này không khả dụng", selectionState: "UNAVAILABLE" },
 ];
 
 export function parseCinemaPreviewState(value: string | null): CinemaPreviewState {
@@ -22,7 +22,7 @@ export function createMockCinemaService(state: CinemaPreviewState = "default", d
         const timer = setTimeout(() => { signal.removeEventListener("abort", abort); resolve(); }, delayMs);
         signal.addEventListener("abort", abort, { once: true });
       });
-      if (state === "error" && !failed) { failed = true; throw new Error("Cinema options couldn’t load. Please try again."); }
+      if (state === "error" && !failed) { failed = true; throw new Error("Không thể tải danh sách rạp. Vui lòng thử lại."); }
       if (state === "empty") return [];
       return OPTIONS.map(option => ({ ...option, selectionState: state === "unavailable" && option.selectionState === "AVAILABLE" ? "UNAVAILABLE" : option.selectionState }));
     },

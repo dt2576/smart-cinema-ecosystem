@@ -36,12 +36,12 @@ export function createMockPromotionService(delayMs = 350): PromotionPreviewServi
       const timer = setTimeout(() => { signal.removeEventListener("abort", abort); resolve(); }, delayMs);
       signal.addEventListener("abort", abort, { once: true });
     });
-    if (!Number.isSafeInteger(baseAmount) || baseAmount < 0) throw new Error("Preview amount is invalid. Return to Concessions to review your selection.");
+    if (!Number.isSafeInteger(baseAmount) || baseAmount < 0) throw new Error("Số tiền xem trước không hợp lệ. Quay lại bắp nước để kiểm tra lựa chọn.");
     const code = normalizePreviewCode(input);
-    if (code === "DEMORETRY" && !failed) { failed = true; throw new Error("The Promotion preview could not load. Retry or remove the code to continue."); }
-    if (code === "DEMOEXPIRED") return { outcome: "EXPIRED", code, message: "This sample Promotion has expired. No discount applied." };
-    if (code === "DEMOINELIGIBLE") return { outcome: "INELIGIBLE", code, message: "This selection is not eligible for the sample Promotion. No discount applied." };
-    if (code !== "DEMO10" && code !== "DEMORETRY") return { outcome: "INVALID", code, message: "Invalid sample Promotion code. No discount applied." };
+    if (code === "DEMORETRY" && !failed) { failed = true; throw new Error("Không thể tải khuyến mãi mẫu. Thử lại hoặc gỡ mã để tiếp tục."); }
+    if (code === "DEMOEXPIRED") return { outcome: "EXPIRED", code, message: "Khuyến mãi mẫu này đã hết hạn. Chưa áp dụng giảm giá." };
+    if (code === "DEMOINELIGIBLE") return { outcome: "INELIGIBLE", code, message: "Lựa chọn này không đủ điều kiện cho khuyến mãi mẫu. Chưa áp dụng giảm giá." };
+    if (code !== "DEMO10" && code !== "DEMORETRY") return { outcome: "INVALID", code, message: "Mã khuyến mãi mẫu không hợp lệ. Chưa áp dụng giảm giá." };
     // Demo rule only: 10% of Seat + Concession subtotal, rounded down to whole VND.
     return { outcome: "APPLIED", code, baseAmount, discount: Math.floor(baseAmount / 10) };
   } };

@@ -40,7 +40,7 @@ test("empty, retry and cancellation are isolated local adapter states", async ()
   assert.deepEqual(await empty.list(signal()), []);
   assert.equal(await empty.get("9007199254741101", signal()), null);
   const service = createMockBookingHistoryService("error", 0);
-  await assert.rejects(service.list(signal()), /could not load/);
+  await assert.rejects(service.list(signal()), /Không thể tải/);
   assert.equal((await service.list(signal())).length, 5);
   const controller = new AbortController();
   controller.abort();

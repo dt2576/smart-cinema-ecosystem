@@ -18,7 +18,7 @@ test("token renewal sends the refresh credential and maps the rotated session", 
       refreshExpiresIn: 2_592_000,
       userId: 1,
       email: "customer@example.com",
-      fullName: "Nguyen Van A",
+      fullName: "Nguyễn Văn A",
       role: "CUSTOMER",
     }), { status: 200, headers: { "Content-Type": "application/json" } });
   };
@@ -53,7 +53,7 @@ test("logout submits the current refresh token with Bearer authentication", asyn
       expiresAt: Date.now() + 900_000,
       refreshToken: "current-refresh",
       refreshExpiresAt: Date.now() + 2_592_000_000,
-      user: { id: 1, email: "customer@example.com", fullName: "Nguyen Van A", role: "CUSTOMER" },
+      user: { id: 1, email: "customer@example.com", fullName: "Nguyễn Văn A", role: "CUSTOMER" },
     });
   } finally {
     globalThis.fetch = originalFetch;

@@ -6,8 +6,8 @@ const SAMPLES: BookingHistoryPreview[] = [
     movie: { id: "9007199254741201", title: "Dune: Part Two", posterUrl: "/images/movies/dune-part-two.jpg" },
     cinema: { id: "9007199254740993", name: "Smart Cinema Landmark" },
     showtime: { id: "9007199254741301", startsAt: "2026-09-28T19:30:00+07:00" },
-    hall: { id: "9007199254741401", name: "Hall 1" }, seatSubtotal: 400000,
-    concessions: [{ id: "9007199254741501", name: "Movie Combo", quantity: 2, unitPrice: 120000 }],
+    hall: { id: "9007199254741401", name: "Phòng chiếu 1" }, seatSubtotal: 400000,
+    concessions: [{ id: "9007199254741501", name: "Combo xem phim", quantity: 2, unitPrice: 120000 }],
     discount: 40000, amount: 600000,
     qr: { payload: "SMART_CINEMA_PREVIEW:BOOKING:9007199254741101", imageUrl: "/images/booking-preview/9007199254741101.png" },
   },
@@ -16,7 +16,7 @@ const SAMPLES: BookingHistoryPreview[] = [
     movie: { id: "9007199254741201", title: "Dune: Part Two", posterUrl: "/images/movies/dune-part-two.jpg" },
     cinema: { id: "102", name: "Smart Cinema Nguyen Trai" },
     showtime: { id: "9007199254741302", startsAt: "2026-09-21T18:00:00+07:00" },
-    hall: { id: "9007199254741402", name: "Hall 2" }, seatSubtotal: 200000,
+    hall: { id: "9007199254741402", name: "Phòng chiếu 2" }, seatSubtotal: 200000,
     concessions: [], discount: 0, amount: 200000,
     qr: { payload: "SMART_CINEMA_PREVIEW:BOOKING:9007199254741102", imageUrl: "/images/booking-preview/9007199254741102.png" },
   },
@@ -26,7 +26,7 @@ const SAMPLES: BookingHistoryPreview[] = [
     movie: { id: "9007199254741201", title: "Dune: Part Two", posterUrl: "/images/movies/dune-part-two.jpg" },
     cinema: { id: "9007199254740993", name: "Smart Cinema Landmark" },
     showtime: { id: `900719925474130${index + 3}`, startsAt: `2026-09-${20 - index}T19:30:00+07:00` },
-    hall: { id: "9007199254741401", name: "Hall 1" }, seatSubtotal: 100000,
+    hall: { id: "9007199254741401", name: "Phòng chiếu 1" }, seatSubtotal: 100000,
     concessions: [], discount: 0, amount: 100000, qr: null,
   })),
 ];
@@ -44,7 +44,7 @@ export function createMockBookingHistoryService(scenario: BookingHistoryScenario
       const timer = setTimeout(() => { signal.removeEventListener("abort", abort); resolve(); }, delayMs);
       signal.addEventListener("abort", abort, { once: true });
     });
-    if (scenario === "error" && !failed) { failed = true; throw new Error("Sample Bookings could not load. Please try again."); }
+    if (scenario === "error" && !failed) { failed = true; throw new Error("Không thể tải đơn đặt vé mẫu. Vui lòng thử lại."); }
   }
   return {
     async list(signal) {

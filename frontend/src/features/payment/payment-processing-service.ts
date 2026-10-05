@@ -22,7 +22,7 @@ export function createMockPaymentProcessingService(scenario: PaymentProcessingSc
       await waitForPreview(delayMs, signal);
       onPhase("verifying");
       await waitForPreview(delayMs, signal);
-      if (scenario === "error" && !failedOnce) { failedOnce = true; throw new Error("The local simulation was interrupted. Retry the preview; no payment was attempted."); }
+      if (scenario === "error" && !failedOnce) { failedOnce = true; throw new Error("Mô phỏng đã bị gián đoạn. Thử lại bản xem trước; chưa thực hiện thanh toán."); }
       return scenario === "error" ? "success" : scenario;
     })().finally(() => { active = null; });
     return active;

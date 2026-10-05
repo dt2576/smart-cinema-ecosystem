@@ -16,7 +16,7 @@ import { useMovieRequest } from "@/features/movie/use-movie-request";
 import { canSelectShowtime, createSeatSelectionHandoff, formatShowtimeDate, formatShowtimeTime, showtimeDate } from "@/features/showtime/showtime-service";
 
 export function ShowtimeSelectionScreen({ movieId, cinemaId }: { movieId: string; cinemaId: string }) {
-  if (!isMovieId(movieId) || !isMovieId(cinemaId)) return <><MovieFeedback title="Invalid selection link" message="Choose a Movie and Cinema to continue." /><Link href="/movies" className="mt-6 inline-flex min-h-11 items-center text-accent">Browse Movies</Link></>;
+  if (!isMovieId(movieId) || !isMovieId(cinemaId)) return <><MovieFeedback title="Liên kết lựa chọn không hợp lệ" message="Chọn phim và rạp để tiếp tục." /><Link href="/movies" className="mt-6 inline-flex min-h-11 items-center text-accent">Xem danh sách phim</Link></>;
   return <ShowtimeContext key={`${movieId}/${cinemaId}`} movieId={movieId} cinemaId={cinemaId} />;
 }
 
@@ -30,8 +30,8 @@ function ShowtimeContext({ movieId, cinemaId }: { movieId: string; cinemaId: str
   const from = search.get("from");
   const back = `/movies/${movieId}/cinemas${from ? `?from=${encodeURIComponent(from)}` : ""}`;
   if (loading) return <MovieLoading detail />;
-  if (error) return <><MovieFeedback title={error instanceof MovieApiError && error.status === 404 ? "Movie unavailable" : error instanceof DiscoveryApiError && error.status === 404 ? "Cinema unavailable" : "Selection couldn’t load"} message={error.message} retry={(error instanceof MovieApiError || error instanceof DiscoveryApiError) && [400, 404].includes(error.status) ? undefined : retry} /><Link href={back} className="mt-6 inline-flex min-h-11 items-center text-accent">Choose Cinema</Link></>;
-  if (!data?.cinema) return <><MovieFeedback title="Cinema unavailable" message="This branch cannot be selected. Choose an available Cinema." /><Link href={back} className="mt-6 inline-flex min-h-11 items-center text-accent">Choose Cinema</Link></>;
+  if (error) return <><MovieFeedback title={error instanceof MovieApiError && error.status === 404 ? "Phim không khả dụng" : error instanceof DiscoveryApiError && error.status === 404 ? "Rạp không khả dụng" : "Không thể tải lựa chọn"} message={error.message} retry={(error instanceof MovieApiError || error instanceof DiscoveryApiError) && [400, 404].includes(error.status) ? undefined : retry} /><Link href={back} className="mt-6 inline-flex min-h-11 items-center text-accent">Chọn rạp</Link></>;
+  if (!data?.cinema) return <><MovieFeedback title="Rạp không khả dụng" message="Không thể chọn rạp này. Vui lòng chọn rạp đang hoạt động." /><Link href={back} className="mt-6 inline-flex min-h-11 items-center text-accent">Chọn rạp</Link></>;
   return <ShowtimeOptions movie={data.movie} cinema={data.cinema} />;
 }
 
@@ -85,43 +85,43 @@ function ShowtimeOptions({ movie, cinema }: { movie: MovieDetail; cinema: Cinema
   }
 
   return <>
-    <nav aria-label="Selection progress" className="mb-6 flex flex-wrap items-center gap-3 font-heading text-xs uppercase tracking-wide text-muted">
-      <Link href={movieHref} className="inline-flex min-h-11 items-center text-accent">1. Movie</Link><span aria-hidden="true">→</span><Link href={cinemaHref} className="inline-flex min-h-11 items-center text-accent">2. Cinema</Link><span aria-hidden="true">→</span><span aria-current="step" className="text-accent">3. Showtime</span><span aria-hidden="true">→</span><span>4. Seats</span>
+    <nav aria-label="Tiến trình chọn vé" className="mb-6 flex flex-wrap items-center gap-3 font-heading text-xs uppercase tracking-wide text-muted">
+      <Link href={movieHref} className="inline-flex min-h-11 items-center text-accent">1. Phim</Link><span aria-hidden="true">→</span><Link href={cinemaHref} className="inline-flex min-h-11 items-center text-accent">2. Rạp chiếu phim</Link><span aria-hidden="true">→</span><span aria-current="step" className="text-accent">3. Suất chiếu</span><span aria-hidden="true">→</span><span>4. Ghế</span>
     </nav>
-    <section aria-label="Selected Movie and Cinema" className="mb-8 flex flex-wrap items-center gap-4 rounded-2xl bg-linear-to-r from-panel to-action/10 p-5">
+    <section aria-label="Phim và rạp đã chọn" className="mb-8 flex flex-wrap items-center gap-4 rounded-2xl bg-linear-to-r from-panel to-action/10 p-5">
       <div className="w-16 shrink-0"><MoviePoster url={movie.posterUrl} title={movie.title} /></div>
-      <div className="min-w-0 flex-1"><p className="text-xs text-muted">{movie.ageRating && `${movie.ageRating} · `}{movie.duration} min</p><h2 className="mt-1 break-words text-xl font-bold">{movie.title}</h2><p className="mt-2 text-sm text-accent">{cinema.name}</p><p className="mt-1 text-xs text-muted">{cinema.address}</p></div>
-      <Link href={cinemaHref} className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-panel-high px-4 font-heading text-xs font-semibold hover:bg-panel-hover sm:w-auto">Change Cinema</Link>
+      <div className="min-w-0 flex-1"><p className="text-xs text-muted">{movie.ageRating && `${movie.ageRating} · `}{movie.duration} phút</p><h2 className="mt-1 break-words text-xl font-bold">{movie.title}</h2><p className="mt-2 text-sm text-accent">{cinema.name}</p><p className="mt-1 text-xs text-muted">{cinema.address}</p></div>
+      <Link href={cinemaHref} className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-panel-high px-4 font-heading text-xs font-semibold hover:bg-panel-hover sm:w-auto">Đổi rạp</Link>
     </section>
-    <h1 className="text-3xl font-bold sm:text-4xl">Select Showtime</h1>
-    <p className="mb-6 mt-4 rounded-lg border border-outline/40 bg-panel-low px-4 py-3 text-sm leading-6 text-muted">Showtimes come from the live catalog. Times use {data?.timeZone ?? "the configured Cinema timezone"}. Seat availability is checked on the next screen.</p>
-    {loading && <p role="status" className="rounded-xl bg-panel-low p-10 text-center text-muted">Loading Showtimes…</p>}
-    {error && <MovieFeedback title="Showtimes couldn’t load" message={error.message} retry={retry} />}
-    {error instanceof DiscoveryApiError && error.status === 400 && <Button variant="secondary" onClick={() => router.push(`/movies/${movie.id}/cinemas/${cinema.id}/showtimes`)}>Choose schedule dates</Button>}
+    <h1 className="text-3xl font-bold sm:text-4xl">Chọn suất chiếu</h1>
+    <p className="mb-6 mt-4 rounded-lg border border-outline/40 bg-panel-low px-4 py-3 text-sm leading-6 text-muted">Suất chiếu lấy từ lịch chiếu thực tế. Thời gian hiển thị theo {data?.timeZone ?? "múi giờ rạp đã cấu hình"}. Tình trạng ghế được kiểm tra ở bước tiếp theo.</p>
+    {loading && <p role="status" className="rounded-xl bg-panel-low p-10 text-center text-muted">Đang tải suất chiếu…</p>}
+    {error && <MovieFeedback title="Không thể tải suất chiếu" message={error.message} retry={retry} />}
+    {error instanceof DiscoveryApiError && error.status === 400 && <Button variant="secondary" onClick={() => router.push(`/movies/${movie.id}/cinemas/${cinema.id}/showtimes`)}>Chọn ngày chiếu</Button>}
     {data && <>
-      <section aria-label="Select date" className="mb-8">
-        <h2 className="mb-4 font-heading text-sm font-semibold uppercase tracking-wide">Select date</h2>
+      <section aria-label="Chọn ngày" className="mb-8">
+        <h2 className="mb-4 font-heading text-sm font-semibold uppercase tracking-wide">Chọn ngày</h2>
         <div className="flex flex-wrap gap-3">{data.dates.map(value => <button key={value} type="button" aria-pressed={date === value} onClick={() => { setSelection({ url, id: null }); setContinuationError(false); navigate(value); }} className={`min-h-16 rounded-lg border px-4 py-3 font-heading text-sm font-semibold ${date === value ? "border-action bg-action text-on-action" : "border-outline/40 bg-panel-high hover:bg-panel-hover"}`}>{formatShowtimeDate(value)}</button>)}</div>
       </section>
-      {!validDate ? <MovieFeedback title="Choose a date" message="Select one of the dates above." /> : items.length === 0 ? <MovieFeedback title="No Showtimes on this date" message="Choose another date or try again." retry={retry} /> : <>
-        <p className="mb-4 text-sm text-muted">Open for booking · Select a future screening to view Seats</p>
-        <fieldset><legend className="sr-only">Choose a Showtime</legend><div className="space-y-5">{halls.map(hall => <section key={hall.id} aria-label={hall.name} className="rounded-xl border border-outline/30 bg-panel-low p-5 sm:p-6">
+      {!validDate ? <MovieFeedback title="Chọn ngày" message="Chọn một trong các ngày trên." /> : items.length === 0 ? <MovieFeedback title="Ngày này chưa có suất chiếu" message="Chọn ngày khác hoặc thử lại." retry={retry} /> : <>
+        <p className="mb-4 text-sm text-muted">Đang mở bán · Chọn suất chiếu chưa bắt đầu để xem ghế</p>
+        <fieldset><legend className="sr-only">Chọn suất chiếu</legend><div className="space-y-5">{halls.map(hall => <section key={hall.id} aria-label={hall.name} className="rounded-xl border border-outline/30 bg-panel-low p-5 sm:p-6">
           <h2 className="mb-5 text-lg font-bold">{hall.name}</h2>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">{items.filter(item => item.hall.id === hall.id).map(item => {
             const available = canSelectShowtime(item, movie.id, cinema.id, date, now);
             const active = selected?.id === item.id;
-            const label = Date.parse(item.startsAt) <= now ? "Started / past" : item.bookingCutOff && Date.parse(item.bookingCutOff) <= now ? "Booking closed" : "Open for booking";
+            const label = Date.parse(item.startsAt) <= now ? "Đã bắt đầu / đã qua" : item.bookingCutOff && Date.parse(item.bookingCutOff) <= now ? "Đã ngừng đặt vé" : "Đang mở bán";
             return <label key={item.id} className={`flex min-h-28 flex-col items-center justify-center gap-2 rounded-lg border p-3 text-center ${active ? "border-action bg-action/10 ring-1 ring-action" : "border-outline/40 bg-panel"} ${available ? "cursor-pointer hover:bg-panel-hover" : "cursor-not-allowed text-muted"}`}>
-              <span className="font-heading text-lg font-bold tabular-nums">{formatShowtimeTime(item.startsAt, data.timeZone)}</span><span className={`text-xs ${available ? "text-success" : "text-muted"}`}>{active ? "Selected" : label}</span>
+              <span className="font-heading text-lg font-bold tabular-nums">{formatShowtimeTime(item.startsAt, data.timeZone)}</span><span className={`text-xs ${available ? "text-success" : "text-muted"}`}>{active ? "Đã chọn" : label}</span>
               <input type="radio" name="showtime" aria-label={`${hall.name} ${formatShowtimeTime(item.startsAt, data.timeZone)} ${label}`} checked={active} disabled={!available} onChange={() => { setSelection({ url, id: item.id }); setContinuationError(false); navigate(date, item.id); }} className="size-4 accent-action" />
             </label>;
           })}</div>
         </section>)}</div></fieldset>
       </>}
     </>}
-    <aside aria-label="Showtime selection summary" className="sticky bottom-3 z-20 mt-8 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-outline/50 bg-panel p-5 shadow-xl">
-      <div className="min-w-0 flex-1" aria-live="polite"><p className="font-heading text-xs uppercase tracking-wider text-accent">Selected Showtime</p><p className="mt-2 break-words font-semibold">{selected ? `${formatShowtimeDate(date)} · ${formatShowtimeTime(selected.startsAt, data?.timeZone)} · ${selected.hall.name}` : "Choose an available future Showtime"}</p>{((selectedId && data && !selected) || continuationError) && <p className="mt-2 text-sm text-error">Your choice is no longer available. Choose another Showtime.</p>}</div>
-      <Button disabled={!selected} onClick={() => continueToSeats(Date.now())} className="w-full sm:w-auto">Continue to Seat Selection<Icon name="arrow" /></Button>
+    <aside aria-label="Tóm tắt lựa chọn suất chiếu" className="sticky bottom-3 z-20 mt-8 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-outline/50 bg-panel p-5 shadow-xl">
+      <div className="min-w-0 flex-1" aria-live="polite"><p className="font-heading text-xs uppercase tracking-wider text-accent">Suất chiếu đã chọn</p><p className="mt-2 break-words font-semibold">{selected ? `${formatShowtimeDate(date)} · ${formatShowtimeTime(selected.startsAt, data?.timeZone)} · ${selected.hall.name}` : "Chọn suất chiếu khả dụng chưa bắt đầu"}</p>{((selectedId && data && !selected) || continuationError) && <p className="mt-2 text-sm text-error">Lựa chọn không còn khả dụng. Vui lòng chọn suất chiếu khác.</p>}</div>
+      <Button disabled={!selected} onClick={() => continueToSeats(Date.now())} className="w-full sm:w-auto">Tiếp tục chọn ghế<Icon name="arrow" /></Button>
     </aside>
   </>;
 }

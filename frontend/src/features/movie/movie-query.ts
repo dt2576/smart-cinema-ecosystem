@@ -1,12 +1,12 @@
 import type { MovieQuery, MovieSort } from "@/features/movie/movie.types";
 
 export const MOVIE_SORT_OPTIONS: { value: MovieSort; label: string }[] = [
-  { value: "title,asc", label: "Title: A–Z" },
-  { value: "title,desc", label: "Title: Z–A" },
-  { value: "releaseDate,desc", label: "Release date: newest first" },
-  { value: "releaseDate,asc", label: "Release date: oldest first" },
-  { value: "id,asc", label: "Movie ID: ascending" },
-  { value: "id,desc", label: "Movie ID: descending" },
+  { value: "title,asc", label: "Tên phim: A–Z" },
+  { value: "title,desc", label: "Tên phim: Z–A" },
+  { value: "releaseDate,desc", label: "Ngày khởi chiếu: mới nhất trước" },
+  { value: "releaseDate,asc", label: "Ngày khởi chiếu: cũ nhất trước" },
+  { value: "id,asc", label: "Mã phim: tăng dần" },
+  { value: "id,desc", label: "Mã phim: giảm dần" },
 ];
 
 export function isMovieId(value: unknown): value is string {
@@ -18,24 +18,24 @@ export function parseMovieQuery(params: URLSearchParams): MovieQuery {
   const allowed = new Set(["q", "genreId", "page", "size", "sort"]);
   for (const key of params.keys()) {
     if (!allowed.has(key) || params.getAll(key).length !== 1) {
-      throw new Error("Use each supported filter only once. Reset filters to start again.");
+      throw new Error("Chỉ dùng mỗi bộ lọc một lần. Đặt lại bộ lọc để bắt đầu lại.");
     }
   }
   const q = (params.get("q") ?? "").trim();
-  if ([...q].length > 255) throw new Error("Search titles using at most 255 characters.");
+  if ([...q].length > 255) throw new Error("Tìm tên phim với tối đa 255 ký tự.");
   const genreId = params.get("genreId") ?? "";
-  if (params.has("genreId") && !isMovieId(genreId)) throw new Error("Select a valid Genre or reset filters.");
+  if (params.has("genreId") && !isMovieId(genreId)) throw new Error("Chọn thể loại hợp lệ hoặc đặt lại bộ lọc.");
   function integer(key: string, fallback: number, min: number, max: number) {
     const raw = params.get(key);
     if (raw === null) return fallback;
     const value = Number(raw);
     if (!/^[0-9]+$/.test(raw) || !Number.isSafeInteger(value) || value < min || value > max) {
-      throw new Error(`${key === "page" ? "Page" : "Page size"} must be between ${min} and ${max}.`);
+      throw new Error(`${key === "page" ? "Trang" : "Số mục mỗi trang"} phải nằm trong khoảng ${min} và ${max}.`);
     }
     return value;
   }
   const sort = params.get("sort") ?? "title,asc";
-  if (!MOVIE_SORT_OPTIONS.some(option => option.value === sort)) throw new Error("Choose a supported sorting option.");
+  if (!MOVIE_SORT_OPTIONS.some(option => option.value === sort)) throw new Error("Chọn kiểu sắp xếp được hỗ trợ.");
   return { q, genreId, page: integer("page", 0, 0, 2147483647), size: integer("size", 20, 1, 100), sort: sort as MovieSort };
 }
 

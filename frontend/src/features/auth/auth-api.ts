@@ -1,4 +1,5 @@
 import type { AuthSession, CustomerProfile, LoginCredentials, RegistrationDetails, UpdateCustomerProfile, UserRole } from "@/features/auth/auth.types";
+import { presentationError, presentationFieldErrors } from "@/lib/presentation-errors";
 
 type ProblemDetail = {
   title?: string;
@@ -50,15 +51,15 @@ async function request<T>(path: string, options: { method?: "GET" | "POST" | "PA
       cache: "no-store",
     });
   } catch {
-    throw new AuthApiError("Unable to reach Smart Cinema. Check your connection and try again.", 0);
+    throw new AuthApiError("Không thể kết nối đến Smart Cinema. Kiểm tra kết nối và thử lại.", 0);
   }
 
   if (!response.ok) {
     const problem = await readProblemDetail(response);
     throw new AuthApiError(
-      problem.detail ?? "Something went wrong. Please try again.",
+      path === "/api/v1/auth/tokens" && response.status === 401 ? "Email hoặc mật khẩu không đúng." : path === "/api/v1/users" && response.status === 409 ? "Email này đã có tài khoản. Đăng nhập hoặc dùng email khác." : presentationError(response.status, problem.detail),
       response.status,
-      problem.errors,
+      presentationFieldErrors(problem.errors),
     );
   }
 

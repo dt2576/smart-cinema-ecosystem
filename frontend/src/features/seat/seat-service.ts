@@ -18,7 +18,7 @@ export function createMockSeatService(scenario: SeatPreviewScenario = "default",
         const timer = setTimeout(() => { signal.removeEventListener("abort", abort); resolve(); }, delayMs);
         signal.addEventListener("abort", abort, { once: true });
       });
-      if (scenario === "error" && !failed) { failed = true; throw new Error("Seat map couldn’t load. Please try again."); }
+      if (scenario === "error" && !failed) { failed = true; throw new Error("Không thể tải sơ đồ ghế. Vui lòng thử lại."); }
       const units: SeatUnit[] = [];
       if (scenario !== "empty") for (const [rowIndex, row] of ["A", "B", "C", "D", "E"].entries()) {
         const couple = row === "E";
