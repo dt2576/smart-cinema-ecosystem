@@ -1,8 +1,10 @@
 # Current AI handoff
 
-Last reconciled: 2026-10-03, Asia/Ho_Chi_Minh. **Vietnamese frontend localization COMPLETE**. Primary frontend language: **Vietnamese** across implemented Customer, Auth, Admin and preview screens. The prior Customer Booking creation milestone and its real owned Hold → one Neon Booking/browser Summary evidence remain accepted. No commit is implied. Read [project context](project-context.md), [AGENTS.md](../../AGENTS.md), workflows/conventions and Git status first. Current status here supersedes older English UI labels and preview/pre-Booking descriptions; no stable architecture/domain decision changed.
+Last reconciled: 2026-10-05, Asia/Ho_Chi_Minh. **Customer Concession composition COMPLETE**, with the conditional live-write verification limitation below. Primary frontend language: **Vietnamese** across implemented Customer, Auth, Admin and preview screens. The prior Vietnamese localization and Customer Booking creation milestones remain accepted. No commit is implied for this task. Read [project context](project-context.md), [AGENTS.md](../../AGENTS.md), workflows/conventions and Git status first. Current status supersedes older preview/pre-Concession descriptions; no stable architecture/domain decision changed.
 
 ## Current milestone
+
+Real Concession implementation: [current guide](../development/customer-concession-composition-frontend.md) and [dated report](../reports/2026-10-05_customer-concession-composition-frontend_report.md). Owned Summary links to `/bookings/{bookingId}/concessions`, with public ACTIVE catalog and authenticated owned add/quantity/remove. Whole Seat origins, snapshots, exact server totals and original expiry remain. Confirmed eligible PENDING/null-paymentStartedAt only; frozen/terminal read-only. No fixture authority, automatic POST retry or Promotion/Payment write. Final full regression and requirement/convention reconciliation PASS. Stop; Promotion is recommendation only.
 
 Localization evidence: [dated report](../reports/2026-10-03_frontend-vietnamese-localization_report.md) and [current guide](../development/frontend-vietnamese-localization.md). Existing API/status/role/seat-type values remain unchanged; shared display labels map to Vietnamese. Exact Booking money and explicit UTC remain authoritative. Preview VND formatting is Vietnamese. Safe errors, validation and accessible names are localized. Final-source TypeScript, ESLint, production build, **84/84 unit tests**, full **115/115 Playwright scenarios** (one worker, no retries/skips) and backend **294 tests** passed. Desktop/mobile production screenshots and existing keyboard/overflow checks passed. Prior Booking evidence below is preserved separately.
 
@@ -40,9 +42,9 @@ Read [Booking v1.0](../api/booking-contract-v1.0.md) plus additive
   existing eligible-unexpired-PENDING same-owner contract. A per-tab untrusted
   hint grants no ownership; unknown identity cannot be rediscovered once that
   recovery window expires because no Booking list endpoint exists.
-- Real Summary stops before Concession/Promotion/Payment integration. Separate
-  secondary Preview Concessions retains the static design demonstration only.
-  Its quantities/codes/prices never modify a real Booking. No Payment/VNPAY,
+- Real Summary now supports real Concession composition through its owned editor,
+  then stops before Promotion/Payment integration. Separate secondary Preview
+  Concessions retains the static design demonstration only. Its quantities/codes/prices never modify a real Booking. No Payment/VNPAY,
   freeze, PAID, consumption, sold_at or Ticket/Booking QR is initiated by this UI.
 
 **Admin Showtime Management and real Customer READ integration are implemented.**
@@ -57,9 +59,13 @@ stopped at authorization; the separate accepted task resolved that gate and appr
 - New/retimed end comes from persisted Movie duration; occupied_until=end; booking_cut_off=start. Exact nonnegative numeric(19,4), including zero/fractions. Price/status-only edits preserve saved times. Half-open existing Hall exclusion remains the concurrency backstop.
 - Create DRAFT/SCHEDULED/OPEN_FOR_BOOKING. DRAFT→SCHEDULED/OPEN_FOR_BOOKING/CANCELLED, SCHEDULED→OPEN_FOR_BOOKING/CANCELLED, OPEN_FOR_BOOKING→CANCELLED. Same-state safe future edits only. Any Hold/Booking history freezes commercial/schedule/lifecycle. No Admin STARTED/ENDED, regressions or cancelled reopening.
 - Runtime gets only guarded configuration writer EXECUTE. No direct Showtime/membership DML, initializer execution, configuration-owner inheritance/SET, HTTP role switching or disabled trigger. Managed bootstrap SET/schema CREATE is revoked before commit. After-commit technical audit follows existing Admin pattern.
-- Customer READ remains as implemented in the Admin Showtime slice. The subsequent Hold frontend integration above replaces local acquisition/countdown only; primary seat-only Booking creation/owned Summary is now real; composition/Payment/history/Ticket/QR integrations remain separate previews.
+- Customer READ remains as implemented in the Admin Showtime slice. Subsequent Hold frontend integration replaces local acquisition/countdown; primary Booking creation/owned Summary and Concession composition are now real. Promotion/Payment/history/Ticket/QR integrations remain separate previews.
 
 ## Verification and live data
+
+Concession verification: TypeScript, ESLint, production build, **94/94 unit tests**, full installed-Edge **130/130 Playwright scenarios** (6.9 minutes, one worker, no retries/skips, exit 0) and backend **294 tests** passed. All fifteen new browser scenarios passed in the full run. Scope, strict UTF-8, documentation links, whitespace, report inventory and Convention Compliance passed; 612/621 original files and all 19 original E2E files are unchanged. Live Neon validates V12 and has five active catalog items, but no future OPEN_FOR_BOOKING/cutoff-valid Showtime among 73 existing rows. Full new Booking/composition write proof is NOT RUN for that data dependency; no scheduling/catalog edits were made. No-interception real production-browser proof used ordinary QA Customer login, existing CANCELLED Booking 1 and real catalog; read-only/reload/desktop/mobile/keyboard passed, zero page errors. Original 19 domain/history/financial fingerprints and all V1–V12 applied checksums are unchanged. No new business writes or cleanup; expected Auth token activity is separate.
+
+### Prior localization verification — preserved historical context
 
 Localization verification: final-source TypeScript/ESLint/build PASS, unit **84/84 PASS**, full installed-Edge Playwright **115/115 PASS**, retries=0, one worker and normal timeouts. Backend `mvn verify` **294 PASS**, zero failures/errors/skips, completed 2026-10-02T19:42:54+07:00 using the existing dedicated local database and integration flags. Strict UTF-8/authorized-scope checks passed for all 118 changed/created files; 54 local Markdown links and whitespace/report/convention reconciliation passed. No backend, migration, API, requirement, historical-report or Stitch change. Browser localization QA renders the actual production frontend with isolated API fixtures; no new live Neon transaction or deployment occurred. Localization is accepted; stop before Concession integration.
 
@@ -120,18 +126,12 @@ Final verification Showtime is **CANCELLED**, Admin read-only; Customer query om
 
 ## Exact next recommended task — not authorization
 
-**Real Customer Concession composition integration into the existing unpaid Booking.**
-Read [Concession v1.0](../api/concession-composition-contract-v1.0.md), Booking
-v1.0 through v1.3 and this latest frontend guide/report. Use the actual active
-catalog and owned PENDING/pre-first-Payment edit APIs, immutable name/price
-snapshots and authoritative recalculated totals. Preserve original Seat origins
-and Booking deadline; no preview fixture authority, invented endpoint or Payment
-write. Then scope **Promotion integration**, followed by **Payment initiation**,
-as separate tasks. **Do not begin automatically.**
+**Real Customer Promotion application/removal integration into the existing unpaid Booking.**
+Read [Promotion v1.1](../api/promotion-composition-contract-v1.1.md), Booking v1.0 through v1.3 and the current Concession frontend guide/report. Preserve stored Seat/Concession snapshots, exact authoritative totals, original deadline and first-Payment freeze. Payment initiation remains a separate later task. **Do not begin automatically.**
 
 ## Remaining limitations and dependencies
 
-- Seat/Hold and seat-only Booking creation/owned Summary now use authoritative APIs. Concession composition, Promotion, Payment and My Bookings/Tickets/QR remain preview integrations. VIP Booking snapshots are real; old Summary demo pricing supports STANDARD/COUPLE only and must never determine persisted prices.
+- Seat/Hold, Booking creation/owned Summary and Concession composition now use authoritative APIs. Promotion, Payment and My Bookings/Tickets/QR remain preview integrations. VIP Booking snapshots are real; old Summary demo pricing supports STANDARD/COUPLE only and must never determine persisted prices.
 - No bulk-release/replacement endpoint exists: clear uses sequential exact-ID releases, stops on failure and reconciles remaining ownership. No implicit release or renewal on navigation. Polling/operations reconcile rather than realtime push; reads are not a final Booking guarantee. Downstream previews carry original expiry but cannot prove continuing ownership.
 - Automatic STARTED/ENDED progression, operational cancellation with history/refunds, Manager scoped authoring, Delete, layout reshaping and durable searchable Admin audit remain outside this task. Cinema-first behavioral contract remains unresolved; Movie-first real discovery is implemented.
 - Legacy Auth response/session userId is numeric; new domain IDs are decimal strings. Do not claim global ID safety.

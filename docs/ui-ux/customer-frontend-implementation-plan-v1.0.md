@@ -3,6 +3,8 @@
 Date: 2026-09-25.
 Status: Canonical planning baseline; Final Customer frontend QA reconciliation dated 2026-09-28; final verification recorded in the QA report.
 
+Current continuation, 2026-10-05: real Customer discovery, Holds, Booking creation/owned Summary and Vietnamese localization are already accepted. [Customer Concession composition](../development/customer-concession-composition-frontend.md) now adds `/bookings/[bookingId]/concessions` with active catalog, owned POST/PATCH/DELETE, immutable snapshots, exact server totals and unchanged expiry. Older planning-stage preview descriptions below are historical and are superseded by dated integration sections/current handoff. Promotion application/removal is the next separate task; Payment/history/Ticket integrations remain deferred. Live Concession write QA is unavailable because Neon currently has no future eligible open Showtime; automated persistence proof and limited real read-only browser proof are distinguished in the new report.
+
 ## 1. Controlling references
 
 - [Canonical screen map](screen-spec/customer-screen-map-v1.0.md): one source ID per route/state, current coverage and excluded variants.

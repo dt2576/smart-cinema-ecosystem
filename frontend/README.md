@@ -2,6 +2,8 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 Primary frontend language: **Vietnamese** across the implemented Customer, Auth, Admin and preview screens. See the [localization guide](../docs/development/frontend-vietnamese-localization.md) for terminology, display labels, safe errors, date/money formatting and preserved API/domain boundaries. Later sections retain the history of the initial scaffold; use the [current handoff](../docs/ai/current-handoff.md) for current functionality.
 
+Owned Booking Summary now links to real [Customer Concession composition](../docs/development/customer-concession-composition-frontend.md): active backend catalog, authenticated add/update/remove, persisted snapshots and authoritative exact totals. Promotion/Payment/Ticket integrations remain separate.
+
 ## Getting Started
 
 First, run the development server:

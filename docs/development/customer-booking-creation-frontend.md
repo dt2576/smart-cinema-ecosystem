@@ -7,14 +7,16 @@ Read [Booking v1.0](../api/booking-contract-v1.0.md) and additive
 [Seat/Hold v1.0](../api/seat-hold-contract-v1.0.md) and
 [v1.1](../api/seat-hold-contract-v1.1.md). These contracts remain unchanged.
 
+Current continuation, 2026-10-05: [real Customer Concession composition](customer-concession-composition-frontend.md) now extends owned Summary. The original creation/Seat-origin behavior below is preserved; Promotion and Payment remain separate integrations.
+
 ## Actual boundary and navigation
 
 Run `pnpm dev` from repository root with the existing ignored `backend/.env`.
 Use the normal Customer login and Movie → Cinema → Showtime → Seat flow.
 Select whole units, **Hold selected Seats**, then **Create Booking & review**.
 The primary action opens `/bookings/{bookingId}/summary` only after the server
-confirms its identity. It creates a seat-only PENDING Booking, then stops before
-Concession composition, Promotion and Payment integration.
+confirms its identity. It creates a seat-only PENDING Booking. Owned Summary now
+offers optional real Concession composition; it stops before Promotion and Payment integration.
 
 The existing **Preview Concessions** secondary action opens the separate static
 design preview. Its local catalog, quantities, Promotion codes, prices and
@@ -53,8 +55,9 @@ The typed DTO mirrors the current BookingResponse, with decimal string IDs:
 - `seatUnitCount`, `guestCount`, whole Seat lines including `id`, `seatId`,
   `holdId`, row/number, type/guest count and `unitPrice`/`finalPrice`;
 - `seatAmount`, `concessionAmount`, `subtotal`, `discount`, `finalAmount`;
-- persisted Concession lines and nullable Promotion snapshot, rendered read-only
-  if an existing owned Booking already contains them.
+- persisted Concession lines and nullable Promotion snapshot. Concession lines
+  may be edited through the dedicated composition screen while eligible;
+  Promotion remains read-only.
 
 Seat type, prices and totals are saved snapshots. Movie/Cinema/Hall labels are
 current referenced metadata in this API; they are not invented historical
@@ -123,13 +126,13 @@ survives only until unload. The last per-tab hint is not Booking history.
 
 ## Payment and next integration
 
-Persisted Summary provides no enabled Payment handoff. It sends no Payment,
-VNPAY, Concession or Promotion write. Creation does not freeze composition,
+Persisted Summary provides no enabled Payment handoff. It links to the real
+Concession editor; no Payment, VNPAY or Promotion write is initiated. Creation does not freeze composition,
 consume Holds/Promotion usage, set PAID/paid_at/sold_at or issue Ticket/Booking QR.
 If GET returns an already frozen Booking, `paymentStartedAt` is shown as an
 existing attempt boundary, never proof of verified success.
 
-Exact next task: **Integrate real Concession composition into the existing unpaid
-Booking**, followed separately by Promotion integration, then Payment initiation.
+Exact next recommended task: **Real Customer Promotion application/removal
+integration into the existing unpaid Booking**, then separately Payment initiation.
 Do not begin these automatically. See the
 [implementation report](../reports/2026-10-02_customer-booking-creation-frontend_report.md).

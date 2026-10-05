@@ -42,6 +42,7 @@ export function validateBooking(value: unknown): Booking {
     || new Set(b.seats.map(s => s.seatId)).size !== b.seats.length
     || new Set(b.seats.map(s => s.holdId)).size !== b.seats.length
     || new Set(b.seats.map(s => s.id)).size !== b.seats.length
+    || new Set(b.concessions.map(c => c.id)).size !== b.concessions.length
     || (b.promotion !== null && (!b.promotion || !isBookingId(b.promotion.id) || !label(b.promotion.code)
       || !["PERCENTAGE", "FIXED_AMOUNT"].includes(b.promotion.type)
       || ![b.promotion.value, b.promotion.minimumOrderAmount].every(money)
@@ -50,7 +51,8 @@ export function validateBooking(value: unknown): Booking {
   if (minor(b.subtotal) !== minor(b.seatAmount) + minor(b.concessionAmount)
     || minor(b.finalAmount) + minor(b.discount) !== minor(b.subtotal)
     || b.seats.reduce((sum, s) => sum + minor(s.finalPrice), BigInt(0)) !== minor(b.seatAmount)
-    || b.concessions.reduce((sum, c) => sum + minor(c.totalPrice), BigInt(0)) !== minor(b.concessionAmount)) throw new BookingApiError(502);
+    || b.concessions.reduce((sum, c) => sum + minor(c.totalPrice), BigInt(0)) !== minor(b.concessionAmount)
+    || b.concessions.some(c => minor(c.totalPrice) !== minor(c.unitPrice) * BigInt(c.quantity))) throw new BookingApiError(502);
   return b;
 }
 
