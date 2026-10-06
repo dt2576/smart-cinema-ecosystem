@@ -7,7 +7,7 @@ Read [Booking v1.0](../api/booking-contract-v1.0.md) and additive
 [Seat/Hold v1.0](../api/seat-hold-contract-v1.0.md) and
 [v1.1](../api/seat-hold-contract-v1.1.md). These contracts remain unchanged.
 
-Current continuation, 2026-10-05: [real Customer Concession composition](customer-concession-composition-frontend.md) now extends owned Summary. The original creation/Seat-origin behavior below is preserved; Promotion and Payment remain separate integrations.
+Current continuation, 2026-10-05: [real Concession composition](customer-concession-composition-frontend.md) and [real Promotion application/removal](customer-promotion-composition-frontend.md) now extend owned Summary. The original creation/Seat-origin behavior below is preserved; Payment remains a separate integration.
 
 ## Actual boundary and navigation
 
@@ -57,7 +57,7 @@ The typed DTO mirrors the current BookingResponse, with decimal string IDs:
 - `seatAmount`, `concessionAmount`, `subtotal`, `discount`, `finalAmount`;
 - persisted Concession lines and nullable Promotion snapshot. Concession lines
   may be edited through the dedicated composition screen while eligible;
-  Promotion remains read-only.
+  Promotion now supports explicit real apply/replace/reapply/remove inline in owned Summary; its terms and discount remain server-authoritative.
 
 Seat type, prices and totals are saved snapshots. Movie/Cinema/Hall labels are
 current referenced metadata in this API; they are not invented historical
@@ -127,12 +127,11 @@ survives only until unload. The last per-tab hint is not Booking history.
 ## Payment and next integration
 
 Persisted Summary provides no enabled Payment handoff. It links to the real
-Concession editor; no Payment, VNPAY or Promotion write is initiated. Creation does not freeze composition,
+Concession editor and inline real Promotion commands; no Payment or VNPAY write is initiated. Creation does not freeze composition,
 consume Holds/Promotion usage, set PAID/paid_at/sold_at or issue Ticket/Booking QR.
 If GET returns an already frozen Booking, `paymentStartedAt` is shown as an
 existing attempt boundary, never proof of verified success.
 
-Exact next recommended task: **Real Customer Promotion application/removal
-integration into the existing unpaid Booking**, then separately Payment initiation.
-Do not begin these automatically. See the
+Exact next recommended task: **Real Customer Payment initiation frontend integration against the existing backend Payment contract.**
+Do not begin automatically. See the
 [implementation report](../reports/2026-10-02_customer-booking-creation-frontend_report.md).
