@@ -2,7 +2,7 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 Primary frontend language: **Vietnamese** across the implemented Customer, Auth, Admin and preview screens. See the [localization guide](../docs/development/frontend-vietnamese-localization.md) for terminology, display labels, safe errors, date/money formatting and preserved API/domain boundaries. Later sections retain the history of the initial scaffold; use the [current handoff](../docs/ai/current-handoff.md) for current functionality.
 
-Owned Booking Summary links to real [Customer Concession composition](../docs/development/customer-concession-composition-frontend.md): active backend catalog, authenticated add/update/remove and persisted snapshots. It now includes real [Customer Promotion application/removal](../docs/development/customer-promotion-composition-frontend.md), with code entry, server-owned discount/totals and original deadline. Payment/Ticket integrations remain separate.
+Owned Booking Summary links to real [Customer Concession composition](../docs/development/customer-concession-composition-frontend.md): active backend catalog, authenticated add/update/remove and persisted snapshots. It includes real [Customer Promotion application/removal](../docs/development/customer-promotion-composition-frontend.md), with code entry, server-owned discount/totals and original deadline, and [Customer Payment initiation](../docs/development/customer-payment-initiation-frontend.md), with first-attempt freeze, known-ID recovery and backend-gated VNPAY Sandbox submission. Post-initiation return/status and Ticket integration remain separate.
 
 ## Getting Started
 

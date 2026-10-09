@@ -126,12 +126,11 @@ survives only until unload. The last per-tab hint is not Booking history.
 
 ## Payment and next integration
 
-Persisted Summary provides no enabled Payment handoff. It links to the real
-Concession editor and inline real Promotion commands; no Payment or VNPAY write is initiated. Creation does not freeze composition,
+Persisted Summary now links to the real Concession editor and inline real Promotion commands, plus [Payment initiation](customer-payment-initiation-frontend.md) as a separate explicit Customer action. Booking creation itself does not freeze composition,
 consume Holds/Promotion usage, set PAID/paid_at/sold_at or issue Ticket/Booking QR.
 If GET returns an already frozen Booking, `paymentStartedAt` is shown as an
 existing attempt boundary, never proof of verified success.
 
-Exact next recommended task: **Real Customer Payment initiation frontend integration against the existing backend Payment contract.**
+Exact next recommended task: **Audit and integrate the Customer post-initiation Payment return/status/recovery flow against the existing backend verification contract.** Keep backend verification authoritative; no Tickets before independently verified SUCCESS.
 Do not begin automatically. See the
 [implementation report](../reports/2026-10-02_customer-booking-creation-frontend_report.md).

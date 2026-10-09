@@ -40,7 +40,7 @@ test("atomic STANDARD VIP COUPLE Booking uses exact owned origins, snapshots and
   await expect(units.getByRole("listitem")).toHaveCount(3); await expect(units).toContainText("E1-2 · Ghế đôi");
   await expect(page.getByRole("complementary", { name: "Tổng tiền đặt vé từ máy chủ" })).toContainText("270,004.2963");
   await expect(page.locator(`time[datetime="${origins[0].expiresAt}"]`)).toBeVisible();
-  await expect(page.getByRole("button", { name: "Chưa tích hợp thanh toán" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Tiến hành thanh toán" })).toBeEnabled();
   await expect(page.locator("html")).toHaveAttribute("lang", "vi");
   await page.evaluate(() => scrollTo(0, 0));
   await page.screenshot({ path: info.outputPath("vietnamese-booking-desktop.png"), fullPage: true });
