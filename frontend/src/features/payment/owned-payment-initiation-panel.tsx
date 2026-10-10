@@ -6,15 +6,17 @@ import { formatBookingAmount } from "@/features/booking/booking-service";
 import { paymentIneligibility } from "@/features/payment/payment-initiation-service";
 import type { OwnedPaymentAttempt, PaymentInitiationReceipt } from "@/features/payment/payment-initiation.types";
 import { formatUtcInstant } from "@/lib/display-format";
+import { OwnedPaymentStatusPanel } from "@/features/payment/owned-payment-status-panel";
 
 interface Props {
   booking: Booking; now: number; busy: boolean; confirmed: boolean; compositionReviewRequired: boolean;
   payment?: OwnedPaymentAttempt; receipt?: PaymentInitiationReceipt; hasIdentityHint: boolean; paymentConfirmed: boolean;
   reviewRequired: boolean; notice: string; providerExpiresAt?: string;
   mutate: (operation: "INITIATE" | "SUBMIT") => Promise<void>; acknowledgeReview: () => void;
+  refresh: () => Promise<void>;
 }
 export function OwnedPaymentInitiationPanel({ booking, now, busy, confirmed, compositionReviewRequired, payment, receipt,
-  hasIdentityHint, paymentConfirmed, reviewRequired, notice, providerExpiresAt, mutate, acknowledgeReview }: Props) {
+  hasIdentityHint, paymentConfirmed, reviewRequired, notice, providerExpiresAt, mutate, acknowledgeReview, refresh }: Props) {
   const frozen = booking.paymentStartedAt !== null;
   const reason = paymentIneligibility(booking, now, !frozen);
   const blocked = busy || !confirmed || compositionReviewRequired || reviewRequired || !!reason;
@@ -32,13 +34,16 @@ export function OwnedPaymentInitiationPanel({ booking, now, busy, confirmed, com
         : payment.reconciliationRequired ? "Máy chủ yêu cầu đối soát; chưa thể tiếp tục"
         : payment.status === "INITIATED" ? "Đã khởi tạo, chưa gửi cổng thanh toán"
         : payment.status === "PENDING" ? "Đang chờ xác nhận từ máy chủ"
-        : "Máy chủ đã ghi nhận kết quả. Cần tra cứu qua luồng sau thanh toán."}</dd></div>
+        : payment.status === "FAILED" ? "Máy chủ xác nhận thất bại"
+        : payment.status === "CANCELLED" ? "Máy chủ xác nhận đã hủy"
+        : "Máy chủ đã xác nhận kết quả giao dịch"}</dd></div>
     </dl>}
     {receipt && paymentConfirmed && <p className="mt-3 break-all text-xs text-muted">Mã tham chiếu nội bộ: {receipt.internalReference}</p>}
     {providerExpiresAt && <p className="mt-3 break-all text-xs text-muted">Hạn gửi VNPAY Sandbox (VND): <time dateTime={providerExpiresAt}>{formatUtcInstant(providerExpiresAt)}</time>. Đây là hạn cổng do máy chủ trả về, có thể sớm hơn hạn đặt vé gốc.</p>}
     {frozen && !payment && <p role="status" className="mt-3 text-xs leading-6 text-muted">{hasIdentityHint
       ? "Đơn đã khóa. Chưa thể đọc lần thanh toán từ máy chủ. Hãy cập nhật đơn để kiểm tra lại mã đã nhận; không tự gửi lại hay tạo lần thanh toán mới."
       : "Đơn đã khóa nhưng chưa có mã lần thanh toán để tra cứu. Không thể tự tạo lần mới. Hãy kiểm tra lại đơn đặt vé; thông tin thanh toán sẽ cần được khôi phục qua hỗ trợ hoặc luồng tra cứu được máy chủ cung cấp."}</p>}
+    {frozen && <OwnedPaymentStatusPanel booking={booking} payment={payment} confirmed={confirmed && paymentConfirmed} busy={busy} refresh={refresh} />}
     {notice && <p role="status" className="mt-3 text-sm text-accent">{notice}</p>}
     {reviewRequired && <div className="mt-4 rounded-lg border border-outline bg-panel-low p-3"><p role="status" className="text-xs leading-6 text-muted">Cần xem lại dữ liệu máy chủ trước khi tiếp tục. Yêu cầu trước có thể đã được ghi nhận; không tự gửi lại hay tạo lần thanh toán mới.</p><Button variant="secondary" className="mt-3 w-full" disabled={busy || !confirmed || (frozen && !paymentConfirmed)} onClick={acknowledgeReview}>Đã xem dữ liệu thanh toán máy chủ</Button></div>}
     {reason && <p className="mt-3 text-xs leading-6 text-muted">{reason}</p>}

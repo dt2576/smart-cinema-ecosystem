@@ -4,6 +4,8 @@ Date: 2026-10-07. Primary language: **Vietnamese**. Real owned Booking Summary i
 
 ## Commands and authority
 
+Current continuation, 2026-10-10: [real Payment return/status/recovery](customer-payment-return-status-recovery-frontend.md) now supplies the fixed `/payments/vnpay/return` landing and authoritative status UI on Summary. Its dated guide supersedes the original slice's deferred post-initiation descriptions below; original initiation/freeze/navigation contracts and historical verification remain unchanged. Actual Sandbox return/callback/SUCCESS/PAID remain NOT RUN.
+
 `/bookings/{bookingId}/summary` continues to read owned Booking and display Seat origins, Concessions, Promotion, the five exact amount rows and original expiry. **Tiến hành thanh toán** explicitly requests the first internal attempt. **Mở VNPAY Sandbox** is a separate explicit action on a known, freshly confirmed unresolved attempt. No additional route/provider or preview processing adapter is needed.
 
 | Action | Existing resource | Body |
@@ -44,4 +46,4 @@ Fresh read-only Neon preflight found 73 Showtimes, latest start 2026-10-09T16:17
 
 Merchant/secret are absent and all confirmation flags remain false. Live generated URL/provider acceptance/signed callback/SUCCESS/PAID/issuance are **NOT RUN**, with no enabling of gates, manufactured callback or external provider contact. Normal Auth activity is separate from business data. No return/result/finalization, history, Ticket/QR, check-in, Admin or deployment feature is added.
 
-Exact next recommended task: **Audit and integrate the Customer post-initiation Payment return/status/recovery flow against the existing backend verification contract.** Keep backend verification authoritative and do not issue Tickets before independently verified SUCCESS. Recommendation only; stop here.
+The original next recommendation is now implemented by the [2026-10-10 return/status/recovery continuation](customer-payment-return-status-recovery-frontend.md). Current next recommended task: **Real Customer Ticket/Booking QR and My Bookings integration, but only after independently verified backend PAID/issuance contracts are audited. Do not start automatically.**

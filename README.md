@@ -167,7 +167,7 @@ and [Showtimes](docs/development/admin-showtime-management.md) at
 membership and protects transactional history. Customer Cinema/Showtime/Seat-map
 reads use real APIs; Seat selection uses authoritative authenticated Holds, then
 [real Booking creation and owned Summary](docs/development/customer-booking-creation-frontend.md).
-Owned Booking now supports real [Concession composition](docs/development/customer-concession-composition-frontend.md), [Promotion application/removal](docs/development/customer-promotion-composition-frontend.md), and [Payment initiation](docs/development/customer-payment-initiation-frontend.md). Sandbox submission remains subject to backend merchant confirmation gates. Post-initiation return/status, history and Ticket/QR integrations remain separate.
+Owned Booking now supports real [Concession composition](docs/development/customer-concession-composition-frontend.md), [Promotion application/removal](docs/development/customer-promotion-composition-frontend.md), [Payment initiation](docs/development/customer-payment-initiation-frontend.md), and [Payment return/status/recovery](docs/development/customer-payment-return-status-recovery-frontend.md). The fixed `/payments/vnpay/return` landing and Summary read authoritative owned Payment/Booking state; no browser callback confirms success. Sandbox configuration/interoperability remains gated and NOT RUN. History and Ticket/QR integrations remain separate.
 
 Provision a dedicated development Admin with **`pnpm admin:dev`** after setting
 local `DEV_ADMIN_*` inputs in ignored `backend/.env`. Registration and demo seed

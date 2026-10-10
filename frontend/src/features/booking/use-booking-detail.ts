@@ -9,10 +9,11 @@ import { getOwnedPaymentAttempt, initiateBookingPayment, PaymentApiError, submit
 import { paymentIneligibility, paymentMatchesBooking, sameBookingComposition, sameBookingOrigins } from "@/features/payment/payment-initiation-service";
 import { readPaymentHint, savePaymentHint } from "@/features/payment/payment-initiation-storage";
 import type { OwnedPaymentAttempt, PaymentInitiationReceipt, SandboxPaymentSubmission } from "@/features/payment/payment-initiation.types";
+import { frozenBookingUnchanged, paymentStateCoherent, PAYMENT_STATUS_READ_INTERVAL, PAYMENT_STATUS_READ_LIMIT } from "@/features/payment/payment-status-service";
 import { holdClock, projectedServerNow } from "@/features/seat/seat-hold-service";
 import type { SeatHoldClock } from "@/features/seat/seat-hold.types";
 
-export function useBookingDetail(id: string, token: string) {
+export function useBookingDetail(id: string, token: string, expectedPaymentId?: string) {
   const [data, setData] = useState<{ booking: Booking; clock: SeatHoldClock }>();
   const dataRef = useRef<typeof data>(undefined);
   const [loading, setLoading] = useState(true);
@@ -21,6 +22,7 @@ export function useBookingDetail(id: string, token: string) {
   const [error, setError] = useState<BookingApiError | PromotionApiError | PaymentApiError>();
   const [payment, setPayment] = useState<OwnedPaymentAttempt>();
   const paymentRef = useRef<OwnedPaymentAttempt | undefined>(undefined);
+  const verifiedSuccessRef = useRef<OwnedPaymentAttempt | undefined>(undefined);
   const [paymentReceipt, setPaymentReceipt] = useState<PaymentInitiationReceipt>();
   const [hasPaymentIdentityHint, setHasPaymentIdentityHint] = useState(false);
   const receiptRef = useRef<PaymentInitiationReceipt | undefined>(undefined);
@@ -35,6 +37,7 @@ export function useBookingDetail(id: string, token: string) {
   const [notice, setNotice] = useState("");
   const [tick, setTick] = useState(0);
   const controller = useRef<AbortController | null>(null);
+  const automaticReadBlocked = useRef(false);
   const expiryRead = useRef<string | null>(null);
   const accept = useCallback((booking: Booking, started: number) => {
     const received = performance.now(), next = { booking, clock: holdClock(booking.serverTime, started, received) };
@@ -45,12 +48,14 @@ export function useBookingDetail(id: string, token: string) {
     try {
       const booking = await getBooking(id, token, current.signal);
       if (!current.signal.aborted) {
+        if (dataRef.current && !frozenBookingUnchanged(dataRef.current.booking, booking)) throw new PaymentApiError(502);
         accept(booking, started); return booking;
       }
     } catch (failure) {
       if (!current.signal.aborted) {
         const problem = failure instanceof BookingApiError ? failure : new BookingApiError(503);
         setError(problem);
+        if ([401, 403, 404, 429].includes(problem.status)) automaticReadBlocked.current = true;
         if ([401, 403, 404].includes(problem.status)) { dataRef.current = undefined; setData(undefined); }
       }
     }
@@ -63,13 +68,18 @@ export function useBookingDetail(id: string, token: string) {
     paymentConfirmedRef.current = false; setPaymentConfirmed(false);
     const hint = readPaymentHint(id);
     setHasPaymentIdentityHint(!!hint?.paymentId);
+    if (expectedPaymentId && hint?.paymentId !== expectedPaymentId) {
+      setError(new PaymentApiError(502)); return;
+    }
     if (hint?.reviewRequired) { paymentReviewRef.current = true; setPaymentReviewRequired(true); }
     if (!hint?.paymentId) return;
     try {
       const attempt = await getOwnedPaymentAttempt(id, hint.paymentId, token, current.signal);
       if (current.signal.aborted) return;
+      const previous = verifiedSuccessRef.current ?? paymentRef.current;
       paymentRef.current = attempt; setPayment(attempt);
-      if (!paymentMatchesBooking(booking, attempt)) {
+      if (attempt.status === "SUCCESS") verifiedSuccessRef.current = attempt;
+      if (!paymentStateCoherent(booking, attempt, previous)) {
         requirePaymentReview(true, hint.paymentId); setError(new PaymentApiError(502)); return;
       }
       if (receiptRef.current && !paymentMatchesBooking(booking, attempt, receiptRef.current)) {
@@ -84,15 +94,19 @@ export function useBookingDetail(id: string, token: string) {
         requirePaymentReview(true, hint.paymentId);
         const problem = failure instanceof PaymentApiError ? failure : new PaymentApiError(503);
         setError(problem);
+        if ([401, 403, 404, 429].includes(problem.status)) automaticReadBlocked.current = true;
         if ([401, 403, 404].includes(problem.status)) { paymentRef.current = undefined; setPayment(undefined); receiptRef.current = undefined; setPaymentReceipt(undefined); }
       }
     }
-  }, [id, token, requirePaymentReview]);
-  const refresh = useCallback(async () => {
-    if (controller.current) return;
+  }, [id, token, expectedPaymentId, requirePaymentReview]);
+  const refresh = useCallback(async (automatic = false) => {
+    if (controller.current || (automatic && automaticReadBlocked.current)) return;
+    if (!automatic) automaticReadBlocked.current = false;
+    paymentConfirmedRef.current = false; setPaymentConfirmed(false);
     const current = new AbortController(); controller.current = current; setLoading(true); setError(undefined); setNotice("");
+    const timeout = setTimeout(() => { current.abort(); automaticReadBlocked.current = true; setError(new PaymentApiError(503)); }, 30_000);
     try { const booking = await read(current); if (booking) await recoverPayment(booking, current); }
-    finally { if (controller.current === current) { controller.current = null; setLoading(false); } }
+    finally { clearTimeout(timeout); if (controller.current === current) { controller.current = null; setLoading(false); } }
   }, [read, recoverPayment]);
   const mutatePromotion = useCallback(async (command: PromotionCommand) => {
     if (controller.current || !confirmedRef.current || reviewRef.current || paymentReviewRef.current || !dataRef.current) return;
@@ -171,7 +185,8 @@ export function useBookingDetail(id: string, token: string) {
         if (latest) {
           await recoverPayment(latest, recovery);
           if (sent && receiptRef.current && paymentConfirmedRef.current && sameBookingComposition(reviewed, latest) && operation === "INITIATE") requirePaymentReview(false, receiptRef.current.id);
-          if (submission && Date.parse(submission.expiresAt) > projectedServerNow(dataRef.current!.clock, performance.now())
+          if (submission && paymentRef.current?.paymentId === submission.paymentId
+            && Date.parse(submission.expiresAt) > projectedServerNow(dataRef.current!.clock, performance.now())
             && paymentConfirmedRef.current && paymentRef.current && ["INITIATED", "PENDING"].includes(paymentRef.current.status)
             && !paymentRef.current.reconciliationRequired && latest.status === "PENDING"
             && !paymentIneligibility(latest, projectedServerNow(dataRef.current!.clock, performance.now()), false)) {
@@ -185,8 +200,15 @@ export function useBookingDetail(id: string, token: string) {
   }, [read, recoverPayment, requirePaymentReview, id, token]);
   useEffect(() => {
     const initial = setTimeout(() => void refresh(), 0);
-    const activeRefresh = () => { if (document.visibilityState === "visible") void refresh(); };
-    const poll = setInterval(activeRefresh, 30_000);
+    const activeRefresh = () => { if (document.visibilityState === "visible") void refresh(true); };
+    let reads = 0;
+    const poll = setInterval(() => {
+      if (document.visibilityState !== "visible" || controller.current) return;
+      if (automaticReadBlocked.current || (paymentConfirmedRef.current && paymentRef.current
+        && ["SUCCESS", "FAILED", "CANCELLED"].includes(paymentRef.current.status) && !paymentRef.current.reconciliationRequired)) { clearInterval(poll); return; }
+      if (++reads >= PAYMENT_STATUS_READ_LIMIT) clearInterval(poll);
+      activeRefresh();
+    }, PAYMENT_STATUS_READ_INTERVAL);
     const timer = setInterval(() => setTick(performance.now()), 1000);
     window.addEventListener("focus", activeRefresh); window.addEventListener("pageshow", activeRefresh);
     document.addEventListener("visibilitychange", activeRefresh);
@@ -195,7 +217,7 @@ export function useBookingDetail(id: string, token: string) {
   const now = data ? projectedServerNow(data.clock, tick) : Infinity;
   useEffect(() => {
     if (data?.booking.status === "PENDING" && now >= Date.parse(data.booking.expiresAt) && !loading && expiryRead.current !== data.booking.expiresAt) {
-      expiryRead.current = data.booking.expiresAt; void refresh();
+      expiryRead.current = data.booking.expiresAt; void refresh(true);
     }
   }, [data, now, loading, refresh]);
   function acknowledgeReview() {
