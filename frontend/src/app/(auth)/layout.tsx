@@ -8,9 +8,10 @@ const FOOTER_LINKS = ["Quy định vào rạp", "Độ tuổi xem phim & giấy 
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
     <div className="relative isolate flex min-h-screen flex-col overflow-hidden bg-canvas">
+      <a href="#auth-content" className="sr-only z-50 rounded-control bg-action p-3 text-on-action focus:fixed focus:left-4 focus:top-4 focus:not-sr-only">Chuyển đến nội dung</a>
       <header className="relative z-10 bg-canvas/85 shadow-md backdrop-blur-xl">
-        <div className="mx-auto flex h-20 w-full max-w-7xl items-center justify-between px-4 lg:px-10">
-          <Link href="/" aria-label="Trang chủ Smart Cinema"><CinemaBrand /></Link>
+        <div className="page-container flex h-header items-center justify-between">
+          <Link href="/" aria-label="Trang chủ Smart Cinema" className="inline-flex min-h-control items-center"><CinemaBrand /></Link>
           <div className="flex items-center gap-6">
             <span className="hidden font-heading text-xs font-semibold uppercase tracking-wider text-muted md:inline">Trợ giúp &amp; hỗ trợ</span>
             <span className="flex size-10 items-center justify-center rounded-full bg-accent text-on-action shadow-lg shadow-action/20"><Icon name="user" width={18} height={18} /></span>
@@ -18,7 +19,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main className="relative flex flex-1 items-center justify-center px-4 py-14 sm:px-6">
+      <main id="auth-content" tabIndex={-1} className="page-container relative flex flex-1 items-center justify-center py-14">
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="absolute left-1/2 top-0 h-[70%] w-[42rem] -translate-x-1/2 rotate-12 bg-linear-to-br from-transparent via-action/5 to-transparent" />
         </div>

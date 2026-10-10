@@ -9,6 +9,7 @@ import { Icon, type IconName } from "@/components/ui/icon";
 import { PreviewDialog } from "@/components/ui/preview-dialog";
 import { HomeMovies } from "@/features/home/home-movies";
 import { CINEMAS, OFFERS } from "@/features/home/home-mock-data";
+import { useAuth } from "@/features/auth/auth-context";
 
 type Preview = { title: string; content: ReactNode };
 const CONTAINER = "mx-auto w-full max-w-7xl px-4 lg:px-10";
@@ -25,6 +26,7 @@ function SectionHeading({ title, eyebrow, description, action, icon = "arrow", o
 }
 
 export function HomeScreen() {
+  const { session, isHydrated } = useAuth();
   const [preview, setPreview] = useState<Preview | null>(null);
   const unavailable = (title: string) => setPreview({ title, content: title.startsWith("Suất chiếu")
     ? <div className="space-y-4 text-sm leading-7 text-muted"><p>Chọn phim trước, rồi chọn rạp và suất chiếu. Các địa điểm mẫu trên trang chủ không xác nhận có suất chiếu thực tế.</p><Link href="/movies" className="inline-flex min-h-11 items-center rounded-lg bg-action px-5 font-semibold text-on-action">Chọn phim</Link></div>
@@ -54,7 +56,7 @@ export function HomeScreen() {
     </main>
     <footer className="mt-10 bg-canvas py-10">
       <div className={CONTAINER}>
-        <div className="flex flex-col justify-between gap-6 pb-10 lg:flex-row lg:items-center"><div className="space-y-2"><a href="#home"><CinemaBrand /></a><p className="max-w-sm text-xs leading-6 text-muted">Không gian điện ảnh tinh tế và trải nghiệm chọn ghế cao cấp.</p></div><nav aria-label="Điều hướng chân trang" className="flex flex-wrap gap-x-6 gap-y-2 font-heading text-xs uppercase tracking-wider text-muted"><Link className="py-3 hover:text-accent" href="/movies">Phim</Link><a className="py-3 hover:text-accent" href="#cinemas">Rạp chiếu phim</a><Link className="py-3 hover:text-accent" href="/my-bookings">Vé của tôi</Link>{["Hỗ trợ", "Điều khoản & quyền riêng tư", "Quy định vào rạp"].map(label => <button key={label} className="py-3 uppercase hover:text-accent" onClick={() => unavailable(label)}>{label}</button>)}</nav></div>
+        <div className="flex flex-col justify-between gap-6 pb-10 lg:flex-row lg:items-center"><div className="space-y-2"><a href="#home"><CinemaBrand /></a><p className="max-w-sm text-xs leading-6 text-muted">Không gian điện ảnh tinh tế và trải nghiệm chọn ghế cao cấp.</p></div><nav aria-label="Điều hướng chân trang" className="flex flex-wrap gap-x-6 gap-y-2 font-heading text-xs uppercase tracking-wider text-muted"><Link className="py-3 hover:text-accent" href="/movies">Phim</Link><a className="py-3 hover:text-accent" href="#cinemas">Rạp chiếu phim</a>{isHydrated && (!session || session.user.role === "CUSTOMER") && <Link className="py-3 hover:text-accent" href="/my-bookings">Vé của tôi</Link>}{["Hỗ trợ", "Điều khoản & quyền riêng tư", "Quy định vào rạp"].map(label => <button key={label} className="py-3 uppercase hover:text-accent" onClick={() => unavailable(label)}>{label}</button>)}</nav></div>
         <p className="pt-6 text-xs text-muted">© 2025 Smart Cinema Group Inc. Bảo lưu mọi quyền.</p>
       </div>
     </footer>

@@ -7,6 +7,11 @@ import { useRouter } from "next/navigation";
 import { CinemaBrand } from "@/components/layout/site-header";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
+import { FormField } from "@/components/ui/form-field";
+import { SurfaceCard } from "@/components/ui/surface-card";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { StatusFeedback } from "@/components/ui/status-feedback";
+import { Skeleton } from "@/components/ui/skeleton";
 import { AuthApiError, getCustomerProfile, updateCustomerProfile } from "@/features/auth/auth-api";
 import { CustomerAccountMenu } from "@/features/auth/customer-account-menu";
 import { useAuth } from "@/features/auth/auth-context";
@@ -127,40 +132,41 @@ export function ProfileScreen() {
   if (!profile) return <ProfileShell><LoadError message={error} onRetry={() => void loadProfile()} /></ProfileShell>;
 
   return <ProfileShell>
-    <main className="mx-auto w-full max-w-6xl px-4 pb-20 pt-28 sm:px-6 lg:px-10 lg:pt-32">
+    <main id="profile-content" tabIndex={-1} className="page-container page-content max-w-6xl pb-20">
       <nav aria-label="Đường dẫn điều hướng" className="mb-9 flex items-center gap-2 text-sm text-muted"><Link href="/" className="hover:text-accent">Trang chủ</Link><span aria-hidden="true">/</span><span>Tài khoản</span><span aria-hidden="true">/</span><span className="text-foreground">Hồ sơ của tôi</span></nav>
       <p className="mb-3 font-heading text-xs font-bold uppercase tracking-[0.24em] text-accent">Thông tin &amp; quyền truy cập</p>
       <h1 className="text-4xl font-semibold tracking-tight text-white sm:text-5xl">Hồ sơ của tôi</h1>
       <p className="mt-4 max-w-2xl text-base leading-7 text-muted">Quản lý thông tin cá nhân, thông tin liên hệ và xem trạng thái truy cập tài khoản.</p>
 
-      <section aria-label="Tóm tắt hồ sơ" className="mt-10 flex flex-col gap-5 rounded-2xl border border-outline/40 bg-panel p-6 shadow-2xl shadow-black/20 sm:flex-row sm:items-center sm:p-8">
+      <SurfaceCard aria-label="Tóm tắt hồ sơ" className="mt-10 flex flex-col gap-5 sm:flex-row sm:items-center">
         <div className="flex size-20 shrink-0 items-center justify-center rounded-full bg-accent font-heading text-2xl font-bold text-on-action" aria-hidden="true">{initials(profile.fullName)}</div>
-        <div className="min-w-0 flex-1"><h2 className="truncate text-2xl font-semibold text-white">{profile.fullName}</h2><p className="mt-1 truncate text-muted">{profile.email}</p><div className="mt-4 flex flex-wrap gap-2"><StatusBadge>{displayLabel(profile.role)}</StatusBadge><StatusBadge success={profile.status === "ACTIVE"}>{displayLabel(profile.status)}</StatusBadge></div></div>
+        <div className="min-w-0 flex-1"><h2 className="truncate text-2xl font-semibold text-foreground">{profile.fullName}</h2><p className="mt-1 truncate text-muted">{profile.email}</p><div className="mt-4 flex flex-wrap gap-2"><StatusBadge>{displayLabel(profile.role)}</StatusBadge><StatusBadge tone={profile.status === "ACTIVE" ? "success" : "error"}>{displayLabel(profile.status)}</StatusBadge></div></div>
         <div className="border-t border-outline/30 pt-5 sm:border-l sm:border-t-0 sm:pl-8 sm:pt-0"><p className="text-xs font-bold uppercase tracking-[0.18em] text-muted">Quyền truy cập tài khoản</p><p className="mt-2 flex items-center gap-2 font-heading font-semibold text-success"><span className="size-2 rounded-full bg-success" aria-hidden="true" />{displayLabel(profile.status)}</p></div>
-      </section>
+      </SurfaceCard>
 
-      <section className="mt-8 overflow-hidden rounded-2xl border border-outline/40 bg-panel shadow-2xl shadow-black/20">
+      <SurfaceCard padding="none" className="mt-8 overflow-hidden">
         <div className="flex flex-col gap-4 border-b border-outline/30 p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8"><div><h2 className="text-2xl font-semibold text-white">Thông tin cá nhân</h2><p className="mt-1 text-sm text-muted">Chỉ có thể chỉnh sửa họ tên và số điện thoại.</p></div>{!editing && <Button variant="secondary" onClick={() => { setEditing(true); setSuccess(""); }}><Icon name="user" />Chỉnh sửa hồ sơ</Button>}</div>
         <form onSubmit={saveProfile} noValidate className="p-6 sm:p-8">
           <div className="grid gap-6 md:grid-cols-2">
             <ProfileField label="Họ tên" name="fullName" value={editing ? draft.fullName : profile.fullName} editable={editing} error={fieldErrors.fullName} onChange={value => setDraft(current => ({ ...current, fullName: value }))} autoComplete="name" />
-            <ReadOnlyField label="Địa chỉ email" value={profile.email} hint="Thông tin tài khoản được bảo vệ" />
+            <ReadOnlyField inputId="profile-email" label="Địa chỉ email" value={profile.email} hint="Thông tin tài khoản được bảo vệ" />
             <ProfileField label="Số điện thoại" name="phone" value={editing ? draft.phone : profile.phone} editable={editing} error={fieldErrors.phone} onChange={value => setDraft(current => ({ ...current, phone: value }))} autoComplete="tel" />
-            <ReadOnlyField label="Vai trò tài khoản" value={displayLabel(profile.role)} hint="Do Smart Cinema quản lý" />
-            <ReadOnlyField label="Trạng thái tài khoản" value={displayLabel(profile.status)} hint="Do Smart Cinema quản lý" />
+            <ReadOnlyField inputId="profile-role" label="Vai trò tài khoản" value={displayLabel(profile.role)} hint="Do Smart Cinema quản lý" />
+            <ReadOnlyField inputId="profile-status" label="Trạng thái tài khoản" value={displayLabel(profile.status)} hint="Do Smart Cinema quản lý" />
           </div>
-          <div aria-live="polite" className="mt-6 min-h-6">{error && <p role="alert" className="text-sm text-error">{error}</p>}{success && <p className="text-sm text-success">{success}</p>}</div>
+          <div aria-live="polite" className="mt-6 min-h-6">{error && <StatusFeedback compact role="alert" tone="error" message={error} />}{success && <StatusFeedback compact tone="success" message={success} />}</div>
           {editing && <div className="mt-4 flex flex-col-reverse gap-3 border-t border-outline/30 pt-6 sm:flex-row sm:justify-end"><Button variant="secondary" onClick={cancelEditing} disabled={saving}>Hủy</Button><Button type="submit" disabled={saving}>{saving ? "Đang lưu…" : "Lưu thay đổi"}</Button></div>}
         </form>
-      </section>
-      <section className="mt-8 rounded-2xl border border-outline/30 bg-panel-low p-6 sm:p-8"><h2 className="text-lg font-semibold text-white">Thông tin tài khoản &amp; quyền riêng tư</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-muted">Vai trò, trạng thái và email là các trường được bảo vệ. Liên hệ hỗ trợ Smart Cinema nếu thông tin này không chính xác.</p></section>
+      </SurfaceCard>
+      <SurfaceCard tone="subtle" className="mt-8"><h2 className="text-lg font-semibold text-foreground">Thông tin tài khoản &amp; quyền riêng tư</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-muted">Vai trò, trạng thái và email là các trường được bảo vệ. Liên hệ hỗ trợ Smart Cinema nếu thông tin này không chính xác.</p></SurfaceCard>
     </main>
   </ProfileShell>;
 }
 
 function ProfileShell({ children }: { children: ReactNode }) {
   return <div className="min-h-screen bg-linear-to-b from-canvas via-background to-canvas">
-    <header className="fixed inset-x-0 top-0 z-40 border-b border-outline/20 bg-canvas/90 backdrop-blur-xl"><div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-10"><Link href="/" aria-label="Trang chủ Smart Cinema"><CinemaBrand /></Link><nav aria-label="Điều hướng tài khoản" className="flex items-center gap-4"><Link href="/movies" className="hidden min-h-11 items-center text-sm text-muted hover:text-accent sm:inline-flex">Về danh sách phim</Link><CustomerAccountMenu /></nav></div></header>
+    <a href="#profile-content" className="sr-only z-50 rounded-control bg-action p-3 text-on-action focus:fixed focus:left-4 focus:top-4 focus:not-sr-only">Chuyển đến nội dung</a>
+    <header className="fixed inset-x-0 top-0 z-40 border-b border-outline/20 bg-canvas/90 backdrop-blur-xl"><div className="page-container flex h-header items-center justify-between"><Link href="/" aria-label="Trang chủ Smart Cinema" className="inline-flex min-h-control items-center"><CinemaBrand /></Link><nav aria-label="Điều hướng tài khoản" className="flex items-center gap-4"><Link href="/movies" className="hidden min-h-11 items-center text-sm text-muted hover:text-accent sm:inline-flex">Về danh sách phim</Link><CustomerAccountMenu /></nav></div></header>
     {children}
     <footer className="border-t border-outline/20 bg-canvas px-4 py-8 text-center text-sm text-muted">© 2026 Smart Cinema. Trải nghiệm điện ảnh cao cấp, chăm chút từng chi tiết.</footer>
   </div>;
@@ -168,21 +174,20 @@ function ProfileShell({ children }: { children: ReactNode }) {
 
 function ProfileField({ label, name, value, editable, error, onChange, autoComplete }: { label: string; name: EditableField; value: string; editable: boolean; error?: string; onChange: (value: string) => void; autoComplete: string }) {
   const errorId = `${name}-error`;
-  return <label className="block"><span className="mb-2 block text-xs font-bold uppercase tracking-[0.15em] text-muted">{label}</span><input name={name} value={value} onChange={event => onChange(event.target.value)} readOnly={!editable} aria-invalid={Boolean(error)} aria-describedby={error ? errorId : undefined} autoComplete={autoComplete} className={`min-h-12 w-full rounded-lg border bg-panel-high px-4 text-foreground transition-colors ${editable ? "border-outline focus:border-action" : "cursor-default border-transparent text-muted"}`} />{error && <span id={errorId} className="mt-2 block text-sm text-error">{error}</span>}</label>;
+  return <FormField inputId={name} label={label} error={error}><input id={name} name={name} value={value} onChange={event => onChange(event.target.value)} readOnly={!editable} aria-invalid={Boolean(error)} aria-describedby={error ? errorId : undefined} autoComplete={autoComplete} className="form-input" /></FormField>;
 }
 
-function ReadOnlyField({ label, value, hint }: { label: string; value: string; hint: string }) {
-  return <label className="block"><span className="mb-2 block text-xs font-bold uppercase tracking-[0.15em] text-muted">{label}</span><span className="relative block"><input value={value} readOnly aria-readonly="true" className="min-h-12 w-full cursor-default rounded-lg border border-transparent bg-panel-high px-4 pr-12 text-muted" /><span className="absolute right-4 top-1/2 -translate-y-1/2 text-accent" aria-hidden="true">✓</span></span><span className="mt-2 block text-xs text-muted">{hint}</span></label>;
-}
-
-function StatusBadge({ children, success = false }: { children: ReactNode; success?: boolean }) {
-  return <span className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider ${success ? "bg-success/10 text-success" : "bg-accent/10 text-accent"}`}>{children}</span>;
+function ReadOnlyField({ inputId, label, value, hint }: { inputId: string; label: string; value: string; hint: string }) {
+  return <FormField inputId={inputId} label={label} hint={hint}><input id={inputId} value={value} readOnly aria-readonly="true" aria-describedby={`${inputId}-help`} className="form-input" /></FormField>;
 }
 
 function LoadingProfile() {
-  return <main className="mx-auto flex min-h-[80vh] max-w-6xl items-center justify-center px-4 pt-20"><p role="status" className="text-muted">Đang tải hồ sơ của bạn…</p></main>;
+  return <main id="profile-content" tabIndex={-1} className="page-container page-content min-h-[80vh] max-w-6xl">
+    <StatusFeedback compact role="status" message="Đang tải hồ sơ của bạn…" />
+    <SurfaceCard aria-hidden="true" className="mt-8 space-y-6"><Skeleton className="h-20 w-20 rounded-full" /><Skeleton className="h-8 w-2/3" /><div className="grid gap-6 md:grid-cols-2">{Array.from({ length: 4 }, (_, i) => <Skeleton key={i} className="h-12" />)}</div></SurfaceCard>
+  </main>;
 }
 
 function LoadError({ message, onRetry }: { message: string; onRetry: () => void }) {
-  return <main className="mx-auto flex min-h-[80vh] max-w-xl flex-col items-center justify-center px-4 pt-20 text-center"><h1 className="text-3xl text-white">Không thể tải hồ sơ của bạn</h1><p role="alert" className="mt-3 text-muted">{message}</p><Button className="mt-6" onClick={onRetry}>Thử lại</Button></main>;
+  return <main id="profile-content" tabIndex={-1} className="page-container page-content min-h-[80vh] max-w-xl"><StatusFeedback headingLevel={1} title="Không thể tải hồ sơ của bạn" message={message} role="alert" actions={<Button onClick={onRetry}>Thử lại</Button>} /></main>;
 }

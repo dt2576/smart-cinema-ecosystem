@@ -18,14 +18,43 @@
   --color-error: #ffb4ab;
   --font-sans: var(--font-jakarta);
   --font-heading: var(--font-space);
+  --radius-control: 0.5rem;
+  --radius-card: 1rem;
+  --spacing-header: 5rem;
+  --spacing-control: 2.75rem;
+  --spacing-page-gutter: 1rem;
+  --spacing-section: 2.5rem;
+  --text-body-sm: 0.8125rem;
+  --text-body-sm--line-height: 1.125rem;
+  --text-body: 0.9375rem;
+  --text-body--line-height: 1.375rem;
+  --text-label: 0.875rem;
+  --text-label--line-height: 1.25rem;
+  --text-heading-md: 1.375rem;
+  --text-heading-md--line-height: 1.875rem;
+  --text-heading-lg: 1.75rem;
+  --text-heading-lg--line-height: 2.25rem;
+}
+
+@layer components {
+  .page-container { margin-inline: auto; width: 100%; max-width: 80rem; padding-inline: var(--spacing-page-gutter); }
+  .page-content { padding-top: calc(var(--spacing-header) + 2rem); padding-bottom: 4rem; }
+  .surface-card { min-width: 0; border: 1px solid color-mix(in srgb, var(--color-outline) 40%, transparent); border-radius: var(--radius-card); box-shadow: 0 16px 40px rgb(0 0 0 / 12%); }
+  .form-input { min-height: 3rem; width: 100%; border: 1px solid transparent; border-radius: var(--radius-control); background: var(--color-panel-high); padding-inline: 1rem; color: var(--color-foreground); transition: background-color 150ms, border-color 150ms; }
+  .form-input:focus { background: var(--color-panel-hover); border-color: var(--color-action); }
+  .form-input[aria-invalid="true"] { border-color: var(--color-error); }
+  .form-input[readonly] { color: var(--color-muted); cursor: default; }
+  @media (min-width: 40rem) { .page-container { padding-inline: 1.5rem; } }
+  @media (min-width: 64rem) { .page-container { padding-inline: 2.5rem; } }
 }
 
 html { scroll-behavior: smooth; scroll-padding-top: 104px; color-scheme: dark; }
 body { background: var(--color-background); color: var(--color-foreground); font-family: var(--font-jakarta), Arial, sans-serif; }
 h1, h2, h3 { font-family: var(--font-space), Arial, sans-serif; }
-button, a, input { -webkit-tap-highlight-color: transparent; }
+button, a, input, summary { -webkit-tap-highlight-color: transparent; }
 button:not(:disabled), a { cursor: pointer; }
 :focus-visible { outline: 2px solid var(--color-action); outline-offset: 4px; }
+input:focus-visible { outline-offset: 2px; }
 ::selection { background: var(--color-action); color: var(--color-on-action); }
 dialog::backdrop { background: rgb(0 0 0 / 75%); backdrop-filter: blur(6px); }
 @media (prefers-reduced-motion: reduce) {
