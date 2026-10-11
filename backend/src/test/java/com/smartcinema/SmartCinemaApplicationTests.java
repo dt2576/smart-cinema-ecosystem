@@ -51,6 +51,8 @@ class SmartCinemaApplicationTests {
 	@MockitoBean
 	private com.smartcinema.booking.BookingRepository bookingRepository;
 	@MockitoBean
+	private com.smartcinema.booking.BookingReadRepository bookingReadRepository;
+	@MockitoBean
 	private com.smartcinema.seat.SeatRepository seatRepository;
 	@MockitoBean
 	private com.smartcinema.discovery.DiscoveryRepository discoveryRepository;

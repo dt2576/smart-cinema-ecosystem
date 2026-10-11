@@ -78,6 +78,8 @@ public class AuthSecurityConfiguration {
 						.requestMatchers(promotionApply, promotionRemove).hasRole("CUSTOMER")
 						.requestMatchers(paymentInitiate).hasRole("CUSTOMER")
 						.requestMatchers(bookingCreate, bookingCancel,
+								PathPatternRequestMatcher.pathPattern(HttpMethod.GET, "/api/v1/bookings"),
+								PathPatternRequestMatcher.pathPattern(HttpMethod.GET, "/api/v1/bookings/{bookingId}/tickets"),
 								PathPatternRequestMatcher.pathPattern(HttpMethod.GET, "/api/v1/bookings/{bookingId}")).hasRole("CUSTOMER")
 						.requestMatchers(PathPatternRequestMatcher.pathPattern(HttpMethod.GET, "/api/v1/showtimes/{showtimeId}/seats")).permitAll()
 						.requestMatchers(holdAcquire, holdRelease,
