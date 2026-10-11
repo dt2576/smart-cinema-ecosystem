@@ -2,6 +2,7 @@ import { mockCustomerHolds, confirmSelectedHolds } from "./helpers/customer-hold
 import { mockDiscoveryReads, isCustomerReadPath, isCustomerHoldPath } from "./helpers/customer-discovery";
 import { test, expect, type Page, type TestInfo } from "@playwright/test";
 import { resolve } from "node:path";
+import { mockCustomerEntitlements } from "./helpers/customer-entitlements";
 
 const MOVIE_ID = "9223372036854775807";
 const GENRE_ID = "9007199254740993";
@@ -38,6 +39,7 @@ for (const mobile of [false, true]) test(`complete Customer journey keeps bounda
   await page.setViewportSize(mobile ? { width: 390, height: 844 } : { width: 1440, height: 1000 });
   await page.clock.setFixedTime(new Date("2030-01-01T09:00:00+07:00"));
   await mockCatalog(page);
+  await mockCustomerEntitlements(page, false);
   await page.route("**/api/v1/auth/tokens", route => route.fulfill({ json: TOKEN }));
   await page.route("**/api/v1/profile", route => route.fulfill({ json: PROFILE }));
   await page.route("**/api/v1/auth/token-revocations", route => route.fulfill({ status: 204 }));
@@ -46,7 +48,7 @@ for (const mobile of [false, true]) test(`complete Customer journey keeps bounda
   page.on("pageerror", error => errors.push(error.message));
   page.on("request", request => {
     const url = new URL(request.url());
-    if (url.pathname.startsWith("/api/") && !isCustomerReadPath(url.pathname) && !isCustomerHoldPath(url.pathname) && !["/api/v1/movies", `/api/v1/movies/${MOVIE_ID}`, "/api/v1/genres", "/api/v1/auth/tokens", "/api/v1/profile", "/api/v1/auth/token-revocations"].includes(url.pathname)) unexpected.push(url.pathname);
+    if (url.pathname.startsWith("/api/") && !isCustomerReadPath(url.pathname) && !isCustomerHoldPath(url.pathname) && !/^\/api\/v1\/bookings(?:\/9007199254741101(?:\/tickets)?)?$/.test(url.pathname) && !["/api/v1/movies", `/api/v1/movies/${MOVIE_ID}`, "/api/v1/genres", "/api/v1/auth/tokens", "/api/v1/profile", "/api/v1/auth/token-revocations"].includes(url.pathname)) unexpected.push(url.pathname);
   });
   await page.goto("/");
   await page.getByRole("link", { name: "Đăng nhập", exact: true }).click();
@@ -105,16 +107,16 @@ for (const mobile of [false, true]) test(`complete Customer journey keeps bounda
   await capture(page, info, "11-result");
   if (mobile) await page.getByRole("button", { name: "Mở menu điều hướng" }).click();
   await page.getByRole("navigation", { name: mobile ? "Điều hướng trên điện thoại" : "Điều hướng chính", exact: true }).getByRole("link", { name: "Vé của tôi", exact: true }).click();
-  await expect(page.getByRole("article")).toHaveCount(5);
-  await expect(page.getByText(/không phải lịch sử tài khoản/)).toBeVisible();
+  await expect(page.getByRole("article")).toHaveCount(1);
+  await expect(page.getByText(/không phải lịch sử tài khoản/)).toHaveCount(0);
   await capture(page, info, "12-my-bookings");
-  await page.getByRole("link", { name: "Xem đơn đặt vé DEMO-SC-1101", exact: true }).click();
+  await page.getByRole("link", { name: "Xem đơn đặt vé SC-FIXTURE-1101", exact: true }).click();
   await expect(page.getByRole("region", { name: "Vé riêng lẻ" })).toContainText("3 vé · 3 ghế · 4 khách");
-  await expect(page.locator('img[alt^="Mã QR đặt vé mẫu cho"]')).toHaveCount(1);
+  await expect(page.locator('img[alt^="Mã QR đặt vé cho"]')).toHaveCount(1);
   await capture(page, info, "13-booking-tickets");
   await page.getByRole("button", { name: "Phóng to mã QR đặt vé", exact: true }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
-  await expect(page.locator('img[alt^="Mã QR đặt vé mẫu cho"]')).toHaveCount(1);
+  await expect(page.locator('img[alt^="Mã QR đặt vé cho"]')).toHaveCount(1);
   await page.screenshot({ path: info.outputPath("14-booking-qr.png") });
   await page.keyboard.press("Escape");
   await page.locator("summary").filter({ hasText: "Mở menu tài khoản" }).click();

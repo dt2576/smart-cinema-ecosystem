@@ -1,8 +1,18 @@
 # Current AI handoff
 
-Last reconciled: 2026-10-10, Asia/Ho_Chi_Minh. **Customer Payment return/status/recovery COMPLETE — implementation and full regression PASS**, with explicit live Sandbox limitations below. Primary frontend language: **Vietnamese**. Prior initiation, localization, Booking creation, Concession and Promotion milestones remain accepted. No commit is implied. Read [project context](project-context.md), [AGENTS.md](../../AGENTS.md), workflows/conventions and Git status first. Current status supersedes older preview/pre-composition descriptions; no stable architecture/domain decision changed.
+Last reconciled: 2026-10-11, Asia/Ho_Chi_Minh. **Phase 3C Customer My Bookings/Tickets/Booking QR COMPLETE — implementation and full frontend regression PASS.** Primary frontend language: **Vietnamese**. Prior Payment, Booking and shared UI milestones remain accepted. No commit is implied. Read [project context](project-context.md), [AGENTS.md](../../AGENTS.md), workflows/conventions and Git status first.
 
 ## Current milestone
+
+Phase 3C: [implementation report](../reports/2026-10-11_customer-my-bookings-ticket-qr-frontend_report.md). `/my-bookings` and `/my-bookings/[bookingId]` now use real authenticated owned GET history/detail/Ticket aggregates from the [Phase 3B contract](../api/customer-booking-history-ticket-qr-contract-v1.0.md), independently of Payment attempt identity. No production mock fallback. Complete unique Tickets must match purchased Seat Units before one exact UTF-8 Booking QR is rendered. COUPLE remains one Ticket/two guests. All four Ticket states are read-only; VALID alone does not establish admission eligibility. Original pre-sale expiry does not hide a paid Booking.
+
+Known inconsistencies, stale/malformed/unavailable reads and session changes suppress Ticket/QR display. Account/token/resource keys and aborted requests isolate data; no QR token goes into URL/storage/analytics. Narrow safe login resume covers only the two canonical history routes. Explicit and throttled focus/tab/pageshow recovery use GET only; no polling, automatic Payment initiation, financial finalization, Ticket issuance or Customer Check-in. Existing Summary/return freeze and known/unknown Payment policies remain unchanged.
+
+Phase 3B backend evidence is separately recorded in its [report](../reports/2026-10-11_customer-booking-history-ticket-qr-backend_report.md): 317/317 tests and V12 head. Phase 3C final TypeScript/lint/build and 151/151 unit cases passed; focused Playwright 35/35 and full Playwright 272/272 passed, with no failures/skips/retries. Backend was not rerun; its sources remain unchanged. Browser fixtures do not prove live provider settlement, actual paid entitlements, Neon or Staff admission. No live database/provider action was performed.
+
+Next recommendation: independent Staff QR resolution/per-Ticket Check-in API, authorization and admission-contract audit before Phase 4. Do not start automatically; no commit/deployment authorized by this handoff.
+
+### Prior milestone — Payment return/status/recovery
 
 Real Payment return/status/recovery: [current guide](../development/customer-payment-return-status-recovery-frontend.md) and [dated report](../reports/2026-10-10_customer-payment-return-status-recovery-frontend_report.md). Fixed `/payments/vnpay/return` uses the existing backend 303-to-configured-HTTPS contract; backend forwards no IDs/query and return never settles. A matching per-tab known-attempt pointer selects authenticated owned Booking/Payment GET only. Callback/query values are discarded without interpretation or forwarding. The mounted landing cannot switch attempt if its hint changes. Lost identity stays blocked: no list/latest/Customer-query endpoint exists, and no blind POST is permitted.
 
