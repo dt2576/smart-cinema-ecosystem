@@ -1,5 +1,21 @@
 # Current AI handoff
 
+## Phase 4B-1 continuation — 2026-10-12
+
+**COMPLETE for backend/database foundation:** [continuation report](../reports/2026-10-12_staff-checkin-foundation-implementation-continuation_report.md). Resume approves ADMIN-created BLOCKED STAFF, secure emailed one-time invitation/private password setup, still BLOCKED until explicit ADMIN activation. [Onboarding/Admin contract](../api/staff-invitation-administration-contract-v1.0.md), [Staff operational contract](../api/staff-qr-checkin-contract-v1.0.md), [foundation guide](../development/staff-onboarding-and-checkin-foundation.md), [Gmail setup](../development/gmail-smtp-setup.md). Implemented protected administration/public setup, purpose-bound 256-bit digest/AES-GCM outbox, exact24h/reissue/consumption, durable bounded SMTP retry and designed current Cinema assignments. Gmail defaults are configuration only; delivery disabled until configured, real Gmail NOT VERIFIED. Local capture and Mailpit v1.31.5 PASS; no external-recipient sends.
+
+Source head now **V13**, V1–V12 preserved; protected NOLOGIN owner/narrow VALID→CHECKED_IN writer, immutable per-Ticket audit, parent-first locks, live STAFF/assignment/active-context and inclusive −30/+15-minute admission checks. Existing Booking/Payment/VNPAY/issuance/freeze/expiry and Customer frontend unchanged. Baseline317/317, final365/365 backend tests in54 suites, 0 failures/errors/skips; focused48/48. Local QA unreleased-V13 checksum/function synchronization is fully disclosed in report; no old checksum/business data/Neon change. No frontend tests or live Gmail/provider/admission proof claimed.
+
+Four Staff operational HTTP controllers, scanner/workspace/password-setup/Admin frontend remain unimplemented by phase boundary. Next recommendation: separately approve Phase 4B-2 HTTP integration against published contract; no automatic continuation, commit or deployment. Historical preflight/blocked and accepted milestones below are retained unchanged.
+
+## Phase 4B-1 preflight — 2026-10-12
+
+**BLOCKED before implementation**, per the task's explicit §7 credential/activation STOP gate: [blocking decision report](../reports/2026-10-12_staff-checkin-contract-database-foundation_report.md). Admission window (−30/+15 minutes, inclusive), atomic selected batches, STAFF-only admission, ADMIN-only provisioning/assignment management and safe Staff Booking recovery are approved. Existing contracts do not settle initial STAFF password establishment/delivery, initial account activation or first-login credential behavior. Resolve that decision before resuming Phase 4B-1; do not infer an invitation, temporary password, forced reset or initial ACTIVE/BLOCKED workflow.
+
+Source head rechecked at V12. No Staff API contract, Java/controller/test, V13, assignment persistence or protected Check-in writer was implemented; no database/provider commands or tests ran. Previous regression counts below remain historical. Incoming untracked Phase 3A/4A reports and all application sources are preserved. No commit/deployment or Phase 4B-2 work.
+
+Prior accepted milestone context:
+
 Last reconciled: 2026-10-11, Asia/Ho_Chi_Minh. **Phase 3C Customer My Bookings/Tickets/Booking QR COMPLETE — implementation and full frontend regression PASS.** Primary frontend language: **Vietnamese**. Prior Payment, Booking and shared UI milestones remain accepted. No commit is implied. Read [project context](project-context.md), [AGENTS.md](../../AGENTS.md), workflows/conventions and Git status first.
 
 ## Current milestone
