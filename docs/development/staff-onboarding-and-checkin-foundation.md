@@ -1,5 +1,7 @@
 # Staff onboarding and Check-in database foundation
 
+Current continuation: Phase4B-2 operational HTTP implementation is covered by the [Staff API integration guide](staff-qr-checkin-backend-apis.md). The Phase4B-1 scope/evidence below is historical; V14 adds operational rate buckets and retains V13's protected Check-in writer.
+
 Date: 2026-10-12. API definitions: [onboarding/admin v1.0](../api/staff-invitation-administration-contract-v1.0.md), [Staff operational v1.0](../api/staff-qr-checkin-contract-v1.0.md). [Security design](../db/staff-onboarding-checkin-security-design-v1.0.md). Operational Staff HTTP routes/frontends remain Phase 4B-2/later; database writer and onboarding/admin endpoints are this slice.
 
 ## Onboarding and activation

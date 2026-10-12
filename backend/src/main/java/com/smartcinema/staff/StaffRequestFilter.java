@@ -16,16 +16,25 @@ public class StaffRequestFilter extends OncePerRequestFilter {
     public StaffRequestFilter(StaffRateLimiter limiter) { this.limiter=limiter; }
     @Override protected boolean shouldNotFilter(HttpServletRequest request) {
         String path=request.getRequestURI();
-        return !(path.equals("/api/v1/staff/password-setups") || path.equals("/api/v1/admin/staff") || path.startsWith("/api/v1/admin/staff/"));
+        return !(path.startsWith("/api/v1/staff/") || path.equals("/api/v1/admin/staff") || path.startsWith("/api/v1/admin/staff/"));
     }
     @Override protected void doFilterInternal(HttpServletRequest request,HttpServletResponse response,FilterChain chain) throws ServletException,IOException {
+        response.setHeader("Cache-Control","no-store");
+        if (request.getMethod().equals("GET") && request.getRequestURI().startsWith("/api/v1/staff/")) {
+            try { if (request.getInputStream().read()!=-1) { reject(response,400); return; } }
+            catch (IOException failure) { reject(response,503); return; }
+        }
         if (request.getMethod().equals("POST") && request.getRequestURI().equals("/api/v1/staff/password-setups")) {
             try {
                 if (!limiter.allow("REDEMPTION",request.getRemoteAddr()==null?"unknown":request.getRemoteAddr())) { reject(response,429); return; }
             } catch (RuntimeException failure) { reject(response,503); return; }
         }
         if (!request.getMethod().equals("POST") && !request.getMethod().equals("PUT")) { chain.doFilter(request,response); return; }
-        byte[] body=request.getInputStream().readNBytes(65537); if (body.length>65536) { reject(response,400); return; }
+        int limit=request.getRequestURI().matches("/api/v1/staff/bookings/[^/]+/check-ins") ? 1048576 : 65536;
+        byte[] body;
+        try { body=request.getInputStream().readNBytes(limit+1); }
+        catch (IOException failure) { reject(response,503); return; }
+        if (body.length>limit) { reject(response,400); return; }
         chain.doFilter(new HttpServletRequestWrapper(request) {
             @Override public ServletInputStream getInputStream() {
                 var input=new ByteArrayInputStream(body);

@@ -15,9 +15,13 @@ public final class StaffRequest {
     private StaffRequest() { }
     @SuppressWarnings("unchecked")
     public static Map<String, Object> body(StaffSensitiveBody sensitive, String... keys) {
+        return body(sensitive, 65536, keys);
+    }
+    @SuppressWarnings("unchecked")
+    public static Map<String, Object> body(StaffSensitiveBody sensitive, int maxBytes, String... keys) {
         try {
             String raw = sensitive == null ? null : sensitive.value();
-            if (raw == null || raw.getBytes(StandardCharsets.UTF_8).length > 65536) throw new StaffFailure(400);
+            if (raw == null || raw.getBytes(StandardCharsets.UTF_8).length > maxBytes) throw new StaffFailure(400);
             Object value = JSON.readValue(raw, Object.class);
             if (!(value instanceof Map<?, ?> map) || !map.keySet().equals(Set.of(keys))) throw new StaffFailure(400);
             return (Map<String, Object>) map;

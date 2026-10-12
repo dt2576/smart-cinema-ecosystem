@@ -418,8 +418,8 @@ class StaffFoundationPostgresTests {
         var before=new JdbcTemplate(new org.springframework.jdbc.datasource.SingleConnectionDataSource(connection,true));
         var checksums=before.queryForList("SELECT version,checksum FROM "+upgrade+".flyway_schema_history WHERE success AND version IS NOT NULL ORDER BY installed_rank");
         var next=org.flywaydb.core.Flyway.configure().dataSource(source,System.getenv("DB_USERNAME"),System.getenv("DB_PASSWORD")).defaultSchema(upgrade).schemas(upgrade,"public").load();next.migrate();next.validate();
-        assertThat(before.queryForList("SELECT version,checksum FROM "+upgrade+".flyway_schema_history WHERE success AND version<>'13' ORDER BY installed_rank")).isEqualTo(checksums);
-        assertThat(jdbc.queryForObject("SELECT max(version::integer) FROM flyway_schema_history WHERE success",Integer.class)).isEqualTo(13);
+        assertThat(before.queryForList("SELECT version,checksum FROM "+upgrade+".flyway_schema_history WHERE success AND version::integer<=12 ORDER BY installed_rank")).isEqualTo(checksums);
+        assertThat(jdbc.queryForObject("SELECT max(version::integer) FROM flyway_schema_history WHERE success",Integer.class)).isEqualTo(14);
         }
         jdbc.execute("DROP SCHEMA "+upgrade+" CASCADE");
     }

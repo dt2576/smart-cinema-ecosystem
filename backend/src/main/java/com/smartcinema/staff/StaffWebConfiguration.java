@@ -15,7 +15,8 @@ public class StaffWebConfiguration implements WebMvcConfigurer {
         converters.addFirst(new AbstractHttpMessageConverter<StaffSensitiveBody>(MediaType.APPLICATION_JSON) {
             @Override protected boolean supports(Class<?> type) { return type==StaffSensitiveBody.class; }
             @Override protected StaffSensitiveBody readInternal(Class<? extends StaffSensitiveBody> type,HttpInputMessage input) throws IOException {
-                byte[] bytes=input.getBody().readNBytes(65537); if(bytes.length>65536) throw new StaffFailure(400);
+                // The filter retains 64 KiB for onboarding/resolution, 1 MiB for Check-in.
+                byte[] bytes=input.getBody().readNBytes(1048577); if(bytes.length>1048576) throw new StaffFailure(400);
                 try { return new StaffSensitiveBody(StandardCharsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT).onUnmappableCharacter(CodingErrorAction.REPORT).decode(ByteBuffer.wrap(bytes)).toString()); }
                 catch(CharacterCodingException failure) { throw new StaffFailure(400); }
             }
