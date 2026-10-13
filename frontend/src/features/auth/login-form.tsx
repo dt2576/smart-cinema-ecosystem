@@ -8,7 +8,7 @@ import { FormField } from "@/components/ui/form-field";
 import { StatusFeedback } from "@/components/ui/status-feedback";
 import { AuthApiError, login } from "@/features/auth/auth-api";
 import { useAuth } from "@/features/auth/auth-context";
-import { customerLoginReturn } from "@/features/auth/auth-return";
+import { customerLoginReturn, staffLoginReturn } from "@/features/auth/auth-return";
 
 type LoginErrors = {
   email?: string;
@@ -48,7 +48,8 @@ export function LoginForm() {
       const session = await login({ email, password });
       establishSession(session);
       const returnTo = customerLoginReturn(new URLSearchParams(window.location.search).get("returnTo"));
-      router.replace(session.user.role === "CUSTOMER" && returnTo ? returnTo : session.user.role === "ADMIN" ? "/admin" : "/");
+      const staffReturn = staffLoginReturn(new URLSearchParams(window.location.search).get("returnTo"));
+      router.replace(session.user.role === "STAFF" ? staffReturn ?? "/staff/check-in" : session.user.role === "CUSTOMER" && returnTo ? returnTo : session.user.role === "ADMIN" ? "/admin" : "/");
     } catch (error) {
       if (error instanceof AuthApiError) {
         setErrors({

@@ -19,7 +19,7 @@ export function SiteHeader({ onPreview }: { onPreview?: (title: string) => void 
   const { isAuthenticated, isHydrated, session } = useAuth();
   const authenticatedUser = isHydrated && isAuthenticated ? session?.user : null;
   const customerLinksVisible = isHydrated && (!authenticatedUser || authenticatedUser.role === "CUSTOMER");
-  const links = [{ label: "Phim", href: "/movies" }, ...(onPreview ? [{ label: "Suất chiếu" }, { label: "Rạp chiếu phim", href: "/#cinemas" }, { label: "Khuyến mãi", href: "/#promotions" }] : []), ...(customerLinksVisible ? [{ label: "Vé của tôi", href: "/my-bookings" }] : [])];
+  const links = [{ label: "Phim", href: "/movies" }, ...(onPreview ? [{ label: "Suất chiếu" }, { label: "Rạp chiếu phim", href: "/#cinemas" }, { label: "Khuyến mãi", href: "/#promotions" }] : []), ...(customerLinksVisible ? [{ label: "Vé của tôi", href: "/my-bookings" }] : []), ...(authenticatedUser?.role === "STAFF" ? [{ label: "Soát vé", href: "/staff/check-in" }] : [])];
   const navigation = links.map(link => link.href
     ? <Link key={link.label} href={link.href} onClick={() => setMenuOpen(false)} aria-current={pathname === link.href || pathname.startsWith(`${link.href}/`) ? "page" : undefined} className={`rounded-lg px-4 py-3 font-heading text-sm hover:bg-panel-high ${pathname === link.href || pathname.startsWith(`${link.href}/`) ? "bg-panel-high text-accent" : "text-muted"}`}>{link.label}</Link>
     : <button key={link.label} onClick={() => { setMenuOpen(false); onPreview?.(link.label); }} className="rounded-lg px-4 py-3 text-left font-heading text-sm text-muted hover:bg-panel-high">{link.label}</button>);

@@ -1,6 +1,8 @@
 import type { SVGProps } from "react";
 
 const ICON_PATHS = {
+  camera: "M3 7h4l2-3h6l2 3h4v14H3z M16 13a4 4 0 1 1-8 0 4 4 0 0 1 8 0",
+  scan: "M3 8V3h5M16 3h5v5M21 16v5h-5M8 21H3v-5M6 6h4v4H6zM14 6h4v4h-4zM6 14h4v4H6zM14 14h4m-4 0v4h4v-2",
   film: "M4 3h16v18H4z M4 7h4m-4 5h4m-4 5h4M16 7h4m-4 5h4m-4 5h4M8 3v18M16 3v18",
   arrow: "M5 12h14m-6-6 6 6-6 6",
   play: "M9 6v12l10-6z",

@@ -35,6 +35,7 @@ export function CustomerAccountMenu() {
     <div className="absolute right-0 top-[calc(100%+0.5rem)] z-50 w-60 max-w-[calc(100vw-2rem)] overflow-hidden rounded-card border border-outline/40 bg-panel p-2 shadow-2xl shadow-black/40">
       <p className="truncate px-3 py-2 text-xs text-muted sm:hidden">{user.fullName}</p>
       {user.role === "ADMIN" && <Link href="/admin" onClick={() => menuRef.current?.removeAttribute("open")} className="flex min-h-11 items-center rounded-md px-3 font-heading text-sm font-semibold text-accent hover:bg-panel-high">Khu vực quản trị</Link>}
+      {user.role === "STAFF" && <Link href="/staff/check-in" onClick={() => menuRef.current?.removeAttribute("open")} className="flex min-h-11 items-center rounded-control px-3 font-heading text-sm font-semibold text-accent hover:bg-panel-high">Khu vực soát vé</Link>}
       {user.role === "CUSTOMER" && <Link href="/profile" onClick={() => menuRef.current?.removeAttribute("open")} className="flex min-h-11 items-center rounded-control px-3 font-heading text-sm font-semibold text-foreground hover:bg-panel-high">Hồ sơ của tôi</Link>}
       <button type="button" onClick={() => void logout()} className="flex min-h-11 w-full items-center rounded-md px-3 text-left font-heading text-sm font-semibold text-error hover:bg-panel-high">Đăng xuất</button>
     </div>

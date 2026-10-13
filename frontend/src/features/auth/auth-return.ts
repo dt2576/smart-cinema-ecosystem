@@ -1,4 +1,7 @@
 // Seat resume uses the existing discovery context; reject external redirects.
+export function staffLoginReturn(value: string | null): string | null {
+  return value === "/staff/check-in" ? value : null;
+}
 export function seatLoginReturn(value: string | null): string | null {
   if (!value || !/^\/showtimes\/[1-9][0-9]{0,18}\/seats\?/.test(value) || value.includes("\\")) return null;
   const url = new URL(value, "https://smart-cinema.local");
