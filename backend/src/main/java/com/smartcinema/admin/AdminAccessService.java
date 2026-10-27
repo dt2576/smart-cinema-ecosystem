@@ -11,7 +11,16 @@ public class AdminAccessService {
     public AdminAccessService(JdbcTemplate jdbc) { this.jdbc = jdbc; }
 
     public AdminIdentity requireAdmin(long actorId) {
-        return jdbc.query("SELECT id, full_name, role, status FROM users WHERE id=? FOR SHARE", (row, number) -> {
+        return requireAdmin(actorId,true);
+    }
+
+    /** Reporting snapshot authorization, without locking users or requiring a write transaction. */
+    public AdminIdentity requireAdminReadOnly(long actorId) {
+        return requireAdmin(actorId,false);
+    }
+
+    private AdminIdentity requireAdmin(long actorId,boolean lock) {
+        return jdbc.query("SELECT id, full_name, role, status FROM users WHERE id=?"+(lock?" FOR SHARE":""), (row, number) -> {
             if (!"ADMIN".equals(row.getString("role")) || !"ACTIVE".equals(row.getString("status"))) {
                 throw denied();
             }

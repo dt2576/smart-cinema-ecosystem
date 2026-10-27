@@ -1,5 +1,36 @@
 # Current AI handoff
 
+## ADMIN Reporting & Dashboard backend — 2026-10-27
+
+**IMPLEMENTED & VERIFIED — PASS (backend API slice).**
+[Report](../reports/2026-10-27_admin-reporting-dashboard-backend_report.md),
+[API contract](../api/admin-reporting-dashboard-contract-v1.0.md).
+Four ADMIN GETs: `/api/v1/admin/dashboard`, `/api/v1/admin/reports/summary`,
+`/api/v1/admin/reports/daily`, `/api/v1/admin/reports/breakdowns` with
+CINEMA/MOVIE/SHOWTIME dimensions. Shared exact aggregation, half-open Vietnamese
+calendar periods, intersected bigint filters, bounded paging, current ACTIVE ADMIN
+check and read-only REPEATABLE READ. Existing mutation locking checks unchanged.
+Revenue requires coherent PAID issuance plus verified, non-reconciliation SUCCESS;
+response explicitly SANDBOX. Booking amounts stay frozen, Concession amount is
+gross before Booking discount. Occupancy uses Showtime-date frozen Seat Units,
+separate from payment-date sales. No financial finalization or refund inference.
+
+Actual local startup/backend/frontend/proxy PASS; installed/source **V16**, no
+pending/failed migration,16 checksums valid; no operator credentials or grants.
+Final **197 non-DB +12 read-only PostgreSQL +3 real HTTP tests =212 distinct PASS**,
+zero final failures/errors/skips.187 baseline preserved. Financial-positive cases
+are isolated VALUES CTE SELECT fixtures, never persisted PAID/SUCCESS/Ticket data.
+Live October data:20 created Bookings,20 Showtimes,20 sellable units, zero revenue/
+issued Tickets.30 real authenticated/invalid/anonymous GET checks; no business writes.
+16-table row hashes/Flyway/function definitions preserved. Normal ADMIN login only
+adds refresh-session state. Live wrong-role logins were not provisioned; MVC role
+security plus actual current-account SQL denial verified. Small-data EXPLAIN only,
+production load and positive operational financial proof remain unverified.
+
+No frontend, Manager, Stitch, schema/migration/configuration, Neon, deployment,
+staging/commit/push. Next task requires review and separate approval; do not start
+Dashboard/Reporting frontend automatically. Earlier handoff entries remain historical.
+
 ## ADMIN Promotion Management frontend — 2026-10-27
 
 **IMPLEMENTED & VERIFIED — PASS.** [Report](../reports/2026-10-27_admin-promotion-management-frontend_report.md).
