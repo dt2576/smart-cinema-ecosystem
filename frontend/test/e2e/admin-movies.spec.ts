@@ -50,7 +50,7 @@ test("Admin verification failure can retry and verified backend identity control
   await expect(page.getByText("Không thể kết nối hoặc xác nhận phản hồi từ máy chủ. Vui lòng thử lại.")).toBeVisible();
   await page.getByRole("button", { name: "Kiểm tra lại quyền truy cập" }).click();
   await expect(page.getByRole("heading", { name: "Tổng quan" })).toBeVisible();
-  await expect(page.getByRole("navigation", { name: "Điều hướng quản trị" }).getByRole("link")).toHaveText(["Tổng quan", "Phim", "Rạp chiếu phim", "Suất chiếu", "Nhân viên", "Bắp nước"]);
+  await expect(page.getByRole("navigation", { name: "Điều hướng quản trị" }).getByRole("link")).toHaveText(["Tổng quan", "Phim", "Rạp chiếu phim", "Suất chiếu", "Nhân viên", "Bắp nước", "Khuyến mãi"]);
   await expect(page.getByRole("navigation", { name: "Điều hướng quản trị" }).getByRole("link", { name: "Nhân viên", exact: true })).toHaveAttribute("href", "/admin/staff");
   await page.getByRole("link", { name: "Phim", exact: true }).click();
   await expect(page.getByRole("heading", { name: movie.title })).toBeVisible();

@@ -1,5 +1,34 @@
 # Current AI handoff
 
+## ADMIN Promotion Management frontend — 2026-10-27
+
+**IMPLEMENTED & VERIFIED — PASS.** [Report](../reports/2026-10-27_admin-promotion-management-frontend_report.md).
+Four real `/admin/promotions` list/new/detail/edit routes, five existing APIs, one
+AdminShell link, simplified Vietnamese Nocturne UI. Existing components/auth reused;
+no campaign/analytics/preview/delete/pagination/technical fields. Code immutable,
+status changes separate, conditional percentage cap, exact amounts/string IDs,
+Vietnamese GMT+7 dates with original seconds/microseconds retained when unchanged.
+Explicit locked commands/no replay, typed receipts/safe errors, per-tab untrusted
+review hints, authenticated GET/manual acknowledgment after uncertain outcomes.
+
+Read-only Stitch recheck: List/Detail exports updated,Create old,Edit mixed/legacy2025.
+Approved screenshot/UX fallback used immediately; no Computer Use or more Stitch edits.
+Final typecheck/lint/build PASS (0lint errors/12 historical warnings), **256/256 unit
+PASS**, **69/69 existing +16/16 final new browser cases PASS** (85distinct selected,
+not full suite), **9/9 actual local browser groups PASS** with33 screenshots and
+390/768/1440 keyboard/focus/≥44px/16px/overflow checks. Historical initial datetime/
+generated-cache/test-focus failures disclosed; no skips/retries masking.
+
+Real UI retained one synthetic Promotion **37**, `QAUI-20261027-047E1B95`, ACTIVE,
+FIXED_AMOUNT12345.6789. Create/edit/disable/enable plus final no-op date round-trip
+verified; all32 original Promotion records unchanged. Real five-API workflow is
+separate from adverse HTTP fixtures. No Booking/Payment/Ticket/provider mutation.
+Actual/sourceV16,pending0/failed0/checksums/old-role snapshot valid. QA services stopped.
+No backend/migration/configuration/privilege/Stitch/environment change, Neon, new
+dependency, staging/commit/push/deploy. Historical reports/incoming work preserved.
+Full Playwright/backend regression and physical AT not run; no version/idempotency
+capability invented. Stop; no further module automatically.
+
 ## ADMIN Promotion Management backend — 2026-10-27
 
 **PASS.** [Implementation report](../reports/2026-10-27_admin-promotion-management-backend_report.md),
