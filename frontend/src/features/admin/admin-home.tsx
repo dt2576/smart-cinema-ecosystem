@@ -1,9 +1,32 @@
+"use client";
+
 import Link from "next/link";
+import { useCallback, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { useAdmin } from "@/features/admin/admin-shell";
+import { getAdminDashboard, getAdminReportDaily } from "@/features/admin/admin-report-api";
+import { ReportError, ReportKpis, ReportLoading, RevenueChart } from "@/features/admin/admin-report-components";
+import { reportAddDays, reportDateLabel, reportPreset, type ReportPreset } from "@/features/admin/admin-report-service";
+import { useMovieRequest } from "@/features/movie/use-movie-request";
 
 export function AdminHome() {
-  return <section className="space-y-6"><div><p className="text-sm uppercase tracking-widest text-accent">Quản trị chuỗi rạp</p><h1 className="mt-2 text-3xl font-bold">Tổng quan</h1><p className="mt-3 text-muted">Quản lý phim và hệ thống rạp → phòng chiếu → ghế.</p></div>
-    <Link href="/admin/movies" className="block rounded-xl border border-outline/40 bg-panel p-6 transition hover:bg-panel-high"><h2 className="text-xl font-semibold">Quản lý phim</h2><p className="mt-2 text-muted">Tạo bản nháp, chỉnh sửa thông tin phim và quản lý việc công bố.</p><span className="mt-4 inline-block font-semibold text-accent">Mở danh sách phim →</span></Link>
-    <Link href="/admin/cinemas" className="block rounded-xl border border-outline/40 bg-panel p-6 transition hover:bg-panel-high"><h2 className="text-xl font-semibold">Quản lý rạp chiếu phim</h2><p className="mt-2 text-muted">Quản lý thông tin rạp, phòng chiếu và sơ đồ ghế được bảo vệ.</p><span className="mt-4 inline-block font-semibold text-accent">Mở danh sách rạp →</span></Link>
-    <Link href="/admin/showtimes" className="block rounded-xl border border-outline/40 bg-panel p-6 transition hover:bg-panel-high"><h2 className="text-xl font-semibold">Quản lý suất chiếu</h2><p className="mt-2 text-muted">Tạo lịch chiếu hợp lệ với đầy đủ ghế và bảo toàn lịch sử giao dịch.</p><span className="mt-4 inline-block font-semibold text-accent">Mở danh sách suất chiếu →</span></Link>
+  const { accessToken } = useAdmin();
+  const [selection, setSelection] = useState(() => ({ preset: "week" as ReportPreset, range: reportPreset("week") }));
+  const { range, preset } = selection;
+  const load = useCallback((signal: AbortSignal) => Promise.all([getAdminDashboard(accessToken, range, signal), getAdminReportDaily(accessToken, range, signal)]), [accessToken, range]);
+  const request = useMovieRequest(load);
+  return <section className="space-y-6 text-base [&_button]:text-base [&_p]:text-base">
+    <div className="flex flex-wrap items-center justify-between gap-4"><h1 className="font-heading text-3xl font-bold">Tổng quan</h1>
+      <Link href={`/admin/reports?${new URLSearchParams(range)}`} className="inline-flex min-h-control items-center rounded-control bg-action px-5 py-3 text-base font-bold text-on-action hover:bg-action-hover">Xem báo cáo chi tiết</Link></div>
+    <div className="flex flex-wrap items-center justify-between gap-4">
+      <div role="group" aria-label="Khoảng thời gian" className="flex flex-wrap gap-2">{([ ["today", "Hôm nay"], ["week", "7 ngày qua"], ["month", "Tháng này"] ] as const).map(([key, label]) =>
+        <Button key={key} variant={preset === key ? "primary" : "secondary"} aria-pressed={preset === key} onClick={() => setSelection({ preset: key, range: reportPreset(key) })}>{label}</Button>)}</div>
+      <p className="text-base text-muted">{reportDateLabel(range.from)} – {reportDateLabel(reportAddDays(range.to, -1)!)}</p>
+    </div>
+    <p className="text-base text-muted">Dữ liệu thanh toán thử nghiệm · Giờ Việt Nam</p>
+    {request.loading ? <ReportLoading /> : request.error ? <ReportError key={request.error.message} error={request.error} retry={request.retry} /> : request.data && <>
+      <ReportKpis metrics={request.data[0].metrics} />
+      <RevenueChart daily={request.data[1]} />
+    </>}
   </section>;
 }

@@ -1,5 +1,35 @@
 # Current AI handoff
 
+## ADMIN Reporting & Dashboard frontend — 2026-10-27
+
+**IMPLEMENTED & VERIFIED — PASS.**
+[Report](../reports/2026-10-27_admin-reporting-dashboard-frontend_report.md).
+Real `/admin` Dashboard and `/admin/reports`, all4 existing GET APIs,4/5 respective
+KPI cards, dynamic Vietnamese Today/7days/month-to-date, inclusive form dates mapped
+to half-open API boundaries, URL/reload recovery, daily chart with accessible table,
+CINEMA/MOVIE/SHOWTIME paginated breakdowns. Exact strings for amounts/counts/IDs;
+BigInt only for bounded chart geometry, no financial inference. Null occupancy is
+unavailable, not zero. Typed response/period/page checks, existing authenticated
+AdminShell gate, abort/stale protection, manual retry and safe feedback. One new
+Reporting navigation link; old quick-navigation Dashboard replaced. No unsupported
+sync/forecast/exports. Nocturne/shared primitives and Vietnamese copy preserved.
+
+Actual final **269/269 unit PASS** (256 baseline+13 new), typecheck/build PASS,
+lint0 errors/12 historical artifact warnings; **88/88 distinct ADMIN Playwright
+PASS** (67 existing+21 new), final focused21/21 included, not additional. No skips
+or retry masking; initial harness failures documented. Actual local browser:
+**12/12 groups PASS**,53 ADMIN GET200 responses,9 final masked screenshots,
+390/768/1440px,≥44px targets/≥16px primary controls/focus/overflow checks, real
+pagination and Dashboard/Reporting agreement. Positive amounts/error/role fixtures
+are separate from real evidence. Local real revenue remains0; no financial fixtures
+persisted. V16 source/installed,16 checksums valid, no pending/failed migration;
+16-table/Flyway/function row hashes preserved. Normal approved ADMIN login only
+adds refresh-session state. Source backend/auth/configuration, DB, Stitch, Manager,
+deployment and Git index/HEAD unchanged. No commit/push. Existing native date
+format follows OS; applied range is explicit DD/MM/YYYY. No provider/real-positive
+financial proof or full cross-module browser/Maven rerun claimed for this task.
+Next feature requires separate selection; do not proceed automatically.
+
 ## ADMIN Reporting & Dashboard backend — 2026-10-27
 
 **IMPLEMENTED & VERIFIED — PASS (backend API slice).**
