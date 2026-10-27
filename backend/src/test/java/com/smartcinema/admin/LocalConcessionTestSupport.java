@@ -45,7 +45,8 @@ final class LocalConcessionTestSupport {
             assertThat(scalar(db,"SELECT (NOT rolsuper AND NOT rolcreatedb AND NOT rolcreaterole AND NOT rolreplication AND NOT rolbypassrls)::text FROM pg_roles WHERE rolname=current_user")).isEqualTo("true");
             assertThat(scalar(db,"SELECT pg_has_role(current_user,'smart_cinema_hold_owner','SET')::text")).isEqualTo("false");
             assertThat(scalar(db,"SELECT count(*) FROM pg_auth_members WHERE member=(SELECT oid FROM pg_roles WHERE rolname=current_user)")).isEqualTo("0");
-            assertThat(scalar(db,"SELECT max(version::int)::text||':'||count(*) FILTER(WHERE success)::text||':'||count(*) FILTER(WHERE NOT success)::text FROM flyway_schema_history")).isEqualTo("15:15:0");
+            int head=sourceHead();
+            assertThat(scalar(db,"SELECT max(version::int)::text||':'||count(*) FILTER(WHERE success)::text||':'||count(*) FILTER(WHERE NOT success)::text FROM flyway_schema_history")).isEqualTo(head+":"+head+":0");
         }
         try(var db=operator()) {
             db.setReadOnly(true);
@@ -56,11 +57,20 @@ final class LocalConcessionTestSupport {
         try(var db=runtime()) {
             assertThat(scalar(db,"SELECT has_function_privilege(current_user,'public.admin_configure_concession_item(bigint,bigint,text,text,text,text,numeric,text)','EXECUTE')::text")).isEqualTo("true");
         }
-        System.out.println("LOCAL_CONCESSION_PREFLIGHT=PASS; V15; restricted runtime/migrator unchanged; approved operator fixtures only");
+        System.out.println("LOCAL_CONCESSION_PREFLIGHT=PASS; source/database head matched; restricted runtime/migrator unchanged; approved operator fixtures only");
         verified=true;
     }
     static Properties read(Path path)throws Exception {
         var p=new Properties();try(Reader in=Files.newBufferedReader(path,StandardCharsets.UTF_8)){p.load(in);}return p;
+    }
+    private static int sourceHead()throws Exception {
+        try(var files=Files.list(Path.of("src/main/resources/db/migration"))) {
+            var versions=files.map(p->p.getFileName().toString()).filter(n->n.matches("V[1-9][0-9]*__.+\\.sql"))
+                .map(n->Integer.parseInt(n.substring(1,n.indexOf("__")))).sorted().toList();
+            assertThat(versions).isNotEmpty();
+            for(int i=0;i<versions.size();i++)assertThat(versions.get(i)).isEqualTo(i+1);
+            return versions.size();
+        }
     }
     private static Connection restricted(boolean migration)throws SQLException {
         return connect(base.getProperty(migration?"spring.flyway.user":"spring.datasource.username"),base.getProperty(migration?"spring.flyway.password":"spring.datasource.password"));

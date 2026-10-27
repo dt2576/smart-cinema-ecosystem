@@ -1,5 +1,42 @@
 # Current AI handoff
 
+## ADMIN Promotion Management backend — 2026-10-27
+
+**PASS.** [Implementation report](../reports/2026-10-27_admin-promotion-management-backend_report.md),
+[verified contract v1.0](../api/admin-promotion-management-contract-v1.0.md).
+Five real `/api/v1/admin/promotions` list/detail/create/term-update/status APIs;
+current ACTIVE ADMIN checked in service and protected actor-aware command. Existing
+two discount types, immutable unique code, global PAID-count policy, exact amounts,
+period/minimum/cap/status, Customer snapshots and first-attempt freeze preserved.
+No delete, stacking, new eligibility, Customer features or financial writer.
+
+User explicitly approved V16/local operator/labelled fixture/audit-fault scope before
+privileged execution. Existing Windows workflow installed exactly V16; actual/source
+V16, pending0/failed0/checksums valid; migration application-data fingerprint unchanged.
+Wrapper owned hold owner, fixed search_path, no PUBLIC execution; app only wrapper
+EXECUTE/Promotion SELECT, raw configure/direct DML/owner SET denied. No role changes,
+reset or historical migration edits. Startup commands remain unchanged; narrow local
+wrapper readiness/provisioning extended. Concession fixture head check now discovers
+source versions, preserving compatibility without manual V15/V16 tracking.
+
+Final **187/187 non-DB +13/13 Promotion PostgreSQL +3/3 real HTTP +12/12 existing
+Concession PostgreSQL PASS**,215 distinct selected tests, zero final failures/errors/
+skips; JAR build PASS. Final HTTP batch74 actual requests, all five APIs, real backend
+login/current blocked-role denial, validation/precision/audit, Customer ownership,
+changed-terms review then real INITIATED/freeze. SQL verifies audit rollback/two actual
+row-lock races/policy boundaries/snapshots/original expiry. First SQL/HTTP batches also
+passed; final16 rerun follows helper correction. Historical test compilation/context
+setup failures are disclosed, no skip/retry masking. Full legacy backend/financial
+fixture suites and frontend regression not run in this backend-only task.
+
+Spring8080/Next3000/real proxy startup PASS; QA services stopped, listeners0. Final
+read-only totals32 Promotions/20 Bookings/8 Payments/0 Tickets, PAID0/SUCCESS0; approved
+synthetic fixtures retained, original table rows/history/guards and old-role snapshot
+preserved. Usage helper count tests are not actual PAID redemption/provider proof.
+No Neon, SMTP/provider activation, frontend/Stitch implementation, staging/commit/
+push/deploy. HEAD/index preserved. Next separate task may implement ADMIN Promotion
+frontend using the verified contract; do not start automatically.
+
 ## ADMIN Concession Management frontend — 2026-10-27
 
 **PASS.** [Implementation report](../reports/2026-10-27_admin-concession-management-frontend_report.md). Four real routes under `/admin/concession-items` (list/new/detail/edit), Bắp nước navigation, exact five verified APIs. Simple Vietnamese essential fields/actions, local name/category filtering/pagination, decimal-string prices and explicit initial status; content edit excludes status/image/read-only fields. Existing AdminShell/shared components/Nocturne preserved, no unsupported SKU/POS/stock/VAT/analytics/upload/delete.

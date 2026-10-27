@@ -1,5 +1,28 @@
 # Isolated local test environment
 
+## ADMIN Promotion verification update — 2026-10-27
+
+After explicit approval, the existing local workflow installed V16 and verified
+installed/source V16, no pending/failed migrations, valid checksums and unchanged
+application data through migration. See the
+[Promotion backend report](../reports/2026-10-27_admin-promotion-management-backend_report.md)
+and [API contract](../api/admin-promotion-management-contract-v1.0.md).
+The commands below remain unchanged. V16 adds only a protected audited Promotion
+wrapper; local provisioning verifies ownership/search_path/PUBLIC exclusion and
+grants the app wrapper EXECUTE plus Promotion SELECT, never direct DML, raw
+configuration EXECUTE or protected-owner membership. Current-schema starts still
+skip administrator credentials.
+
+Opt-in real tests use `ADMIN_PROMOTION_DB_TESTS=true` and a separate explicit
+`ADMIN_PROMOTION_OPERATOR_APPROVED=true` acknowledgement, then
+`mvn -Dtest=AdminPromotionPostgresTests,AdminPromotionHttpPostgresTests test` from
+backend with the already-running isolated app. The acknowledgement is not permission
+by itself: obtain approval for the reviewed fixture scope first. Inputs remain the
+existing private local/runtime/operator/synthetic-ADMIN files; never print them.
+The tests retain labelled fixtures, preserve original rows/history/guards and never
+manufacture financial success. Legacy Concession fixture checks now discover the
+source head rather than rejecting a valid newer forward migration.
+
 ## Current Windows startup and database status — 2026-10-25
 
 Verified on2026-10-25: actual/source **V15**, pending0/failed0, checksums valid;

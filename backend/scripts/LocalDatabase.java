@@ -14,6 +14,7 @@ public final class LocalDatabase {
     static final String URL="jdbc:postgresql://127.0.0.1:5432/smartcinema_phase4e_test?sslmode=disable&connectTimeout=5&socketTimeout=15";
     static final String APP="smartcinema_phase4e_app";
     static final String WRAPPER="public.admin_configure_concession_item(bigint,bigint,text,text,text,text,numeric,text)";
+    static final String PROMOTION_WRAPPER="public.admin_configure_promotion(bigint,bigint,text,text,text,numeric,timestamptz,timestamptz,numeric,integer,text,numeric)";
     static final Path STATE=Path.of("target/local-dev");
     private static final List<String> secrets=new ArrayList<>();
     private static Properties config;
@@ -129,6 +130,14 @@ public final class LocalDatabase {
         }
         if(!wrapperExists && info.current()!=null && info.current().getVersion().getVersion().matches("[1-9][0-9]*") && Integer.parseInt(info.current().getVersion().getVersion())>=15)
             throw new IllegalStateException("V15 is recorded but its protected wrapper is absent; no automatic repair permitted");
+        if(info.current()!=null && Integer.parseInt(info.current().getVersion().getVersion())>=16) {
+            try(var db=connect(APP,config.getProperty("spring.datasource.password"),true)) {
+                verifyPromotionBoundary(db);
+                try(var q=db.prepareStatement("SELECT NOT has_function_privilege(current_user,?,'EXECUTE') OR NOT has_table_privilege(current_user,'public.promotions','SELECT')")) {
+                    q.setString(1,PROMOTION_WRAPPER);try(var r=q.executeQuery()){r.next();grantNeeded|=r.getBoolean(1);}
+                }
+            }
+        }
         Files.writeString(STATE.resolve("status.json"),"{\"installed\":\""+installed+"\",\"latest\":\"V"+latest()+"\",\"pending\":"+pending.length+",\"failed\":"+failures.size()+",\"valid\":"+valid+",\"runtimeGrantNeeded\":"+grantNeeded+"}\n",StandardCharsets.UTF_8);
         System.out.println("CHECKSUMS="+(valid?"VALID":"INVALID")+"; RUNTIME_WRAPPER="+(!wrapperExists?"NOT_INSTALLED":grantNeeded?"EXECUTE_GRANT_REQUIRED":"VERIFIED"));
         if(!valid) {
@@ -161,8 +170,15 @@ public final class LocalDatabase {
                 try(var q=db.createStatement();var r=q.executeQuery("SELECT p.prosecdef,pg_get_userbyid(p.proowner),p.proconfig::text,has_function_privilege('smart_cinema_hold_runtime',p.oid,'EXECUTE') FROM pg_proc p WHERE p.oid=to_regprocedure('"+WRAPPER+"')")){
                     if(!r.next()||!r.getBoolean(1)||!"smart_cinema_hold_owner".equals(r.getString(2))||!r.getString(3).contains("search_path=pg_catalog, pg_temp")||!r.getBoolean(4))throw new IllegalStateException("Protected wrapper owner/ACL/search_path verification failed");
                 }
-                // This is the sole runtime provisioning statement; no role/schema/table grants.
+                // Narrow approved local grants; no owner membership, direct DML or deployment-writer access.
                 try(var q=db.createStatement()){q.execute("GRANT EXECUTE ON FUNCTION "+WRAPPER+" TO "+APP);}
+                if(latest()>=16) {
+                    verifyPromotionBoundary(db);
+                    try(var q=db.createStatement()) {
+                        q.execute("GRANT EXECUTE ON FUNCTION "+PROMOTION_WRAPPER+" TO "+APP);
+                        q.execute("GRANT SELECT ON public.promotions TO "+APP);
+                    }
+                }
                 db.commit();
             } catch(Exception e){db.rollback();throw e;}
             System.out.println("APPLICATION_DATA_UNCHANGED="+before.equals(dataFingerprint(db)));
@@ -170,6 +186,16 @@ public final class LocalDatabase {
         var finalStatus=status();LocalTestEnvironment.verify(false);
         if(finalStatus.pending!=0||finalStatus.grantNeeded)throw new IllegalStateException("Post-migration readiness failed");
         System.out.println("MIGRATION=SUCCESS; applied="+applied+"; final=V"+latest()+"; runtime EXECUTE verified");
+    }
+    private static void verifyPromotionBoundary(Connection db) throws SQLException {
+        try(var q=db.prepareStatement("SELECT p.prosecdef AND pg_get_userbyid(p.proowner)='smart_cinema_hold_owner' AND p.proconfig::text LIKE '%search_path=pg_catalog, pg_temp%' AND NOT EXISTS(SELECT 1 FROM aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a WHERE a.grantee=0 AND a.privilege_type='EXECUTE') FROM pg_proc p WHERE p.oid=to_regprocedure(?)")) {
+            q.setString(1,PROMOTION_WRAPPER);try(var r=q.executeQuery()) {
+                if(!r.next()||!r.getBoolean(1))throw new IllegalStateException("V16 Promotion wrapper absent or ownership/security boundary violated");
+            }
+        }
+        try(var q=db.createStatement();var r=q.executeQuery("SELECT has_table_privilege('"+APP+"','public.promotions','INSERT') OR has_table_privilege('"+APP+"','public.promotions','UPDATE') OR has_table_privilege('"+APP+"','public.promotions','DELETE') OR has_table_privilege('"+APP+"','public.promotions','TRUNCATE') OR has_function_privilege('"+APP+"','public.configure_promotion(bigint,text,text,numeric,timestamptz,timestamptz,numeric,integer,text,numeric)','EXECUTE')")) {
+            r.next();if(r.getBoolean(1))throw new IllegalStateException("Runtime Promotion direct mutation privilege boundary violated");
+        }
     }
     private static String dataFingerprint(Connection db) throws Exception {
         var digest=MessageDigest.getInstance("SHA-256");var names=new ArrayList<String>();

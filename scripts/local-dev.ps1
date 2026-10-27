@@ -129,7 +129,7 @@ try {
     $occupied = @(Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue | Where-Object { $_.LocalPort -in @(8080, 3000) })
     if ($occupied.Count) { throw 'Port 8080 or 3000 is already in use. Stop the existing service; this command will not kill an unrelated process.' }
     if ($status.pending -gt 0 -or $status.runtimeGrantNeeded) {
-        Write-Host 'Privileged plan: apply the displayed pending Flyway files in this database and grant only the protected Concession wrapper EXECUTE to the local app. No role changes, reset or repair.'
+        Write-Host 'Privileged plan: apply the displayed pending Flyway files in this database; grant protected Concession/Promotion wrapper EXECUTE and Promotion SELECT to the local app when installed. No direct catalog DML, role changes, reset or repair.'
         if (-not $ApproveMigrations) {
             $confirmation = Read-Host 'Type MIGRATE to authorize this local migration operation, or Enter to stop'
             if ($confirmation -cne 'MIGRATE') { throw 'Migration not authorized; no privileged operation or service startup performed.' }
