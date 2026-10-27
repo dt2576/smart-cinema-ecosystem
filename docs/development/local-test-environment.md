@@ -1,5 +1,114 @@
 # Isolated local test environment
 
+## Current Windows startup and database status — 2026-10-25
+
+Verified on2026-10-25: actual/source **V15**, pending0/failed0, checksums valid;
+real backend/frontend/API proxy startup passed. See the
+[execution report](../reports/2026-10-25_local-startup-migration-workflow_report.md).
+Always run Status for the current state rather than relying on this dated note.
+
+From the repository root:
+
+```powershell
+.\scripts\local-dev.ps1
+```
+
+Database status only (read-only, no administrator credentials or services):
+
+```powershell
+.\scripts\local-dev.ps1 -Action Status
+```
+
+Both commands pin every connection to **127.0.0.1:5432/smartcinema_phase4e_test**.
+They print installed/source Flyway versions, pending filenames, failed migrations
+and real Flyway history/checksum validation. The source head is discovered from
+the migration directory; no manual V15/V16 version setting is required.
+Missing, changed, failed or future applied migrations stop startup. Only pending
+source migrations are allowed during pre-migration validation; they must all be
+installed before Spring Boot starts. No clean/repair/baseline or retry is used.
+
+If pending migrations exist, review the displayed files and enter **MIGRATE**.
+On first use, enter the **existing local PostgreSQL administrator** credentials
+at the secure prompt. They are stored separately in ignored
+`backend/.env.local-test-migration`, protected by an owner-only Windows ACL.
+The file has Java-properties `url`, `user` and `password` fields; it must never
+target another server/database. It is not an application environment file.
+`-ApproveMigrations` is available only for an already explicitly approved operation;
+it does not invent credentials or elevate roles. Future pending batches require
+a new interactive confirmation when using the normal command.
+
+The administrator installs migrations in a short-lived standalone Flyway process.
+The only extra local runtime provisioning statement grants EXECUTE on the
+protected ADMIN Concession wrapper to `smartcinema_phase4e_app`, whose database
+ACL is separate from the shared runtime role. No role membership, owner CREATE,
+table DML, raw configure grant, seed, account provisioning or external integration
+is performed. The original local role-snapshot/isolation preflight remains active.
+
+If the database is current, migration is skipped and the administrator file is not
+loaded. Spring Boot receives a generated, owner-only `target/local-dev/private/runtime.properties`
+profile with **app credentials for both datasource and read-only Flyway validation**.
+No administrator credentials reach Spring. Provider/delivery/cleanup stay disabled;
+remote `.env` is never imported. Existing private base inputs are not overwritten.
+
+Spring Boot binds8080, Next.js binds3000, both on127.0.0.1. Readiness requires actual
+backend public GET, frontend HTTP200 and matching API proxy response, not just an
+open port. A clear READY line reports final database/source versions and all three
+checks. Press Ctrl+C to stop the supervised services; a child failure stops its
+siblings. Busy ports are reported without killing an existing process. PostgreSQL
+itself must already be running; this script never creates/resets a database.
+
+Required installed tools: Windows PowerShell, Java21/Javac, Maven, Node22+, pnpm,
+the repository's existing dependencies and PostgreSQL. Dependency classpath is
+resolved from the current POM using Maven offline, then cached under target;
+missing cached dependencies produce an explicit error rather than auto-installing.
+Console migration errors preserve the underlying cause with credential redaction.
+After any uncertain result, run Status and inspect it; do not replay a failed
+migration blindly. Interrupted startup does not undo committed migrations.
+
+This workflow implements the user's separately approved local administrator
+migration access and supersedes the **historical blocked V15 startup** notes
+below. It does not itself run feature tests or grant owner membership.
+
+## ADMIN Concession verification — 2026-10-26
+
+The test-only `LocalConcessionTestSupport` now uses the existing private operator
+connection for approved fixture/audit setup. Concession commands continue through
+the restricted app connection; app and migrator are explicitly checked to have
+no protected-owner SET authority or role membership. Every connection is pinned
+to this database. Pre-existing rows/history/guards are checked after each class.
+
+Only after explicit approval for the synthetic fixture/audit/fault-trigger scope,
+start the normal local application, then from `backend/` run:
+
+```powershell
+$env:ADMIN_CONCESSION_DB_TESTS = 'true'
+$env:ADMIN_CONCESSION_OPERATOR_APPROVED = 'true'
+try {
+    mvn -o '-Dtest=AdminConcessionPostgresTests,AdminConcessionHttpPostgresTests' test
+} finally {
+    Remove-Item Env:ADMIN_CONCESSION_DB_TESTS,Env:ADMIN_CONCESSION_OPERATOR_APPROVED
+}
+```
+
+There are12 SQL cases and3 unmocked HTTP cases. Real HTTP login uses the existing
+approved synthetic ADMIN credential file; new wrong-role/blocked/Customer accounts
+are synthetic fixtures. JSON evidence contains method/path/status only, never
+passwords/tokens/response bodies. Fixtures are retained; only the test's own new
+unreferenced deleted-actor User and temporary item-scoped fault trigger/function
+are removed. No role grants, guard disabling, migration, financial success or
+Ticket issuance is performed. Do not run older PostgreSQL suites that manufacture
+PAID/SUCCESS/issued Ticket fixtures as part of this verification.
+
+## Phase 5B-1 migration preflight — 2026-10-25
+
+Backend source now includes V15 ADMIN Concession commands; the actual dedicated database remains **V14**. V15 was **not applied**. Read-only preflight verified the exact target and restricted runtime/migration identities, then found `pg_has_role(migration_user,'smart_cinema_hold_owner','SET')=false`. No role/grant/bootstrap or data change was attempted. See the [implementation report](../reports/2026-10-25_admin-concession-management-backend_report.md).
+
+The base launcher now reports sourceV15/databaseV14 as `PENDING_NOT_APPLIED`; Start/ProvisionAdmin stop before Spring/Flyway when required protected-owner authority is absent. After an approved migration, startup also requires the dedicated runtime's narrow wrapper EXECUTE grant. Do not use another launcher/root command or superuser to bypass this block. A DBA/operator must review approved migration execution and the one database-scoped runtime grant; preserve existing roles/records and V1–V14. No permanent owner membership or raw deployment configure grant is needed for application runtime.
+
+`LocalConcessionVerification.java verify` is read-only and prints no credentials. Its `prepare` action creates only an ignored owner-ACL private unit-test profile under backend/target; it does not prepare/reset/provision a database. Current non-DB verification used that profile and `mvn '-Dtest=*Tests,!*PostgresTests' verify`:169 PASS,0 failures/errors/skips. PostgreSQL suites were explicitly excluded/BLOCKED, not counted as passed. New opt-in AdminConcessionPostgresTests requires an already verified/applied V15 and narrow runtime permission; it never runs migration, modifies roles, disables guards or creates financial outcomes. If separately enabled after review, it retains its synthetic local records and removes only its own unreferenced deleted-actor fixture/new fault-trigger/function; no existing history cleanup.
+
+Historical V14 preparation/onboarding notes below remain preserved. Their completion does not establish current V15 runtime readiness.
+
 Prepared2026-10-15 for Phase4E readiness. This is separate from the unchanged remote configuration in `backend/.env`. **Use these launchers, not root `pnpm dev`, for the local test database.**
 
 ## Completed Staff onboarding update — 2026-10-15

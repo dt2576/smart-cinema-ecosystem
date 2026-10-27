@@ -14,7 +14,7 @@ $postgresJar = Join-Path $env:USERPROFILE '.m2/repository/org/postgresql/postgre
 if (-not (Test-Path -LiteralPath $postgresJar)) { throw 'Installed PostgreSQL JDBC dependency42.7.13 missing; no automatic installation.' }
 Push-Location $backendRoot
 try {
-    $mode = switch ($Action) { 'Prepare' { 'prepare' }; 'Audit' { 'audit' }; 'RestrictMigration' { 'restrict' }; 'Start' { if ($InitialMigration) { 'initial' } else { 'verify' } }; default { 'verify' } }
+    $mode = switch ($Action) { 'Prepare' { 'prepare' }; 'Audit' { 'audit' }; 'RestrictMigration' { 'restrict' }; 'Start' { if ($InitialMigration) { 'initial' } else { 'start-preflight' } }; 'ProvisionAdmin' { 'start-preflight' }; default { 'verify' } }
     & java --class-path $postgresJar (Join-Path $PSScriptRoot 'LocalTestEnvironment.java') $mode
     if ($LASTEXITCODE -ne 0) { throw 'Local datasource preflight/action failed; backend not launched.' }
     if ($Action -in @('Start', 'ProvisionAdmin')) {

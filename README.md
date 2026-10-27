@@ -62,6 +62,33 @@ System analysis documentation is in [docs/system-analysis/](docs/system-analysis
 
 ## Local development
 
+### Windows isolated local workflow
+
+From the repository root, use these commands for the existing local PostgreSQL
+database `127.0.0.1:5432/smartcinema_phase4e_test`:
+
+```powershell
+.\scripts\local-dev.ps1
+.\scripts\local-dev.ps1 -Action Status
+```
+
+Startup displays installed/source versions, pending/failed migrations and checksum
+validation. Pending migrations require an explicit `MIGRATE` confirmation, then
+use the existing local PostgreSQL administrator through a separate ignored,
+owner-only credential file. Spring Boot uses the restricted app credentials.
+An up-to-date database starts without loading administrator credentials.
+The command starts both applications, verifies real HTTP/API proxy responses,
+and stops the supervised processes together on Ctrl+C or a service failure.
+Open <http://127.0.0.1:3000>. See the
+[local environment guide](docs/development/local-test-environment.md) for details.
+
+This local command replaces the manual startup steps below **for this isolated
+database** and never imports `backend/.env`. The generic/manual configuration
+below is retained for other explicitly configured environments; `pnpm dev` is
+not the isolated-local command.
+
+### Generic/manual configuration
+
 Prerequisites: Java 21, Maven (`mvn` on PATH), Node.js 22 or newer
 (required by the development runner), pnpm 12.4.1, and a running PostgreSQL database configured for
 the backend. Use the existing backend environment variables documented in

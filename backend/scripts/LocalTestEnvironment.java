@@ -16,11 +16,12 @@ public final class LocalTestEnvironment {
 
     public static void main(String[] args) {
         try {
-            if (args.length != 1) throw new IllegalStateException("Choose prepare, initial, verify, audit or restrict");
+            if (args.length != 1) throw new IllegalStateException("Choose prepare, initial, verify, start-preflight, audit or restrict");
             switch (args[0]) {
                 case "prepare" -> prepare();
                 case "initial" -> verify(true);
                 case "verify" -> verify(false);
+                case "start-preflight" -> { verify(false); requireConcessionMigrationAuthority(); }
                 case "audit" -> audit();
                 case "restrict" -> restrict();
                 default -> throw new IllegalStateException("Unknown local-only action");
@@ -140,12 +141,18 @@ public final class LocalTestEnvironment {
         System.out.println("PREPARED: "+DATABASE+" at 127.0.0.1:5432; runtime="+APP+"; migrator="+MIGRATOR);
         System.out.println("Migration role is temporarily privileged for unchanged V1-V14; run restrict immediately after successful initial startup.");
     }
-    private static Properties config() throws Exception {
+    static int latestSourceVersion() throws IOException {
         try(var migrations=Files.list(Path.of("src/main/resources/db/migration"))) {
             List<String> files=migrations.map(path->path.getFileName().toString()).filter(name->name.matches("V[0-9]+__.*\\.sql")).toList();
-            if(files.size()!=14 || files.stream().anyMatch(name->Integer.parseInt(name.substring(1,name.indexOf("__")))>14))
-                throw new IllegalStateException("Local launcher is audited for V1-V14 only; review a changed migration head before startup");
+            var versions=files.stream().map(name->Integer.parseInt(name.substring(1,name.indexOf("__")))).sorted().toList();
+            if(versions.size()<14) throw new IllegalStateException("Required historical migrations unavailable");
+            for(int i=0;i<versions.size();i++) if(versions.get(i)!=i+1)
+                throw new IllegalStateException("Source migration sequence has a duplicate or gap");
+            return versions.getLast();
         }
+    }
+    static Properties config() throws Exception {
+        latestSourceVersion();
         Properties p=read(CONFIG);
         if (!URL.equals(p.getProperty("spring.datasource.url")) || !URL.equals(p.getProperty("spring.flyway.url")) ||
             !APP.equals(p.getProperty("spring.datasource.username")) || !MIGRATOR.equals(p.getProperty("spring.flyway.user")) ||
@@ -156,7 +163,7 @@ public final class LocalTestEnvironment {
             throw new IllegalStateException("Local configuration fails isolation safeguards");
         return p;
     }
-    private static void verify(boolean initial) throws Exception {
+    static void verify(boolean initial) throws Exception {
         Properties p=config();
         try(Connection migration=connect(URL,MIGRATOR,p.getProperty("spring.flyway.password"),true)) {
             if(initial && !"true".equals(scalar(migration,"SELECT rolsuper::text FROM pg_roles WHERE rolname=current_user")))
@@ -173,9 +180,11 @@ public final class LocalTestEnvironment {
             if(initial) {
                 if(history || !"0".equals(scalar(db,"SELECT count(*) FROM pg_tables WHERE schemaname='public'"))) throw new IllegalStateException("Initial migration requires the newly created empty database");
             } else {
-                if(!history || !"14".equals(scalar(db,"SELECT version FROM public.flyway_schema_history WHERE success ORDER BY installed_rank DESC LIMIT 1"))) throw new IllegalStateException("Expected V14 Flyway history unavailable");
-                if(!"14|0".equals(scalar(db,"SELECT count(*) FILTER(WHERE success)::text||'|'||count(*) FILTER(WHERE NOT success)::text FROM public.flyway_schema_history")))
-                    throw new IllegalStateException("Flyway history is not fourteen successful migrations");
+                String head=history?scalar(db,"SELECT version FROM public.flyway_schema_history WHERE success ORDER BY installed_rank DESC LIMIT 1"):"";
+                if(head==null || !head.matches("[1-9][0-9]*") || Integer.parseInt(head)<14 || Integer.parseInt(head)>latestSourceVersion())
+                    throw new IllegalStateException("Installed migration head is outside available source history");
+                if(!(head+"|0").equals(scalar(db,"SELECT count(*) FILTER(WHERE success)::text||'|'||count(*) FILTER(WHERE NOT success)::text FROM public.flyway_schema_history")))
+                    throw new IllegalStateException("Flyway history does not match the verified head");
                 if(!"0".equals(scalar(db,"SELECT count(*) FROM pg_roles WHERE rolname='"+MIGRATOR+"' AND (rolsuper OR rolcreatedb OR rolcreaterole)"))) throw new IllegalStateException("Restrict the migration role before normal restart");
                 if(!"0".equals(scalar(db,"SELECT count(*) FROM pg_auth_members WHERE member=(SELECT oid FROM pg_roles WHERE rolname=current_user)")))
                     throw new IllegalStateException("Runtime must not inherit cluster role memberships");
@@ -183,7 +192,7 @@ public final class LocalTestEnvironment {
                     if(!"true".equals(scalar(db,"SELECT (to_regclass('public."+table+"') IS NOT NULL)::text"))) throw new IllegalStateException("Required Staff table missing");
                 for(String ownerRole:List.of("smart_cinema_hold_runtime","smart_cinema_hold_owner","smart_cinema_configuration_owner","smart_cinema_staff_owner","smart_cinema_checkin_owner"))
                     if(!"false".equals(scalar(db,"SELECT pg_has_role(current_user,'"+ownerRole+"','MEMBER')::text"))) throw new IllegalStateException("Runtime has protected-owner membership");
-                System.out.println("FLYWAY=V14; STAFF_TABLES=5/5; USERS="+scalar(db,"SELECT count(*) FROM users")+"; CINEMAS="+scalar(db,"SELECT count(*) FROM cinemas"));
+                System.out.println("FLYWAY=V"+head+"; SOURCE=V"+latestSourceVersion()+"; PENDING="+(latestSourceVersion()-Integer.parseInt(head))+"; STAFF_TABLES=5/5; USERS="+scalar(db,"SELECT count(*) FROM users")+"; CINEMAS="+scalar(db,"SELECT count(*) FROM cinemas"));
             }
             System.out.println("VERIFIED: datasource/server=127.0.0.1:5432; database="+DATABASE+"; owner="+owner+"; runtime="+APP+"; readonly=on");
         }
@@ -193,6 +202,19 @@ public final class LocalTestEnvironment {
             String[] roles=Files.readAllLines(EVIDENCE.resolve("original-roles.txt"),StandardCharsets.UTF_8).toArray(String[]::new);
             if(!snapshot(db,roles).equals(Files.readString(EVIDENCE.resolve("original-role-state.sha256")))) throw new IllegalStateException("Existing role attributes/memberships changed");
             System.out.println("EXISTING_ROLE_ATTRIBUTES_AND_MEMBERSHIPS=UNCHANGED");
+        }
+    }
+    private static void requireConcessionMigrationAuthority() throws Exception {
+        Properties p=config();
+        try(Connection db=connect(URL,MIGRATOR,p.getProperty("spring.flyway.password"),true)) {
+            String head=scalar(db,"SELECT version FROM public.flyway_schema_history WHERE success ORDER BY installed_rank DESC LIMIT 1");
+            if("14".equals(head) && !"true".equals(scalar(db,"SELECT pg_has_role(current_user,'smart_cinema_hold_owner','SET')::text")))
+                throw new IllegalStateException("V15 pending: migration login cannot SET protected hold owner; no migration/start/privilege escalation performed");
+        }
+        try(Connection db=connect(URL,APP,p.getProperty("spring.datasource.password"),true)) {
+            if(Integer.parseInt(scalar(db,"SELECT version FROM public.flyway_schema_history WHERE success ORDER BY installed_rank DESC LIMIT 1"))>=15
+                && !"true".equals(scalar(db,"SELECT has_function_privilege(current_user,'public.admin_configure_concession_item(bigint,bigint,text,text,text,text,numeric,text)','EXECUTE')::text")))
+                throw new IllegalStateException("V15 requires a separately verified database-scoped runtime wrapper grant; no broad grant performed");
         }
     }
     private static void restrict() throws Exception {
