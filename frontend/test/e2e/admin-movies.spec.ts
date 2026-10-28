@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { resolve } from "node:path";
+import { reportFixtureDaily, reportFixtureSummary, reportZeroMetrics } from "../fixtures/admin-reporting";
 
 const BIG_ID = "9007199254740993";
 const genre = { id: BIG_ID, name: "Drama" };
@@ -44,13 +45,20 @@ test("CUSTOMER and forged local Admin role cannot bypass backend authorization",
 });
 test("Admin verification failure can retry and verified backend identity controls shell", async ({ page }) => {
   await session(page, "CUSTOMER"); await api(page);
+  // Isolate this auth-shell fixture from the real Dashboard API. A fake token
+  // must not leak to Spring Boot and race the verified navigation with a403.
+  for (const path of ["dashboard", "reports/daily"]) await page.route(`**/api/v1/admin/${path}?**`, route => {
+    const q = new URL(route.request().url()).searchParams;
+    const range = { from: q.get("from")!, to: q.get("to")! };
+    return route.fulfill({ json: path === "dashboard" ? reportFixtureSummary(range, reportZeroMetrics) : reportFixtureDaily(range, reportZeroMetrics) });
+  });
   let calls = 0;
   await page.route("**/api/v1/admin", route => route.fulfill(++calls === 1 ? { status: 503, json: { detail: "Không thể kết nối hoặc xác nhận phản hồi từ máy chủ. Vui lòng thử lại." } } : { json: { id: "1", fullName: "Đã xác minh Quản trị", role: "ADMIN" } }));
   await page.goto("/admin");
   await expect(page.getByText("Không thể kết nối hoặc xác nhận phản hồi từ máy chủ. Vui lòng thử lại.")).toBeVisible();
   await page.getByRole("button", { name: "Kiểm tra lại quyền truy cập" }).click();
   await expect(page.getByRole("heading", { name: "Tổng quan" })).toBeVisible();
-  await expect(page.getByRole("navigation", { name: "Điều hướng quản trị" }).getByRole("link")).toHaveText(["Tổng quan", "Báo cáo", "Phim", "Rạp chiếu phim", "Suất chiếu", "Nhân viên", "Bắp nước", "Khuyến mãi"]);
+  await expect(page.getByRole("navigation", { name: "Điều hướng quản trị" }).getByRole("link")).toHaveText(["Tổng quan", "Báo cáo", "Phim", "Rạp chiếu phim", "Suất chiếu", "Nhân viên", "Bắp nước", "Khuyến mãi", "Phân công Quản lý"]);
   await expect(page.getByRole("navigation", { name: "Điều hướng quản trị" }).getByRole("link", { name: "Nhân viên", exact: true })).toHaveAttribute("href", "/admin/staff");
   await page.getByRole("link", { name: "Phim", exact: true }).click();
   await expect(page.getByRole("heading", { name: movie.title })).toBeVisible();

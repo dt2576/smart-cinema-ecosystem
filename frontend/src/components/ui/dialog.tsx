@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 
-export function Dialog({ title, children, onClose, busy = false }: { title: string; children: ReactNode; onClose: () => void; busy?: boolean }) {
+export function Dialog({ title, children, onClose, busy = false, initialFocus }: { title: string; children: ReactNode; onClose: () => void; busy?: boolean; initialFocus?: string }) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   useEffect(() => {
@@ -11,12 +11,13 @@ export function Dialog({ title, children, onClose, busy = false }: { title: stri
     const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     const overflow = document.body.style.overflow;
     dialog?.showModal(); document.body.style.overflow = "hidden";
+    if (initialFocus) dialog?.querySelector<HTMLElement>(initialFocus)?.focus();
     return () => {
       dialog?.close(); document.body.style.overflow = overflow;
       if (previous?.isConnected && !previous.matches(":disabled")) previous.focus({ preventScroll: true });
       else document.querySelector<HTMLElement>("main")?.focus({ preventScroll: true });
     };
-  }, []);
+  }, [initialFocus]);
   return <dialog ref={ref} aria-labelledby={titleId} aria-busy={busy} onKeyDown={event => {
     if (event.key !== "Tab") return;
     const controls = [...event.currentTarget.querySelectorAll<HTMLElement>('button:not(:disabled), a[href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex="0"]')].filter(element => element.getClientRects().length > 0);

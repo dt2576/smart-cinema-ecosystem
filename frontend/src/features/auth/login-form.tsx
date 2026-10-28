@@ -9,6 +9,7 @@ import { StatusFeedback } from "@/components/ui/status-feedback";
 import { AuthApiError, login } from "@/features/auth/auth-api";
 import { useAuth } from "@/features/auth/auth-context";
 import { customerLoginReturn, staffLoginReturn } from "@/features/auth/auth-return";
+import { managerLoginReturn } from "@/features/manager/manager-navigation";
 
 type LoginErrors = {
   email?: string;
@@ -49,7 +50,8 @@ export function LoginForm() {
       establishSession(session);
       const returnTo = customerLoginReturn(new URLSearchParams(window.location.search).get("returnTo"));
       const staffReturn = staffLoginReturn(new URLSearchParams(window.location.search).get("returnTo"));
-      router.replace(session.user.role === "STAFF" ? staffReturn ?? "/staff/check-in" : session.user.role === "CUSTOMER" && returnTo ? returnTo : session.user.role === "ADMIN" ? "/admin" : "/");
+      const managerReturn = managerLoginReturn(new URLSearchParams(window.location.search).get("returnTo"));
+      router.replace(session.user.role === "MANAGER" ? managerReturn ?? "/manager/cinemas" : session.user.role === "STAFF" ? staffReturn ?? "/staff/check-in" : session.user.role === "CUSTOMER" && returnTo ? returnTo : session.user.role === "ADMIN" ? "/admin" : "/");
     } catch (error) {
       if (error instanceof AuthApiError) {
         setErrors({

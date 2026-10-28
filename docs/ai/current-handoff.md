@@ -1,5 +1,45 @@
 # Current AI handoff
 
+## MANAGER Cinema Operations frontend — 2026-10-28
+
+**IMPLEMENTED & VERIFIED — PASS for the requested frontend slice.**
+[Report](../reports/2026-10-28_manager-cinema-operations-frontend_report.md).
+Five Manager interfaces plus ADMIN Manager Assignment implemented. `/manager`
+redirects to `/manager/cinemas`; scoped Cinema/Hall dialogs, operational whole-Seat
+grid/initial layout/maintenance, Showtime list/new/edit, read-only Cinema Staff.
+`/admin/managers` belongs to AdminShell only. All15 Manager+4 ADMIN assignment
+endpoints integrated exactly; public Movie and existing ADMIN Cinema GETs reused.
+Shared Nocturne tokens/types/validators/dialogs/auth retained; optional dialog
+initialFocus, Manager account-menu entry and strict role-specific login resume.
+Backend current account/assignment remains authorization authority. IDs/money are
+strings, time input uses server zone/explicit assignmentGMT+7, immutable instants
+and frozen structures preserved. No optimistic writes or automatic replay;
+uncertain commands require authenticated manual GET review, including reload hints.
+
+Typecheck/lint/build PASS, **287/287 unit PASS** (269+18new),0 skips.
+**Final complete selected regression:135/135 PASS in one Edge run**,2026-10-28,
+2.4 minutes,1 worker,0 failures/skips/retries,exit0. Includes all88 ADMIN cases,
+21 Manager cases,shared UI foundation and Customer final QA. No code/test/config
+fix required in the closing verification. This supersedes the earlier134/135 plus
+ADMIN Movie9/9 limitation; prior failures/fixes remain in the report as history.
+**14 real functional groups PASS**,136 recorded Manager/ADMIN responses across
+completed stages; **21 real screen/width checks PASS** at390/768/1440 with keyboard,
+dialog/focus/overflow and≥44px/≥16px Manager primary controls. Fixture-backed adverse
+and positive Staff scenarios remain separate; real scoped Staff list was empty.
+
+Normal local workflow/backend/frontend/proxy PASS. Installed/source **V17**,pending0,
+failed0,17 valid checksums. Approved fresh QA fixture scope reused; four synthetic
+role accounts,two Cinemas,new Hall/layout/Showtime and assignments retained. Only
+new QA assignments/configuration changed; original23-table rows/history/functions/
+roles and financial/catalog counts unchanged. No Hold/Booking/Payment/Ticket
+creation, Neon, provider/SMTP, schema/migration/backend/API/env/dependency change.
+No commit/push/deploy. Full cross-module browser suite/backend Maven NOT RUN for
+this frontend slice. Manager Staff writes/Booking/Reporting/Dashboard remain
+excluded. Do not automatically start another module; require separate scope.
+QA processes stopped;8080/3000/3100 free. Final read-only DB preservation and
+scope/UTF-8/link/whitespace checks PASS:905/913 original files unchanged,8 scoped
+original edits,25 new files;backend/contracts/V1–V17 and Git HEAD/index preserved.
+
 ## MANAGER Cinema Operations backend — 2026-10-28
 
 **IMPLEMENTED & VERIFIED — PASS for the approved backend slice.**

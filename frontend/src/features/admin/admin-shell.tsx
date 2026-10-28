@@ -51,6 +51,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
           <Link href="/admin/staff" aria-current={pathname.startsWith("/admin/staff") ? "page" : undefined} className="rounded-lg px-4 py-3 text-sm font-semibold hover:bg-panel-high aria-[current=page]:bg-panel-high aria-[current=page]:text-accent">Nhân viên</Link>
           <Link href="/admin/concession-items" aria-current={pathname.startsWith("/admin/concession-items") ? "page" : undefined} className="rounded-lg px-4 py-3 text-sm font-semibold hover:bg-panel-high aria-[current=page]:bg-panel-high aria-[current=page]:text-accent">Bắp nước</Link>
           <Link href="/admin/promotions" aria-current={pathname.startsWith("/admin/promotions") ? "page" : undefined} className="rounded-lg px-4 py-3 text-sm font-semibold hover:bg-panel-high aria-[current=page]:bg-panel-high aria-[current=page]:text-accent">Khuyến mãi</Link>
+          <Link href="/admin/managers" aria-current={pathname.startsWith("/admin/managers") ? "page" : undefined} className="flex min-h-12 items-center rounded-lg px-4 py-3 text-base font-semibold hover:bg-panel-high aria-[current=page]:bg-panel-high aria-[current=page]:text-accent">Phân công Quản lý</Link>
         </nav>
         <main id="admin-content" tabIndex={-1} className="min-w-0">{children}</main>
       </div>

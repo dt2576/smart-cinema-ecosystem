@@ -162,7 +162,7 @@ for (const role of ["CUSTOMER", "ADMIN", "STAFF", "MANAGER"] as const) for (cons
     await page.goto("/");
     await expect(page.locator("summary")).toBeVisible();
     await expect(page.locator('a[href="/my-bookings"]')).toHaveCount(role === "CUSTOMER" ? 2 : 0);
-    await expect(page.locator('a[href="/staff/check-in"]')).toHaveCount(role === "STAFF" ? 2 : 0); await expect(page.locator('a[href^="/staff"]:not([href="/staff/check-in"]), a[href^="/manager"]')).toHaveCount(0);
+    await expect(page.locator('a[href="/staff/check-in"]')).toHaveCount(role === "STAFF" ? 2 : 0); await expect(page.locator('a[href^="/staff"]:not([href="/staff/check-in"])')).toHaveCount(0); await expect(page.locator('a[href="/manager/cinemas"]')).toHaveCount(role === "MANAGER" ? 1 : 0); await expect(page.locator('a[href^="/manager"]:not([href="/manager/cinemas"])')).toHaveCount(0);
   });
 }
 
