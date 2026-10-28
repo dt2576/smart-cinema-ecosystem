@@ -12,7 +12,7 @@ public class AdminShowtimeRepository {
     public AdminShowtimeRepository(NamedParameterJdbcTemplate jdbc) { this.jdbc=jdbc; }
     public record Showtime(String id,String movieId,String movieTitle,String cinemaId,String cinemaName,String hallId,String hallName,
         Instant startsAt,Instant endsAt,Instant occupiedUntil,Instant bookingCutOff,String basePrice,String status,boolean editable,List<String> transitions) {}
-    private static final String SELECT="""
+    public static final String SELECT="""
         SELECT s.*,m.title movie_title,c.id cinema_id,c.name cinema_name,h.name hall_name,
           (s.start_time>clock_timestamp() AND s.status IN ('DRAFT','SCHEDULED','OPEN_FOR_BOOKING')
            AND NOT EXISTS(SELECT 1 FROM seat_holds sh WHERE sh.showtime_id=s.id)
@@ -20,7 +20,17 @@ public class AdminShowtimeRepository {
         FROM showtimes s JOIN movies m ON m.id=s.movie_id JOIN halls h ON h.id=s.hall_id JOIN cinemas c ON c.id=h.cinema_id
         """;
     public List<Showtime> list(AdminShowtimeRequest.Filter filter,ZoneId zone) {
+        return list(filter,zone,null);
+    }
+    public List<Showtime> listForManager(AdminShowtimeRequest.Filter filter,ZoneId zone,long actor) {
+        return list(filter,zone,actor);
+    }
+    private List<Showtime> list(AdminShowtimeRequest.Filter filter,ZoneId zone,Long actor) {
         StringBuilder sql=new StringBuilder(SELECT+" WHERE true"); var parameters=new MapSqlParameterSource();
+        if(actor!=null) {
+            sql.append(" AND "+com.smartcinema.manager.ManagerScope.predicate("c.id"));
+            parameters.addValue("actor",actor);
+        }
         if(filter.movieId()!=null) { sql.append(" AND s.movie_id=:movie"); parameters.addValue("movie",filter.movieId()); }
         if(filter.cinemaId()!=null) { sql.append(" AND c.id=:cinema"); parameters.addValue("cinema",filter.cinemaId()); }
         if(filter.hallId()!=null) { sql.append(" AND s.hall_id=:hall"); parameters.addValue("hall",filter.hallId()); }
@@ -38,7 +48,7 @@ public class AdminShowtimeRepository {
     public long save(long actor,Long id,AdminShowtimeRequest.Input input) {
         return jdbc.getJdbcTemplate().queryForObject("SELECT configure_showtime(?,?,?,?,?,?,?)",Long.class,actor,id,input.movieId(),input.hallId(),Timestamp.from(input.startsAt()),input.basePrice(),input.status());
     }
-    private Showtime map(ResultSet r) throws SQLException {
+    public static Showtime map(ResultSet r) throws SQLException {
         boolean editable=r.getBoolean("editable"); String status=r.getString("status");
         List<String> transitions=!editable?List.of():switch(status) {
             case "DRAFT" -> List.of("SCHEDULED","OPEN_FOR_BOOKING","CANCELLED");

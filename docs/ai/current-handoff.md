@@ -1,5 +1,45 @@
 # Current AI handoff
 
+## MANAGER Cinema Operations backend — 2026-10-28
+
+**IMPLEMENTED & VERIFIED — PASS for the approved backend slice.**
+[Report](../reports/2026-10-27_manager-cinema-operations-backend_report.md),
+[API contract](../api/manager-cinema-operations-contract-v1.0.md).
+Implementation/tests2026-10-27; final status/preservation and documentation2026-10-28.
+15 MANAGER operations: assigned Cinema reads, Hall/layout/Seat management,
+Showtime list/detail/create/update and scoped read-only current Staff. Four minimal
+ADMIN operations list existing MANAGER accounts and grant/list/deactivate/reactivate
+Cinema assignments. No Manager account creation, Cinema/Movie authoring, Staff
+mutation, Booking history, reporting/dashboard or frontend added.
+
+JWT role plus current ACTIVE account/effective ACTIVE MANAGER assignment enforced
+in scoped queries and locked protected writers. Missing effective scope403;
+foreign/nonexistent resource404 after valid scope. Future grants do not authorize
+immediate access; revoke/reassign/blocked-account checks work with existing JWT.
+Assignment identity/type/effectiveAt immutable; history retained. Canonical positive
+bigint-string IDs, exact decimal strings, existing Hall/Seat/Showtime rules reused.
+Shared read-only REPEATABLE READ; writes lock/recheck scope and append atomic audit.
+
+User explicitly approved V17 and fresh labeled QA fixture scope before privileged
+operations. Existing private local postgres installed forward-onlyV17 and granted
+runtime only EXECUTE on new Manager assignment wrapper; no new role/membership,
+runtime direct DML or owner authority. Final installed/source **V17**,pending0,
+failed0,17 valid checksums. Original23-table rows/V1–V16 history/financial counts/
+role attributes/memberships preserved; only five approved existing function bodies
+changed plus additive protected helpers. Fresh QA accounts/catalog/assignments and
+unpaid Booking retained; no PAID/SUCCESS/Ticket/provider evidence fabricated.
+
+Actual final **216 non-DB +13 PostgreSQL +5 real HTTP =234 distinct PASS**,
+zero final failures/errors/skips;197 baseline plus37 new. Stronger two-case lock
+rerun included in13. Signed-JWT HTTP suite115 calls exercises all19 endpoints,
+foreign/nested/role/status/revocation/validation cases and existing ADMIN behavior.
+Actual local backend/frontend/proxy startup verified via existing workflow;
+startup when alreadyV17 applies no further migration. Initial fixture/Mockito
+failures fixed and rerun without guard bypass or retry masking; details in report.
+Full historical destructive PostgreSQL suites and frontend tests NOT RUN for this
+backend slice. No Neon, new database, historical migration edit, unrelated source
+change, staging/commit/push/deploy. No further feature automatically authorized.
+
 ## ADMIN Reporting & Dashboard frontend — 2026-10-27
 
 **IMPLEMENTED & VERIFIED — PASS.**

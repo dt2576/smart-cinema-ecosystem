@@ -33,6 +33,10 @@ import com.smartcinema.movie.MovieRepository;
 @AutoConfigureMockMvc
 class SmartCinemaApplicationTests {
 	@MockitoBean
+	private com.smartcinema.manager.ManagerRepository managerRepository;
+	@MockitoBean
+	private com.smartcinema.admin.AdminManagerRepository adminManagerRepository;
+	@MockitoBean
 	private com.smartcinema.admin.AdminReportRepository adminReportRepository;
 	@MockitoBean
 	private com.smartcinema.admin.AdminPromotionRepository adminPromotionRepository;

@@ -7,6 +7,12 @@ import tools.jackson.databind.ObjectMapper;
 
 @Repository
 public class AdminConfigurationRepository {
+    public static final String SEAT_SELECT="""
+        SELECT s.*, NOT (EXISTS(SELECT 1 FROM showtime_seats ss WHERE ss.seat_id=s.id)
+            OR EXISTS(SELECT 1 FROM seat_holds sh WHERE sh.seat_id=s.id)
+            OR EXISTS(SELECT 1 FROM booking_seats bs WHERE bs.seat_id=s.id)) editable
+        FROM seats s
+        """;
     private final JdbcTemplate jdbc;
     private final ObjectMapper json;
     public AdminConfigurationRepository(JdbcTemplate jdbc,ObjectMapper json) { this.jdbc=jdbc; this.json=json; }
@@ -26,12 +32,10 @@ public class AdminConfigurationRepository {
         return halls(cinema).stream().filter(item->item.id().equals(Long.toString(id))).findFirst().orElseThrow(AdminConfigurationException::missing);
     }
     public List<Seat> seats(long hall) {
-        return jdbc.query("""
-            SELECT s.*, NOT (EXISTS(SELECT 1 FROM showtime_seats ss WHERE ss.seat_id=s.id)
-                OR EXISTS(SELECT 1 FROM seat_holds sh WHERE sh.seat_id=s.id)
-                OR EXISTS(SELECT 1 FROM booking_seats bs WHERE bs.seat_id=s.id)) editable
-            FROM seats s WHERE hall_id=? ORDER BY row,number,id
-            """,(r,n)->new Seat(r.getString("id"),r.getString("hall_id"),r.getString("row"),r.getString("number"),r.getString("seat_type"),r.getString("physical_status"),"COUPLE".equals(r.getString("seat_type"))?2:1,r.getBoolean("editable")),hall);
+        return jdbc.query(SEAT_SELECT+" WHERE hall_id=? ORDER BY row,number,id",(r,n)->mapSeat(r),hall);
+    }
+    public static Seat mapSeat(java.sql.ResultSet r) throws java.sql.SQLException {
+        return new Seat(r.getString("id"),r.getString("hall_id"),r.getString("row"),r.getString("number"),r.getString("seat_type"),r.getString("physical_status"),"COUPLE".equals(r.getString("seat_type"))?2:1,r.getBoolean("editable"));
     }
     public Seat seat(long id) {
         Long hall=jdbc.query("SELECT hall_id FROM seats WHERE id=?",(r,n)->r.getLong(1),id).stream().findFirst().orElseThrow(AdminConfigurationException::missing);

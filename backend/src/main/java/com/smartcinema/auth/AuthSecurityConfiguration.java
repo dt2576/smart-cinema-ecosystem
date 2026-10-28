@@ -63,6 +63,8 @@ public class AuthSecurityConfiguration {
 		RequestMatcher adminStaff = PathPatternRequestMatcher.pathPattern("/api/v1/admin/staff/**");
 		RequestMatcher adminConcessions = PathPatternRequestMatcher.pathPattern("/api/v1/admin/concession-items/**");
 		RequestMatcher adminPromotions = PathPatternRequestMatcher.pathPattern("/api/v1/admin/promotions/**");
+		RequestMatcher adminManagers = PathPatternRequestMatcher.pathPattern("/api/v1/admin/managers/**");
+		RequestMatcher managerOperations = PathPatternRequestMatcher.pathPattern("/api/v1/manager/**");
 		RequestMatcher staffPasswordSetup = PathPatternRequestMatcher.pathPattern(HttpMethod.POST, "/api/v1/staff/password-setups");
 		RequestMatcher staffResolve = PathPatternRequestMatcher.pathPattern(HttpMethod.POST, "/api/v1/staff/booking-qr-resolutions");
 		RequestMatcher staffCheckIn = PathPatternRequestMatcher.pathPattern(HttpMethod.POST, "/api/v1/staff/bookings/{bookingId}/check-ins");
@@ -72,9 +74,10 @@ public class AuthSecurityConfiguration {
 						registrationEndpoint, loginEndpoint, tokenRenewalEndpoint,
 						tokenRevocationEndpoint, profileEndpoint, holdAcquire, holdRelease, bookingCreate, bookingCancel,
 						concessionAdd, concessionUpdate, concessionRemove, promotionApply, promotionRemove, paymentInitiate, paymentSubmit,
-						adminMovies, adminCinemas, adminHalls, adminSeats, adminShowtimes, adminStaff, adminConcessions, adminPromotions, staffPasswordSetup, staffResolve, staffCheckIn))
+						adminMovies, adminCinemas, adminHalls, adminSeats, adminShowtimes, adminStaff, adminConcessions, adminPromotions, adminManagers, managerOperations, staffPasswordSetup, staffResolve, staffCheckIn))
 				.authorizeHttpRequests(authorize -> authorize
 						.requestMatchers(PathPatternRequestMatcher.pathPattern("/api/v1/admin/**")).hasRole("ADMIN")
+						.requestMatchers(managerOperations).hasRole("MANAGER")
 						.requestMatchers(staffPasswordSetup).permitAll()
 						.requestMatchers(PathPatternRequestMatcher.pathPattern("/api/v1/staff/**")).hasRole("STAFF")
 						.requestMatchers(PathPatternRequestMatcher.pathPattern(HttpMethod.GET,"/api/v1/payments/vnpay/ipn"),
