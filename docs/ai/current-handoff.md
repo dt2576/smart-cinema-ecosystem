@@ -1,5 +1,44 @@
 # Current AI handoff
 
+## MANAGER Staff Management backend — 2026-10-28
+
+**PASS — scoped Staff assignment backend implemented and verified.**
+[Report](../reports/2026-10-28_manager-staff-management-backend_report.md),
+[API v1.0](../api/manager-staff-management-contract-v1.0.md).
+Four additive routes under `/api/v1/manager/cinemas/{cinemaId}`: GET
+`/staff-assignments`, GET `/staff/{staffId}`, POST
+`/staff/{staffId}/cinema-assignments`, PUT
+`/staff/{staffId}/cinema-assignments/{assignmentId}/status`.
+Minimal profile and Cinema-specific history; existing current-only Staff GET
+unchanged. Source Staff relation and destination Manager scope independently
+checked; exact assignment path prevents multi-Cinema escalation. Canonical string
+IDs, immutable effectiveAt/history, future semantics and no automatic account
+activation. No global directory, invitation/account/profile/status/role writes by
+Manager; initial unrelated Staff placement stays ADMIN. No frontend implemented.
+
+User explicitly approved V18/operator/new QA scope before mutations. Existing local
+postgres installed forward-onlyV18, private shared Staff assignment core plus
+Manager wrapper; existing ADMIN authorization/owner/ACL preserved. App received
+only EXECUTE on new wrapper, not internal core/DML/owner authority. Original domain
+body exact; other original functions/guards unchanged. Final installed/source
+**V18**,pending0,failed0,18 valid checksums. Actual backend/frontend/API proxy health
+PASS. No changes to startup/env/schema tables/roles/memberships or V1–V17.
+
+**243 distinct selected tests PASS =227 non-DB +12 real PostgreSQL +4 real HTTP**,
+0 failures/errors/skips;216 baseline plus27 new. Initial11 SQL cases included in12,
+not counted twice.68 real management HTTP calls with signed JWT; foreign/nested,
+wrong-role/blocked/future/revoked scope, duplicates, rollback/audit and actual
+revocation lock orderings verified. ADMIN reissue/private password/activation
+regression passed; delivery disabled and no email success fabricated.
+Original23-table rows/history/financial counts/roles/ACL preserved except approved
+ADMIN wrapper body; new QA fixtures retained. No Hold/Booking/Payment/Ticket data
+created. Full historical destructive PostgreSQL suites/frontend tests NOT RUN for
+this backend slice. No Neon, Stitch, frontend, commit/push/deploy. Next Manager
+Staff frontend scope requires separate approval; do not start another module.
+Owned backend/frontend startup stopped after verification; ports8080/3000 closed.
+After-shutdown preservation PASS. Final scope/UTF-8/links/whitespace checks PASS;
+935 original files unchanged,3 original files modified,11 new; HEAD/index unchanged.
+
 ## MANAGER Cinema Operations frontend — 2026-10-28
 
 **IMPLEMENTED & VERIFIED — PASS for the requested frontend slice.**
