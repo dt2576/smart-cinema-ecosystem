@@ -1,5 +1,44 @@
 # Current AI handoff
 
+## MANAGER Staff Management frontend — 2026-10-28
+
+**PASS — scoped Staff assignment UI implemented and verified.**
+[Report](../reports/2026-10-28_manager-staff-management-frontend_report.md),
+[existing API v1.0](../api/manager-staff-management-contract-v1.0.md).
+Existing `/manager/staff` and Cinema Staff list extended with history, effective
+date, local filters and detail links. Added
+`/manager/cinemas/[cinemaId]/staff/[staffId]`, minimal profile and scoped history;
+assign-to-another-owned-Cinema, deactivate and reactivate dialogs. Existing five
+Staff reads/writes integrated with strict bigint/parent/receipt validation.
+Current/future/inactive assignments are distinct; immutable timestamps, other
+memberships and account state preserved. No global Staff account/invitation/HR
+controls. Existing ADMIN Staff source and Manager operations remain unchanged.
+Manager navigation and exact detail login resume updated; backend is authority.
+No optimistic status or automatic writes/retries; per-tab ID-only review hints,
+owned source/destination reads and explicit acknowledgement recover uncertain writes.
+
+**306/306 unit PASS** (287+19); typecheck/build PASS; lint0 errors,12 existing
+warnings in ignored historical audit scripts. **160/160 selected Edge regression
+PASS in one complete run**,135 baseline+25 new,0 failures/skips/retries.
+Initial63/65 plus selector-label fix and affected2/2 are documented in the report.
+**12 real functional groups +15 screen/width checks PASS**,390/768/1440,112 real
+management responses,0 browser errors. Real login/resume, current/future writes,
+other-membership integrity, same-JWT revocation, foreign404, ADMIN preservation
+and role denial tested separately from HTTP fixtures.
+
+Local workflow/startup/proxy PASS; installed/source **V18**,pending0,failed0,
+18 valid checksums; no migration or grant changes. Approved fresh QA only; managed
+Staff protected invitation intent/revocation, delivery disabled. Original23-table
+rows/history/functions/ACL/roles/financial/catalog counts preserved. Fresh QA
+fixtures retained; no operational account/assignment or financial data changes.
+Backend/API/migrations/Stitch/auth implementation/env/dependencies unchanged.
+Owned services stopped after QA. No Neon/SMTP/provider, commit/push/deploy.
+Backend Maven and unrelated full cross-module browser suite NOT RUN for this slice.
+Do not start another module automatically.
+Final scope/encoding/links/whitespace PASS:6 scoped original edits,8 new files,
+943/949 originals byte-identical; HEAD/index unchanged. Ports8080/3000/3100 free;
+after-shutdown database preservation PASS.
+
 ## MANAGER Staff Management backend — 2026-10-28
 
 **PASS — scoped Staff assignment backend implemented and verified.**
