@@ -1,5 +1,50 @@
 # Current AI handoff
 
+## PRIMARY Neon startup repair - 2026-10-28 - PASS
+
+[Report](../reports/2026-10-28_neon-flyway-v14-startup-fix_report.md),
+[operator SQL/workflow and approval history](../development/neon-migration-workflow.md).
+PRIMARY Neon `neondb` is now **V18/V18, pending 0, failed 0, all 18 checksums valid**.
+V14 ownership failure came from Staff owner membership lacking INHERIT/SET;
+Configuration owner had the same migration-authority gap. Protected ownership
+and original runtime privileges remain intact. No local database substitution.
+
+Project startup now checks PRIMARY connectivity/history/checksums before launching
+Spring/Next. `pnpm db:status` reports real state; normal `pnpm dev` skips migration
+when current and verifies actual backend/frontend/API-proxy readiness. Pending DDL
+requires a separate reviewed operator connection and `pnpm db:migrate --approved`.
+Spring Flyway stays enabled/read-only. No clean/repair/baseline or automatic retry.
+
+User explicitly approved the documented temporary-role/grant/install/cleanup plan.
+Two approved SCRAM-verifier setup attempts failed at COMMIT and fully rolled back;
+Neon reported that password input must be plaintext. A separately approved third
+setup used a privately generated password over required-TLS JDBC with server SCRAM
+storage; logging settings were checked, not changed. Setup PASS. One Flyway run
+installed original V14-V18 in order. Cleanup PASS: temporary login/credential file
+removed, temporary grants revoked, original role/membership/schema ACL restored.
+No runtime owner membership expansion, historical migration edit or business DML.
+
+**Verification:** startup CLI negative tests 4/4 PASS; protected-function checks
+7/7 PASS; actual `pnpm dev` Spring/Next/proxy READY; real Edge/HTTP smoke 7/7 groups
+PASS, 15 responses, 0 browser errors. Existing PRIMARY ADMIN login/identity/logout,
+anonymous Manager 401, ADMIN-to-Manager 403 and safe forbidden UI verified.
+PRIMARY has 1 ACTIVE ADMIN, 3 ACTIVE CUSTOMER and no MANAGER: positive assigned-
+Manager workflow NOT RUN; no account/assignment was created to manufacture proof.
+Full Maven/frontend feature regressions NOT RUN for this startup-only repair.
+
+All 26 original business-table fingerprints matched after migration/cleanup.
+After normal auth smoke, original refresh rows still matched; exactly one new
+session was created and revoked by logout. Other business rows, original history,
+function ACL and roles/schema remained preserved. Migration-defined routines and
+five new history entries are the intended changes. Provider/mail and expired-Hold
+cleanup were disabled only in the QA process environment, not persistently edited.
+Owned QA services stopped afterward. Private smoke-auth input deleted.
+
+Scope: 4 original files modified, 5 new files; 953/957 originals unchanged;
+V1-V18, frontend, HEAD/index preserved. No commit/push/deployment. Primary evidence
+is independent of prior local-test reports. Requested repair complete; do not
+start another feature or recreate migration authority on the current database.
+
 ## MANAGER Staff Management frontend — 2026-10-28
 
 **PASS — scoped Staff assignment UI implemented and verified.**

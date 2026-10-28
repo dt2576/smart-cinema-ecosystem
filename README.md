@@ -96,7 +96,9 @@ the backend. Use the existing backend environment variables documented in
 [frontend/.env.example](frontend/.env.example). Spring Boot imports the optional
 backend `.env` file; no terminal export or extra dependency is required.
 Next.js continues to load `frontend/.env.local` normally. Do not commit secrets.
-Backend startup runs the existing Flyway migrations against the configured database.
+Normal startup validates installed Flyway migrations through a read-only connection.
+Pending migrations require a separately approved PRIMARY migration connection; see
+the [Neon migration workflow](docs/development/neon-migration-workflow.md).
 
 For Neon, create the local file once (PowerShell also supports `cp`):
 
@@ -126,12 +128,13 @@ as working directory. Spring imports `./backend/.env` and then `./.env`; use onl
 override file values. Without the file or overrides, the original localhost
 database, `postgres` username and `123456` password defaults remain available.
 
-Flyway remains enabled and Hibernate uses `ddl-auto=validate`. On an empty database,
-startup applies V1 through V10 before validation. The migration login must be able
-to install `btree_gist`, create the existing NOLOGIN roles, and perform ownership
-and grants required by those migrations. Confirm those permissions on Neon before
-expecting first startup to succeed; this workflow does not alter migrations or
-bypass database guards. No real Neon connection is implied by configuration alone.
+Flyway remains enabled and Hibernate uses `ddl-auto=validate`. Normal startup
+expects the source migrations to be installed through a separately approved
+operator connection; it does not initialize an empty database using runtime
+credentials. Initial database/role/extension provisioning requires its own review.
+The existing PRIMARY Neon upgrade to V18 was verified on2026-10-28; run
+`pnpm db:status` for the current state rather than relying on this dated note.
+See the [execution report](docs/reports/2026-10-28_neon-flyway-v14-startup-fix_report.md).
 
 Install development dependencies once from the repository root:
 
@@ -146,18 +149,26 @@ Start both applications from the repository root:
 pnpm dev
 ```
 
-This runs `mvn spring-boot:run` inside `backend/` and the existing frontend
+This first checks the configured PRIMARY Neon database read-only, prints installed/
+source versions, validates applied checksums and stops if migrations are pending or
+failed. Use `pnpm db:status` for status only. After an approved operator provisions
+the separate migration connection, `pnpm db:migrate --approved` applies the reviewed
+pending batch; no automatic role changes or retries occur. The normal command
+loads no migration credentials when the schema is current.
+
+Then it runs `mvn spring-boot:run` inside `backend/` and the existing frontend
 `pnpm dev` script. Open <http://localhost:3000>; the backend defaults to
 <http://localhost:8080>. Existing environment overrides and application defaults
 are preserved. PostgreSQL is a prerequisite, not started by this command.
 
-Logs share the terminal with `[backend]` and `[frontend]` labels. Wait for both
-Spring Boot's startup message and Next.js's ready message. If either process
+Logs share the terminal with `[backend]`, `[frontend]` and `[health]` labels. Wait
+for `READY`, which requires real backend/frontend HTTP and matching public API proxy
+responses, not just Maven `BUILD SUCCESS`. If either process
 exits, the other is stopped; startup errors and exit codes remain visible.
 Press **Ctrl+C** to stop both. Windows batch wrappers may additionally ask
 `Terminate batch job (Y/N)?`; answer `Y` to return to the prompt.
 
-The root package only supplies development process supervision using
+The root package supplies PRIMARY database preflight and development process supervision using
 [concurrently](https://github.com/open-cli-tools/concurrently). Frontend dependencies
 and its lockfile remain separate; there is no new pnpm workspace. For separate
 operation, the original commands inside `backend/` and `frontend/` still work.
