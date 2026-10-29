@@ -35,6 +35,8 @@ class SmartCinemaApplicationTests {
 	@MockitoBean
 	private com.smartcinema.manager.ManagerBookingRepository managerBookingRepository;
 	@MockitoBean
+	private com.smartcinema.manager.ManagerReportRepository managerReportRepository;
+	@MockitoBean
 	private com.smartcinema.manager.ManagerStaffRepository managerStaffRepository;
 	@MockitoBean
 	private com.smartcinema.manager.ManagerRepository managerRepository;

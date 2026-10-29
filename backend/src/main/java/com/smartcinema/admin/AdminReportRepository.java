@@ -17,7 +17,7 @@ public class AdminReportRepository {
         jdbc.execute("SET LOCAL statement_timeout='5s'");
         jdbc.execute("SET LOCAL lock_timeout='2s'");
     }
-    static MapSqlParameterSource parameters(AdminReportQuery q) {
+    public static MapSqlParameterSource parameters(AdminReportQuery q) {
         return new MapSqlParameterSource().addValue("start",Timestamp.from(q.start())).addValue("end",Timestamp.from(q.end()))
             .addValue("from",q.from()).addValue("to",q.to()).addValue("zone",AdminReportQuery.ZONE.getId())
             .addValue("cinema",q.cinemaId(),Types.BIGINT).addValue("movie",q.movieId(),Types.BIGINT)
@@ -38,7 +38,7 @@ public class AdminReportRepository {
     public String count(AdminReportQuery q) {
         return named.queryForObject("WITH "+AdminReportSql.COMMON+AdminReportSql.count(q.dimension()),parameters(q),String.class);
     }
-    static Metrics metrics(ResultSet r) throws SQLException {
+    public static Metrics metrics(ResultSet r) throws SQLException {
         return new Metrics(money(r,"revenue"),money(r,"gross"),money(r,"discount"),money(r,"seat_gross"),money(r,"concession_gross"),
             count(r,"confirmed_bookings"),count(r,"tickets_sold"),count(r,"guests_sold"),count(r,"bookings_created"),
             count(r,"showtimes"),count(r,"capacity"),count(r,"sold"),money(r,"occupancy"));

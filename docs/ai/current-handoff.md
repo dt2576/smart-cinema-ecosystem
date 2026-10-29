@@ -1,5 +1,43 @@
 # Current AI handoff
 
+## MANAGER Reporting & Dashboard backend - 2026-10-29
+
+**IMPLEMENTATION PASS; AUTOMATED TESTS PASS; REAL AUTHENTICATED MANAGER BLOCKED.**
+[Report](../reports/2026-10-29_manager-reporting-dashboard-backend_report.md),
+[contract v1.0](../api/manager-reporting-dashboard-contract-v1.0.md).
+GET `/api/v1/manager/dashboard` and `/reports/summary` (same implementation),
+`/reports/daily`, `/reports/breakdowns`, `/reports/concessions` under the Manager
+API prefix. Current account/effective assignment gate plus existing Cinema scope
+on every aggregate/count/rank; bounded 366-day periods and 100-row pages.
+
+Shared financial/occupancy SQL extracted to reporting/ReportSql; all 10 original
+ADMIN executed SQL strings are byte-identical. ADMIN behavior/contract unchanged.
+One verified Sandbox sales cohort, preaggregated attempts/issuance, no SUCCESS-only
+revenue or duplicate money. Raw event/status activity is separate; actual check-in
+timestamps, whole COUPLE units and frozen sold capacity preserved. Concession
+products use frozen quantities/gross with current catalog labels; no net discount
+allocation, refund, settlement, inventory or previous-period comparison invented.
+No PII, QR/Ticket codes, financial writes, new states, migrations or grants.
+
+Baseline 254 executed PASS; final `mvn verify`: **288 executed PASS**, 0 errors/
+failures, 343 existing conditional skips, 631 discovered. All **34 new cases ran**,
+including 18 actual PostgreSQL READ ONLY/VALUES tests. No persisted financial or
+account fixtures. Before/after 19-table/history and protected function hashes
+matched. Targeted Manager/Admin tests 26/26 PASS; original assertions retained.
+
+Root PRIMARY `pnpm dev` READY, V18/V18, pending/failed 0, checksums valid, migration
+skipped. Real API/proxy/Edge 12/12 PASS. Actual READ ONLY schema queries cover
+summary/daily/all three performance dimensions/products with unknown actor; no
+scope leak. Fresh PRIMARY count: 0 ACTIVE/effectively assigned Manager, therefore
+positive authenticated HTTP/live revocation remain NOT RUN/BLOCKED. Fixtures and
+small missing-actor EXPLAIN are not real financial/Manager/load proof.
+
+Frontend/source dependencies/env/auth/writers/Flyway/roles unchanged; no account
+provisioning, Neon business-data mutation, local DB substitution, commit/push/
+deployment. Evidence: ignored `backend/target/manager-reporting-2026-10-29/`.
+Stop. Any authenticated positive verification or frontend/Stitch task requires
+separate scope; do not create accounts or continue another module automatically.
+
 ## MANAGER Booking Management frontend - 2026-10-29
 
 **Implemented; automated functional PASS; real authenticated PRIMARY positive

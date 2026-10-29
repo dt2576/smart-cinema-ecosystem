@@ -7,7 +7,7 @@ public final class AdminReportResponse {
     private AdminReportResponse() { }
     public record Period(LocalDate from,LocalDate to,Instant startInclusive,Instant endExclusive,
             String timezone,String currency,String paymentEnvironment,String cinemaId,String movieId,String showtimeId) {
-        static Period of(AdminReportQuery query) {
+        public static Period of(AdminReportQuery query) {
             return new Period(query.from(),query.to(),query.start(),query.end(),AdminReportQuery.ZONE.getId(),
                     "VND","SANDBOX",id(query.cinemaId()),id(query.movieId()),id(query.showtimeId()));
         }
