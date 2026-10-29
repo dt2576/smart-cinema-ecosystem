@@ -90,3 +90,132 @@ test("Seat save conflict remains visible without discarding the proposed edit", 
   await page.getByLabel("Hàng ghế").fill("C"); await page.getByRole("button", { name: "Lưu ghế" }).click();
   await expect(page.getByRole("main").getByRole("alert")).toHaveText("Dữ liệu đã thay đổi hoặc thao tác bị xung đột. Vui lòng kiểm tra và thử lại."); await expect(page.getByLabel("Hàng ghế")).toHaveValue("C");
 });
+
+// HTTP fixtures below exercise presentation and guarded interactions; they are
+// not evidence of writes to PRIMARY Neon or an exact physical Hall geometry.
+async function denseLayout(page: Page) {
+  await setup(page);
+  const seats = "ABCDEFGHIJ".split("").flatMap((row, r) => Array.from({ length: row === "J" ? 8 : 16 }, (_, i) => ({
+    id: String(BigInt("9007199254741000") + BigInt(r * 16 + i)), hallId: HALL, row,
+    number: row === "J" ? `${i * 2 + 1}-${i * 2 + 2}` : String(i + 1).padStart(2, "0"),
+    type: row === "J" ? "COUPLE" : "EFGH".includes(row) ? "VIP" : "STANDARD",
+    physicalStatus: row === "A" && i === 0 ? "MAINTENANCE" : row === "I" && i === 15 ? "INACTIVE" : "ACTIVE",
+    guestCapacity: row === "J" ? 2 : 1, structureEditable: false,
+  })));
+  await page.route(`**/api/v1/admin/halls/${HALL}`, route => route.fulfill({ json: { id: HALL, cinemaId: CINEMA, name: "Phòng chiếu 01", capacity: 160, type: "2D", status: "ACTIVE", layoutInitialized: true } }));
+  await page.route(`**/api/v1/admin/halls/${HALL}/seats`, route => route.fulfill({ json: seats }));
+  return seats;
+}
+
+for (const width of [390, 768, 1440]) test(`Stitch seat presentation: rows, whole units, inspector and responsive layout at ${width}px`, async ({ page }) => {
+  await page.setViewportSize({ width, height: 1000 });
+  const seats = await denseLayout(page); let writes = 0;
+  page.on("request", request => { if (/\/api\/v1\/admin\//.test(request.url()) && request.method() !== "GET") writes++; });
+  await page.goto(`/admin/halls/${HALL}/seats`);
+  const grid = page.getByRole("region", { name: "Lưới ghế" });
+  await expect(grid.getByRole("button")).toHaveCount(seats.length);
+  await expect(page.locator('[data-seat-row="J"]').getByRole("button")).toHaveCount(8);
+  await expect(page.getByText("MÀN HÌNH CHIẾU", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "F08 VIP · 1 khách Hoạt động", exact: true }).click();
+  await expect(page.getByRole("complementary", { name: "Thông tin ghế" }).getByText("F08", { exact: true })).toBeVisible();
+  await expect(page.getByLabel("Loại ghế")).toBeDisabled();
+  await expect(page.getByLabel("Trạng thái vật lý")).toBeEnabled();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: `target/admin-cinema-stitch-2026-10-28/fixture-seat-${width}.png`, fullPage: true });
+  await page.reload(); await expect(grid.getByRole("button")).toHaveCount(seats.length);
+  expect(writes).toBe(0);
+});
+
+test("Seat keyboard navigation retains exact opaque labels without synthesizing geometry", async ({ page }) => {
+  await setup(page);
+  await page.route(`**/api/v1/admin/halls/${HALL}/seats`, route => route.fulfill({ json: [
+    { id: "9007199254741001", hallId: HALL, row: "Balcony", number: "09-10", type: "COUPLE", guestCapacity: 2, physicalStatus: "ACTIVE", structureEditable: false },
+    { id: "9007199254741002", hallId: HALL, row: "Balcony", number: "Box", type: "STANDARD", guestCapacity: 1, physicalStatus: "INACTIVE", structureEditable: true },
+  ] }));
+  await page.goto(`/admin/halls/${HALL}/seats`);
+  const first = page.getByRole("button", { name: "Balcony09-10 Ghế đôi · 2 khách Hoạt động" });
+  await first.focus(); await page.keyboard.press("ArrowRight");
+  await expect(page.getByRole("button", { name: "BalconyBox Thường · 1 khách Ngừng hoạt động" })).toBeFocused();
+  await page.keyboard.press("Home"); await expect(first).toBeFocused();
+  await expect(page.getByRole("region", { name: "Lưới ghế" }).getByRole("button")).toHaveCount(2);
+  await expect(page.getByLabel("Số ghế")).toHaveValue("09-10");
+});
+
+test("Mobile ADMIN navigation dialog traps focus, closes with Escape and restores its trigger", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 }); await setup(page); await page.goto("/admin/cinemas");
+  const trigger = page.getByRole("button", { name: "Mở điều hướng quản trị" });
+  await trigger.click(); const dialog = page.getByRole("dialog", { name: "Điều hướng quản trị" });
+  await expect(dialog).toBeVisible(); await dialog.getByRole("link").last().focus(); await page.keyboard.press("Tab");
+  await expect(dialog.getByRole("button", { name: "Đóng hộp thoại" })).toBeFocused();
+  await page.keyboard.press("Escape"); await expect(dialog).toHaveCount(0); await expect(trigger).toBeFocused();
+});
+
+test("Seat mutation remains explicit, single-flight and server-authoritative", async ({ page }) => {
+  const seats = await denseLayout(page); let puts = 0; let release!: () => void;
+  const pending = new Promise<void>(resolve => { release = resolve; });
+  await page.route(`**/api/v1/admin/seats/${seats[0].id}`, async route => {
+    puts++; expect(route.request().method()).toBe("PUT"); expect(route.request().postDataJSON()).toEqual({ row: "A", number: "01", type: "STANDARD", physicalStatus: "ACTIVE" });
+    await pending; return route.fulfill({ status: 503, json: {} });
+  });
+  await page.goto(`/admin/halls/${HALL}/seats`); expect(puts).toBe(0);
+  await page.getByLabel("Trạng thái vật lý").selectOption("ACTIVE"); await page.getByRole("button", { name: "Lưu ghế", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Đang lưu…", exact: true })).toBeDisabled();
+  await expect(page.getByRole("region", { name: "Lưới ghế" }).getByRole("button").first()).toBeDisabled();
+  expect(puts).toBe(1); release(); await expect(page.getByRole("main").getByRole("alert")).toBeVisible();
+  await expect(page.getByLabel("Trạng thái vật lý")).toHaveValue("ACTIVE");
+  await expect(page.getByRole("button", { name: "A01 Thường · 1 khách Bảo trì" })).toHaveAttribute("aria-pressed", "true");
+  expect(puts).toBe(1);
+});
+
+test("numeric display ordering preserves API identities, whole COUPLE units and keyboard order", async ({ page }) => {
+  await setup(page);
+  const seats = [
+    { id: "9007199254741001", number: "10", row: "A", type: "VIP", guestCapacity: 1 },
+    { id: "9007199254741002", number: "2", row: "A", type: "STANDARD", guestCapacity: 1 },
+    { id: "9007199254741003", number: "1", row: "A", type: "STANDARD", guestCapacity: 1 },
+    { id: "9007199254741004", number: "9-10", row: "B", type: "COUPLE", guestCapacity: 2 },
+    { id: "9007199254741005", number: "1-2", row: "B", type: "COUPLE", guestCapacity: 2 },
+  ].map(s => ({ ...s, hallId: HALL, physicalStatus: "ACTIVE", structureEditable: false }));
+  await page.route(`**/api/v1/admin/halls/${HALL}/seats`, route => route.fulfill({ json: seats }));
+  let submitted: unknown;
+  await page.route("**/api/v1/admin/seats/*", route => { submitted = { url: route.request().url(), body: route.request().postDataJSON() }; return route.fulfill({ status: 409, json: {} }); });
+  await page.goto(`/admin/halls/${HALL}/seats`);
+  await expect(page.locator('[data-seat-row="A"] button')).toHaveText(["1", "2", "10"]);
+  await expect(page.locator('[data-seat-row="B"] button')).toHaveText(["1-2", "9-10"]);
+  const first = page.getByRole("button", { name: "A1 Thường · 1 khách Hoạt động" });
+  await first.focus(); await page.keyboard.press("ArrowRight");
+  await expect(page.getByRole("button", { name: "A2 Thường · 1 khách Hoạt động" })).toBeFocused();
+  await page.getByLabel("Trạng thái vật lý").selectOption("MAINTENANCE"); await page.getByRole("button", { name: "Lưu ghế", exact: true }).click();
+  await expect(page.getByRole("main").getByRole("alert")).toBeVisible();
+  expect(submitted).toEqual({ url: `http://127.0.0.1:3100/api/v1/admin/seats/9007199254741002`, body: { row: "A", number: "2", type: "STANDARD", physicalStatus: "MAINTENANCE" } });
+});
+
+test("Stitch typography is loaded, rendered by web fonts and uses explicit hierarchy", async ({ page }) => {
+  await denseLayout(page); await page.goto(`/admin/halls/${HALL}/seats`);
+  await expect(page.getByRole("region", { name: "Lưới ghế" }).getByRole("button")).toHaveCount(152);
+  await page.evaluate(() => document.fonts.ready);
+  const heading = page.getByRole("heading", { name: "Quản lý tình trạng ghế", exact: true });
+  expect(await heading.evaluate(el => { const c = getComputedStyle(el); return [c.fontSize, c.lineHeight, c.fontWeight]; })).toEqual(["28px", "36px", "600"]);
+  const label = page.getByText("Hàng ghế", { exact: true });
+  expect(await label.evaluate(el => getComputedStyle(el).fontFamily)).toContain("Space Grotesk");
+  expect(await page.getByLabel("Hàng ghế").evaluate(el => getComputedStyle(el).fontFamily)).toContain("Plus Jakarta Sans");
+  const cdp = await page.context().newCDPSession(page); await cdp.send("DOM.enable"); await cdp.send("CSS.enable");
+  const { root } = await cdp.send("DOM.getDocument"); const { nodeId } = await cdp.send("DOM.querySelector", { nodeId: root.nodeId, selector: "main h1" });
+  const { fonts } = await cdp.send("CSS.getPlatformFontsForNode", { nodeId });
+  expect(fonts.some(f => f.isCustomFont && f.familyName.includes("Space Grotesk") && f.glyphCount > 0)).toBe(true);
+  expect(fonts.filter(f => f.glyphCount > 0).every(f => f.isCustomFont)).toBe(true);
+  await cdp.detach();
+});
+
+test("tablet summary headings retain usable width beside wrapped metrics", async ({ page }) => {
+  await page.setViewportSize({ width: 768, height: 1000 }); await denseLayout(page);
+  for (const path of [`/admin/cinemas/${CINEMA}/halls`, `/admin/halls/${HALL}/seats`]) {
+    await page.goto(path); await expect(page.locator("#admin-content")).toBeVisible();
+    await expect(page.getByText("Đang tải cấu hình…")).toHaveCount(0);
+    const heading = await page.getByRole("main").getByRole("heading", { level: 1 }).boundingBox();
+    const main = await page.locator("#admin-content").boundingBox();
+    expect(heading!.width).toBeGreaterThan(main!.width * 0.6);
+    expect(heading!.height).toBeLessThan(150);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  }
+});

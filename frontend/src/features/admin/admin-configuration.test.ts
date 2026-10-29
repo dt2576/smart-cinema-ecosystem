@@ -29,3 +29,29 @@ test("configuration conflicts remain safe ProblemDetail errors", async () => {
   globalThis.fetch = async () => Response.json({ detail: "Referenced Seat is protected." }, { status: 409 });
   await assert.rejects(api.updateAdminSeat("token", "9007199254740993", { row: "B", number: "1-2", type: "COUPLE", physicalStatus: "INACTIVE" }), (error: unknown) => error instanceof api.AdminApiError && error.status === 409 && error.message === "Dữ liệu đã thay đổi hoặc thao tác bị xung đột. Vui lòng kiểm tra và thử lại.");
 });
+
+const { orderSeatRowForDisplay } = await import("./admin-seat-presentation" + ".ts") as typeof import("./admin-seat-presentation");
+
+test("display order naturally sorts numeric labels without changing identity or API array", () => {
+  const seats = Object.freeze(["1", "10", "2", "03"].map((number, i) => Object.freeze({ number, id: `900719925474099${i}`, row: "A", type: "VIP" })));
+  const ordered = orderSeatRowForDisplay(seats);
+  assert.deepEqual(ordered.map(s => s.number), ["1", "2", "03", "10"]);
+  assert.deepEqual(seats.map(s => s.number), ["1", "10", "2", "03"]);
+  assert.equal(ordered[1], seats[2]);
+  assert.equal(ordered[1].id, "9007199254740992");
+});
+
+test("numeric ranges remain whole units and large numeric labels retain exact precision", () => {
+  const couple = { id: "9007199254740995", number: "9-10", type: "COUPLE", guestCapacity: 2 };
+  const ordered = orderSeatRowForDisplay([{ number: "9007199254740994" }, couple, { number: "11-12" }, { number: "1-2" }, { number: "9007199254740993" }]);
+  assert.deepEqual(ordered.map(s => s.number), ["1-2", "9-10", "11-12", "9007199254740993", "9007199254740994"]);
+  assert.equal(ordered[1], couple); assert.equal(ordered.length, 5);
+});
+
+test("opaque, equivalent, overlapping or descending labels keep the whole row in API order", () => {
+  for (const labels of [["10", "Box", "2"], ["01", "1", "2"], ["9-10", "10", "1"], ["4-2", "1"], ["2.5", "1"], ["A10", "A2"]]) {
+    const seats = labels.map(number => ({ number }));
+    assert.deepEqual(orderSeatRowForDisplay(seats), seats);
+  }
+  assert.deepEqual(orderSeatRowForDisplay([]), []);
+});

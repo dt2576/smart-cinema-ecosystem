@@ -2,6 +2,10 @@
 
 Extend [Development Workflow](DEVELOPMENT_WORKFLOW.md); apply [UI/UX Rules](../rules/UI_UX_RULES.md), [Coding Rules](../rules/CODING_RULES.md), and [Requirement Traceability](../rules/REQUIREMENT_TRACEABILITY.md).
 
+Every frontend task MUST also read and follow the [Smart Cinema Stitch Workflow](SMART_CINEMA_STITCH_WORKFLOW.md) and [Smart Cinema Agent UI Rules](../rules/SMART_CINEMA_AGENT_UI_RULES.md). These are mandatory visual implementation/review and acceptance rules, not optional references. Approved Stitch MCP designs govern appearance; existing requirements/API/RBAC and PRIMARY Neon safeguards govern behavior. Verify loaded/computed fonts and matched real-browser screenshot comparisons, and report Functional and Visual acceptance independently. Missing reference/evidence must never be reported as Visual PASS.
+
+Workflow phase priorities do not grant permission to start or resume modules. Follow the current user-authorized scope and stop after reporting; resume remaining functional modules only when separately instructed. For documentation-only work, validate links/content and preserve screens rather than running UI acceptance checks.
+
 Every frontend task MUST validate against [project conventions](../../docs/development/project-conventions.md) before planning or editing and after implementation. Check route naming, page filename structure, component filenames, React component names, feature folder placement, import alias usage, domain terminology, status naming, and UI text consistency. Use the base workflow's result classifications and completion gate; only relevant areas require substantive checks.
 
 Before UI implementation:

@@ -1,5 +1,7 @@
 # UI/UX Rules
 
+Mandatory companion instructions for every frontend task: [Smart Cinema Agent UI Rules](SMART_CINEMA_AGENT_UI_RULES.md) and [Smart Cinema Stitch Workflow](../workflows/SMART_CINEMA_STITCH_WORKFLOW.md). Use their Stitch MCP, maximum-fidelity, verified-typography, real-browser screenshot and separate Functional/Visual acceptance requirements when implementing or reviewing UI. Existing backend/API/RBAC and PRIMARY Neon constraints remain binding; these rules do not authorize new modules or business behavior.
+
 Before implementing a screen:
 
 1. Identify the actor.

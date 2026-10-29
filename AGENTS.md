@@ -12,3 +12,16 @@ Never knowingly complete a task that violates the canonical convention without e
 - Never silently change business requirements.
 - Never change BRD/SRS to make code appear correct.
 - Never introduce out-of-scope functionality without reporting it.
+
+## Mandatory frontend workflow
+
+For every frontend task, after the canonical workflow and conventions above, read and follow:
+
+1. [.agent/workflows/FRONTEND_WORKFLOW.md](.agent/workflows/FRONTEND_WORKFLOW.md).
+2. [.agent/workflows/SMART_CINEMA_STITCH_WORKFLOW.md](.agent/workflows/SMART_CINEMA_STITCH_WORKFLOW.md).
+3. [.agent/rules/SMART_CINEMA_AGENT_UI_RULES.md](.agent/rules/SMART_CINEMA_AGENT_UI_RULES.md).
+4. Applicable [frontend/AGENTS.md](frontend/AGENTS.md) instructions.
+
+Approved Google Stitch MCP designs are the mandatory visual source of truth. Aim for maximum achievable fidelity; verify actual loaded/computed typography and compare real browser screenshots at matched viewport/state. Report Functional and Visual acceptance separately; passing functional tests alone does not establish Visual PASS. Disclose deviations and blocked evidence instead of claiming unsupported pixel-perfect results.
+
+Existing requirements, backend/API contracts, authorization and PRIMARY Neon safeguards remain authoritative for behavior. These workflow files do not authorize backend/database changes, unrelated redesigns, or starting/resuming unfinished modules. Resume remaining modules only when separately instructed; complete the authorized scope, report and STOP.

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/features/auth/auth-context";
 import { AdminApiError, getAdminIdentity } from "@/features/admin/admin-api";
 import { useMovieRequest } from "@/features/movie/use-movie-request";
+import { AdminConfigurationShell } from "@/features/admin/admin-configuration-shell";
 
 type AdminContextValue = { accessToken: string; reportError: (error: unknown) => void };
 const AdminContext = createContext<AdminContextValue | null>(null);
@@ -31,6 +32,8 @@ export function AdminShell({ children }: { children: ReactNode }) {
   if (!session) return <AdminAccessMessage title="Cần đăng nhập"><p>Đăng nhập bằng tài khoản quản trị viên để vào khu vực này.</p><Link href="/login" className="text-accent underline">Đăng nhập</Link></AdminAccessMessage>;
   if (denied) return <AdminAccessMessage title="Không có quyền quản trị"><p>Cần tài khoản quản trị viên đang hoạt động. Tài khoản của bạn không có quyền truy cập trang quản trị.</p><Button onClick={() => void logoutSession()}>Đăng xuất</Button></AdminAccessMessage>;
   if (identity.error || identity.data?.role !== "ADMIN") return <AdminAccessMessage title="Không thể xác minh quyền quản trị"><p role="alert">{identity.error?.message ?? "Vui lòng thử lại."}</p><Button onClick={identity.retry}>Kiểm tra lại quyền truy cập</Button></AdminAccessMessage>;
+
+  if (pathname.startsWith("/admin/cinemas") || pathname.startsWith("/admin/halls")) return <AdminContext.Provider value={{ accessToken: token, reportError }}><AdminConfigurationShell fullName={identity.data.fullName} pathname={pathname} logout={() => void logoutSession()}>{children}</AdminConfigurationShell></AdminContext.Provider>;
 
   return <AdminContext.Provider value={{ accessToken: token, reportError }}>
     <div className="min-h-screen bg-canvas">

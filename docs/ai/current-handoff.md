@@ -1,5 +1,66 @@
 # Current AI handoff
 
+## ADMIN Cinema / Hall / Seat visual polish - 2026-10-28
+
+**Functional PASS; visual PASS for reference adaptation, not pixel identity.**
+[Follow-up report](../reports/2026-10-28_admin-cinema-hall-seat-visual-polish_report.md).
+Live Stitch theme/HTML/PNG rechecked for Hall `9eca84f2fdaf4cf69b1e68dc9180270c`
+and Seat `c3f01a57af1342789159f2b26b83b69c`. Both intended fonts already loaded;
+scoped scale/weight/line-height/tracking corrected, without changing root loading.
+CDP rendered-font evidence confirms Space Grotesk and Plus Jakarta Sans with no
+sampled system fallback, including Vietnamese. Sidebar/header now 288/64px;
+forms, summary proportions, Seat density/inspector and row-label scrolling refined.
+Visual review found and fixed squeezed tablet banner text; regression added.
+
+New display-only natural ordering supersedes the previous iteration's retained
+API display order for unambiguous numeric labels/ranges. Raw API order/data unchanged;
+ambiguous/mixed/overlapping rows retain server order. No ID coercion, aisle inference
+or split COUPLE unit. Real row A now displays 1 through 10 in natural order.
+
+Baseline unit 306; final **309/309 PASS**, 3 ordering tests added.
+Final selected Edge **169/169 PASS** in one complete run, no skips/retries/failures;
+166 prior cases retained plus identity/order, rendered fonts and tablet regression.
+Typecheck/build PASS; lint 0 errors, 12 existing historical-script warnings.
+Real PRIMARY `pnpm dev` READY, V18/V18, no pending/failed, checksums valid,
+no migrations. 7 before and 28 final route/viewport screenshots at 390/768/1280/1440;
+0 browser errors, 0 ADMIN writes, catalog GET projections unchanged. Two normal
+QA auth cycles logged out 204; private inputs removed. Writes tested with fixtures.
+Evidence: ignored `frontend/target/admin-cinema-polish-2026-10-28/`.
+Original alignment report, prior uncommitted work, backend/API/database/Flyway,
+root fonts/theme/config, other modules and dependencies preserved. No commit/push/
+deployment. Stop for review; do not proceed to another module.
+
+## ADMIN Cinema / Hall / Seat Stitch alignment - 2026-10-28
+
+**Functional PASS; visual PASS for contract-compatible reference adaptation.**
+[Report](../reports/2026-10-28_admin-cinema-hall-seat-stitch-alignment_report.md).
+Live MCP verified project `1208499799798658711`, Hall reference
+`9eca84f2fdaf4cf69b1e68dc9180270c` and Seat reference
+`c3f01a57af1342789159f2b26b83b69c`; actual HTML/screenshots inspected.
+Scoped sidebar/header, Cinema/Hall rows/forms and Seat row-map/inspector implemented.
+Other ADMIN/Manager/Customer modules retain existing presentation. All seven routes,
+API adapters, authentication/authorization and business constraints preserved.
+Opaque label/API order retained; no synthesized aisles or split COUPLE units.
+No copied prototype data, reset/bulk operations, unsupported maintenance rule or price.
+
+Final tsc/build PASS; lint 0 errors, 12 existing historical-script warnings;
+306/306 unit PASS; **166/166 selected Edge PASS** in one final complete run,
+160 baseline plus 6 new cases, no failures/skips/retries. Real PRIMARY `pnpm dev`
+READY, V18/V18 with 18 valid checksums, zero pending/failed; migrations skipped.
+9 real smoke groups and 21 route/width checks PASS at 390/768/1440px;
+real login/owned GETs/native validation/reload/menu/logout verified, 0 browser errors.
+No ADMIN writes attempted on Neon; unchanged catalog projections checked.
+Mutation/conflict/authorization regressions use labeled HTTP fixtures.
+Normal auth session metadata is separate: initial harness timing/logout URL errors
+were fixed; earliest smoke session revocation was not verified. Later UI logout 204;
+private auth input deleted. No manual database cleanup or business-data mutation.
+
+Visual evidence under ignored `frontend/target/admin-cinema-stitch-2026-10-28/`;
+three 1440px comparison pairs and all real route/viewport screenshots reviewed.
+No dedicated Cinema/Hall form/mobile export found: documented shared-reference
+adaptations, not pixel-identity claims. Backend/API/migrations/config/dependencies/
+Stitch unchanged. No commit/push/deploy. Stop for user review; do not start next module.
+
 ## PRIMARY Neon startup repair - 2026-10-28 - PASS
 
 [Report](../reports/2026-10-28_neon-flyway-v14-startup-fix_report.md),
