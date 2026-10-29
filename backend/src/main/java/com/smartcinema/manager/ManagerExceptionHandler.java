@@ -12,7 +12,7 @@ import com.smartcinema.admin.*;
 import com.smartcinema.movie.InvalidMovieRequestException;
 import com.smartcinema.discovery.DiscoveryRequestException;
 
-@RestControllerAdvice(assignableTypes={ManagerController.class,AdminManagerController.class,ManagerStaffController.class})
+@RestControllerAdvice(assignableTypes={ManagerController.class,AdminManagerController.class,ManagerStaffController.class,ManagerBookingController.class})
 public class ManagerExceptionHandler {
     @ExceptionHandler(ManagerFailure.class) ResponseEntity<ProblemDetail> failure(ManagerFailure failure){return problem(failure.status());}
     @ExceptionHandler({InvalidMovieRequestException.class,DiscoveryRequestException.class,HttpMessageNotReadableException.class}) ResponseEntity<ProblemDetail> invalid(){return problem(400);}

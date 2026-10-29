@@ -1,5 +1,33 @@
 # Current AI handoff
 
+## MANAGER Booking Management backend - 2026-10-29
+
+**Implemented; automated PASS. Real authenticated MANAGER positive path BLOCKED.**
+[Report](../reports/2026-10-29_manager-booking-management-backend_report.md),
+[contract](../api/manager-booking-management-contract-v1.0.md).
+GET `/api/v1/manager/bookings` and `/api/v1/manager/bookings/{bookingId}` only.
+Existing current ACTIVE/effective Manager scope repeated in list/count/detail/child
+reads. Exact ID/code search, Cinema/Showtime/state/latest-Payment/date filters,
+bounded pagination/stable order; immutable money/Concession/Seat snapshots read.
+Customer PII, QR/Ticket codes, Hold IDs and provider secrets omitted. Raw Ticket
+rows/counts and Payment attempts do not finalize Booking or promise issuance.
+No writer, financial/Booking lifecycle change, migration or frontend work.
+
+Final `mvn verify`: 597 discovered, **254 executed PASS**, 0 failures/errors,
+343 pre-existing conditional skips; all **27 new cases ran**, including 8 enforced
+PostgreSQL READ ONLY/CTE fixture tests. Synthetic query rows were never persisted
+and are not real Manager/provider/financial proof. Snapshot preservation PASS.
+Added isolated repository mock required by existing application context; affected
+15/15 tests passed, then full verification passed. No tests weakened/skipped/retried.
+
+Real root PRIMARY `pnpm dev` READY: V18/V18, 18 valid checksums, pending/failed0,
+migration skipped. Spring/Next/API proxy and 8 actual Edge/HTTP checks PASS.
+Read-only real-data probe: 0 ACTIVE/effectively assigned MANAGER; authenticated
+positive endpoints/live revocation NOT RUN/BLOCKED. No account/token fabrication,
+business-data mutation, provider enablement, new DB, privileges, ownership or roles.
+No commit/push/deploy. Evidence in ignored backend target folder named in report.
+Stop; positive real-Manager verification/frontends require separate instruction.
+
 ## ADMIN Cinema / Hall / Seat visual polish - 2026-10-28
 
 **Functional PASS; visual PASS for reference adaptation, not pixel identity.**
