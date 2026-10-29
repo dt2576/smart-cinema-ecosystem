@@ -1,5 +1,46 @@
 # Current AI handoff
 
+## MANAGER Booking Management frontend - 2026-10-29
+
+**Implemented; automated functional PASS; real authenticated PRIMARY positive
+verification BLOCKED. Visual PASS for contract-compatible Stitch reproduction,
+not measured pixel identity.**
+[Report](../reports/2026-10-29_manager-booking-management-frontend_report.md).
+Live Stitch current simplified List `413b4b3b6d744731933b6ab325dead8a` and Detail
+`a6990e8019604febaecb035f3ed34b06` were inspected through MCP, actual HTML/images
+downloaded. Cached images omit some content; current HTML was rendered for direct
+comparison. Routes `/manager/bookings` and `/manager/bookings/[bookingId]` use
+the existing two GETs, current Manager scope, strict DTO/query validation and safe
+login resume. Exact string IDs/money, whole COUPLE Units, Payment attempts, actual
+Ticket rows/states and original timestamps retained. No PII/QR/provider secrets,
+local financial authority, mutation handlers or production mock data.
+
+Reference shell/cards/table/detail columns implemented in scoped CSS/components;
+existing Manager layouts remain, gaining only Booking navigation. Extra filters
+and secondary details expand on demand. Unsupported daily KPIs use scoped/page
+counts; absent poster uses a neutral footprint; unsupported demo facts/actions
+omitted. Four-width browser comparison/correction at390/768/1280/1440; actual CDP
+font glyph evidence confirms Space Grotesk/Plus Jakarta Sans including sampled
+Vietnamese, no sampled system fallback. Sidebar288/header64 and desktop H1 metrics
+match HTML reference. Local tablet table scroll, mobile cards/dialog, focus and
+overflow verified. Detailed limitations and screenshot links are in the report.
+
+Baseline309 unit cases; final **319/319 PASS**, tsc/build PASS, lint0 errors with
+12 existing historical-script warnings. Final selected Edge regression **199/199
+PASS**, including30 new Booking cases; no skips/retries. Dropdown labeling and
+badge text/icon issues found by earlier runs were corrected without weakening
+assertions. Actual root PRIMARY `pnpm dev` READY: V18/V18, pending/failed0,
+checksums valid, migration skipped. Real HTTP/browser9/9 PASS for proxy/anonymous
+denials/login entry; separate READ ONLY probe found0 ACTIVE/effectively assigned
+MANAGER. Positive authenticated Neon list/detail/live scope remains NOT RUN,
+BLOCKED; fixture success is not real Manager/financial proof.
+
+No backend/API/database/migration/role/owner/global-theme/dependency changes, no
+account provisioning or Neon business-data writes. QA disabled background cleanup,
+mail delivery and provider only in process environment; env files unchanged.
+Evidence ignored under `frontend/target/manager-booking-2026-10-29/`.
+No staging/commit/push/deploy. Stop; no next module automatically.
+
 ## MANAGER Booking Management backend - 2026-10-29
 
 **Implemented; automated PASS. Real authenticated MANAGER positive path BLOCKED.**

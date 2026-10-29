@@ -9,6 +9,7 @@ import { getManagerCinemas, OperationsApiError } from "@/features/manager/manage
 import { useMovieRequest } from "@/features/movie/use-movie-request";
 import { OperationsState } from "@/features/manager/operations-ui";
 import type { AdminCinema } from "@/features/admin/admin-configuration.types";
+import { ManagerBookingShell } from "@/features/manager/manager-booking-shell";
 
 const ManagerContext = createContext<{ accessToken: string; cinemas: AdminCinema[] } | null>(null);
 export function useManager() { const value = useContext(ManagerContext); if (!value) throw new Error("Manager scope must be verified."); return value; }
@@ -21,7 +22,8 @@ export function ManagerShell({ children }: { children: ReactNode }) {
     <Link className="inline-flex min-h-11 items-center text-accent underline" href="/">Quay về Smart Cinema</Link></main>;
   if (!isHydrated || !session || scope.loading || scope.error || !scope.data) return message;
   // A successful scoped backend read is the authority; stored role is not authorization.
-  const links = [["/manager/cinemas", "Rạp được phân công"], ["/manager/seats", "Quản lý tình trạng ghế"], ["/manager/showtimes", "Quản lý suất chiếu"], ["/manager/staff", "Nhân viên tại rạp"]];
+  if (pathname === "/manager/bookings" || pathname.startsWith("/manager/bookings/")) return <ManagerContext.Provider value={{ accessToken: token, cinemas: scope.data }}><ManagerBookingShell fullName={session.user.fullName} cinemas={scope.data} logout={() => void logoutSession()}>{children}</ManagerBookingShell></ManagerContext.Provider>;
+  const links = [["/manager/cinemas", "Rạp được phân công"], ["/manager/seats", "Quản lý tình trạng ghế"], ["/manager/showtimes", "Quản lý suất chiếu"], ["/manager/bookings", "Quản lý đặt vé"], ["/manager/staff", "Nhân viên tại rạp"]];
   const staffRoute = pathname === "/manager/staff" || /^\/manager\/cinemas\/[^/]+\/staff(?:\/[^/]+)?$/.test(pathname);
   return <ManagerContext.Provider value={{ accessToken: token, cinemas: scope.data }}><div className="min-h-screen bg-canvas">
     <a href="#manager-content" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-action focus:p-4 focus:text-on-action">Chuyển đến nội dung</a>
