@@ -1,5 +1,42 @@
 # Current AI handoff
 
+## PRIMARY MANAGER account and authenticated verification - completed 2026-10-30
+
+**ACCOUNT CREATION PASS; REAL AUTHENTICATION PASS; MANAGER FUNCTIONAL PASS;
+CINEMA SCOPE / ROLE ISOLATION PASS.**
+[Report](../reports/2026-10-30_primary-manager-account-verification_report.md).
+
+Explicitly authorized PRIMARY Neon operation created exactly one ACTIVE MANAGER:
+user `5`, `qa.manager.20261030@example.test`, assigned only to existing Cinema `1`
+(`[DEMO] Smart Cinema Central`). Assignment `1` is ACTIVE / MANAGER with immutable
+effectiveAt `2026-10-30T02:17:03.139811Z`; mandatory assignment audit `1` records
+the real authenticated ADMIN actor. No existing account, catalog, Booking,
+Payment, Ticket, grants, owner, role membership or migration was changed.
+Final Flyway installed/source **V18/V18**, pending/failed zero, 18 checksums valid.
+
+Private credentials are in owner-only, Git-ignored
+`backend/.env.neon-manager-test`; open locally, never paste into chat or reports.
+The one-time ignored operator helper is not a startup seed. Its explicit rerun
+reused the same account/assignment without mutation or password rotation.
+All six refresh-token records created by normal authentication checks were revoked.
+
+Root `pnpm dev` against PRIMARY reached backend/frontend/proxy READY. Real normal
+login and read-only checks: **58/58 HTTP, 20/20 Edge browser groups PASS** across
+Cinema operations, Staff, Bookings, Dashboard/Reports, scope denial, ADMIN denial,
+reload and logout. Staff has no existing membership in Cinema 1: real Staff detail
+and assignment actions were NOT RUN. Existing owned Booking is CANCELLED;
+positive revenue/PAID/issuance/check-in/provider results were not manufactured.
+
+Relevant regression: **119 backend tests executed PASS** (153 discovered, 34
+conditional database-write cases not enabled), including 26 PostgreSQL READ ONLY
+tests; **328/328 frontend unit, 129/129 selected Edge Playwright PASS**. Fixture
+regression is separate from actual authenticated Neon HTTP/browser evidence.
+
+This resolves the older missing-Manager verification blocker for Cinema 1 only;
+historical report outcomes remain unchanged. Account stays ACTIVE for manual
+testing using root `pnpm dev` and `/login`. No STAFF POS or other module started;
+no commit/push/deployment. Stop at this task boundary.
+
 ## MANAGER Reporting & Dashboard frontend - completed 2026-10-30
 
 **FUNCTIONAL PASS (automated frontend); VISUAL PASS (contract-compatible Stitch
