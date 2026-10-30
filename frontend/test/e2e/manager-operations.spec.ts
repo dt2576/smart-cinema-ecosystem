@@ -33,10 +33,14 @@ async function setup(page: Page, role = "MANAGER") {
   });
   return state;
 }
-test("assigned Cinema detail and scoped navigation expose no Admin/statistics", async ({ page }) => {
+test("assigned Cinema detail keeps Admin controls absent and reports use Manager routes", async ({ page }) => {
   const state = await setup(page); await page.goto("/manager/cinemas"); await page.getByRole("link", { name: "Xem chi tiết" }).click();
   await expect(page.getByRole("heading", { name: "Danh sách phòng chiếu" })).toBeVisible(); await expect(page.getByRole("link", { name: "Quản lý tình trạng ghế", exact: true })).toHaveCount(2);
-  await expect(page.getByRole("link", { name: /Phân công Quản lý|Báo cáo/ })).toHaveCount(0); expect(state.writes).toHaveLength(0);
+  await expect(page.getByRole("link", { name: /Phân công Quản lý/ })).toHaveCount(0);
+  await expect(page.locator('a[href^="/admin"]')).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "Tổng quan", exact: true })).toHaveAttribute("href", "/manager/dashboard");
+  await expect(page.getByRole("link", { name: "Báo cáo & Thống kê", exact: true })).toHaveAttribute("href", "/manager/reports");
+  expect(state.writes).toHaveLength(0);
 });
 test("Hall creation and frozen capacity edit use exact API fields", async ({ page }) => {
   const state = await setup(page); await page.goto("/manager/cinemas/11"); await page.getByRole("button", { name: "Thêm phòng chiếu", exact: true }).click();

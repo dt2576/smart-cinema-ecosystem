@@ -1,5 +1,47 @@
 # Current AI handoff
 
+## MANAGER Reporting & Dashboard frontend - completed 2026-10-30
+
+**FUNCTIONAL PASS (automated frontend); VISUAL PASS (contract-compatible Stitch
+reproduction); REAL AUTHENTICATED MANAGER BLOCKED.**
+[Report](../reports/2026-10-29_manager-reporting-dashboard-frontend_report.md).
+Task/reference retrieval began2026-10-29; final verification completed2026-10-30.
+
+Routes `/manager/dashboard` and `/manager/reports` integrate the5 existing GETs
+from Manager Reporting v1.0, with current server scope/authentication, exact string
+IDs/counts/money, inclusive UI days/exclusive API `to`, safe refresh, stale-read
+protection and independent ranking/product pagination. No frontend financial
+recognition, status finalization, net-product discount allocation or mutation API.
+Beyond-last product pages now distinguish an empty page from a period with no
+sales and provide safe first-page recovery.
+
+Live Stitch references: Dashboard `87b091c31f314e2dbec333782d8bbb2f`, Reports
+`ced1bfc2953941c8a64893756154b63b`, project1208499799798658711. Actual HTML/JPEGs
+retrieved; incomplete cached JPEG content is disclosed, and current HTML was
+rendered in Edge for direct comparisons. Four-width comparisons at1440/1280/768/
+390, loaded Vietnamese Space Grotesk/Jakarta glyph evidence, responsive navigation,
+44px controls and no document overflow. No pixel-identity or independent mobile
+Stitch design claim. Contract limitations/demo-copy corrections are in the report.
+
+Baseline319 unit tests; final **328/328 PASS**, typecheck/build PASS, lint0 errors
+with12 existing historical-script warnings. Final Reporting **34/34 PASS** and
+complete selected Edge regression **233/233 PASS**,0 skips/retries, one worker.
+All199 original selected cases remain. Old Manager navigation assertion now denies
+ADMIN routes explicitly while permitting the approved Manager reporting links.
+
+Actual PRIMARY root `pnpm dev` and API proxy READY, Flyway **V18/V18**, pending/
+failed0,18 checksums valid; no migration. Real anonymous HTTP/browser **13/13 PASS**;
+read-only repository/schema probe passed unknown-actor scope denial. Fresh PRIMARY
+still has0 ACTIVE/effectively assigned Managers: real authenticated positive reads,
+live revocation and representative financial-data rendering remain BLOCKED, not
+verified by fixtures. No account provisioning, seed, financial data fabrication,
+Neon business-data write or backend/API/Flyway/role/owner change.
+
+Evidence ignored under `frontend/target/manager-reporting-2026-10-29/`. This task
+adds no package dependency, global theme change, staging, commit, push or deployment.
+Stop. Separately authorize authenticated verification with an approved existing
+Manager when available; do not create an account or start another module automatically.
+
 ## MANAGER Reporting & Dashboard backend - 2026-10-29
 
 **IMPLEMENTATION PASS; AUTOMATED TESTS PASS; REAL AUTHENTICATED MANAGER BLOCKED.**

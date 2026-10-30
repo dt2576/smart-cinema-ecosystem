@@ -11,6 +11,8 @@ const links = [
   ["/manager/showtimes", "Quản lý suất chiếu", "schedule"],
   ["/manager/bookings", "Quản lý đặt vé", "confirmation_number"],
   ["/manager/staff", "Nhân viên tại rạp", "badge"],
+  ["/manager/dashboard", "Tổng quan", "theaters"],
+  ["/manager/reports", "Báo cáo & Thống kê", "account_balance_wallet"],
 ] as const;
 // Only Booking routes adopt this reference shell. Existing modules retain their layout.
 export function ManagerBookingShell({ fullName, cinemas, logout, children }: { fullName: string; cinemas: { id: string; name: string }[]; logout: () => void; children: ReactNode }) {
