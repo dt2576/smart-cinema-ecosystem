@@ -12,10 +12,22 @@ public class VnpayRepository {
         if(!Boolean.TRUE.equals(jdbc.queryForObject("SELECT EXISTS(SELECT 1 FROM users WHERE id=? AND status='ACTIVE' AND role='CUSTOMER')",Boolean.class,user))) {
             throw new org.springframework.security.access.AccessDeniedException("Active Customer required");
         }
+        return projection(booking,payment,user,"customer_id");
+    }
+    public VnpaySubmission ownedCounter(long booking,long payment,long actor) {
+        if(!Boolean.TRUE.equals(jdbc.queryForObject("""
+            SELECT EXISTS(SELECT 1 FROM bookings b JOIN showtimes st ON st.id=b.showtime_id JOIN halls h ON h.id=st.hall_id
+            JOIN users u ON u.id=b.selling_staff_id WHERE b.id=? AND u.id=? AND u.role='STAFF' AND u.status='ACTIVE'
+            AND EXISTS(SELECT 1 FROM cinema_assignments a WHERE a.user_id=u.id AND a.cinema_id=h.cinema_id
+            AND a.assignment_type='STAFF' AND a.status='ACTIVE' AND a.effective_at<=clock_timestamp()))
+            """,Boolean.class,booking,actor))) throw new SeatUnavailableException();
+        return projection(booking,payment,actor,"selling_staff_id");
+    }
+    private VnpaySubmission projection(long booking,long payment,long user,String ownerColumn) {
         var rows = jdbc.query("""
-            SELECT p.* FROM payment_transactions p JOIN bookings b ON b.id=p.booking_id JOIN users u ON u.id=b.customer_id
-            WHERE p.id=? AND b.id=? AND b.customer_id=? AND u.status='ACTIVE' AND u.role='CUSTOMER'
-            """, (r,i) -> new VnpaySubmission(r.getString("id"), r.getString("booking_id"),r.getString("status"),r.getBigDecimal("amount"),
+            SELECT p.* FROM payment_transactions p JOIN bookings b ON b.id=p.booking_id JOIN users u ON u.id=b.%s
+            WHERE p.id=? AND b.id=? AND b.%s=? AND u.status='ACTIVE' AND u.role='%s'
+            """.formatted(ownerColumn,ownerColumn,"customer_id".equals(ownerColumn)?"CUSTOMER":"STAFF"), (r,i) -> new VnpaySubmission(r.getString("id"), r.getString("booking_id"),r.getString("status"),r.getBigDecimal("amount"),
                 r.getString("merchant_code"),r.getString("merchant_reference"),r.getString("submitted_amount"),
                 r.getTimestamp("provider_created_at")==null?null:r.getTimestamp("provider_created_at").toInstant(),
                 r.getTimestamp("provider_expires_at")==null?null:r.getTimestamp("provider_expires_at").toInstant(),

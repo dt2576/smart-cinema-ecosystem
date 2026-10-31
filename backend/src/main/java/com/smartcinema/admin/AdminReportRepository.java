@@ -26,6 +26,11 @@ public class AdminReportRepository {
     public Metrics summary(AdminReportQuery q) {
         return named.queryForObject("WITH "+AdminReportSql.COMMON+AdminReportSql.SUMMARY,parameters(q),(r,n)->metrics(r));
     }
+    public CashTotals cashSummary(AdminReportQuery q) {
+        if(!Boolean.TRUE.equals(jdbc.queryForObject("SELECT to_regprocedure(current_schema()||'.staff_confirm_cash(bigint,bigint,bigint,numeric)') IS NOT NULL",Boolean.class))) return CashTotals.empty();
+        return named.queryForObject("WITH "+com.smartcinema.reporting.ReportSql.cashCommon(false)+AdminReportSql.SUMMARY,parameters(q),
+            (r,n)->new CashTotals(money(r,"revenue"),count(r,"confirmed_bookings"),count(r,"tickets_sold"),count(r,"guests_sold")));
+    }
     public List<Day> daily(AdminReportQuery q) {
         return named.query("WITH "+AdminReportSql.COMMON+AdminReportSql.DAILY,parameters(q),
             (r,n)->new Day(r.getDate("report_day").toLocalDate(),metrics(r)));

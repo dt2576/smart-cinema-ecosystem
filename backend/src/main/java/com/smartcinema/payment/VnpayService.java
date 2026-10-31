@@ -21,15 +21,22 @@ public class VnpayService {
     }
     @Transactional
     public VnpayRedirectResponse submit(long booking,long payment,long user,String ip) {
+        return submit(booking,payment,user,ip,false);
+    }
+    @Transactional
+    public VnpayRedirectResponse submitCounter(long booking,long payment,long actor,String ip) {
+        return submit(booking,payment,actor,ip,true);
+    }
+    private VnpayRedirectResponse submit(long booking,long payment,long user,String ip,boolean counter) {
         settings.submissionReady();
-        VnpaySubmission before=repository.owned(booking,payment,user);
+        VnpaySubmission before=counter?repository.ownedCounter(booking,payment,user):repository.owned(booking,payment,user);
         VnpayProtocol.amount(before.amount()); settings.amount(before.amount());
         if(before.reference()!=null && !settings.confirmed("reopened-url")) { throw new VnpayUnavailableException(); }
         if(before.reference()!=null && !repository.queryAllowsRecovery(payment,settings.value("query-delay","PT5M"))) {
             throw new VnpayConflictException("Payment remains unresolved. Await verified query recovery before reopening.");
         }
         repository.bind(payment,user,settings.merchant(),settings.returnUrl(),ip,settings.value("order-type",""));
-        VnpaySubmission bound=repository.owned(booking,payment,user);
+        VnpaySubmission bound=counter?repository.ownedCounter(booking,payment,user):repository.owned(booking,payment,user);
         long minimum=Long.parseLong(settings.value("minimum-window-seconds","0"));
         if(minimum<=0) { throw new VnpayUnavailableException(); }
         if(!bound.expiresAt().isAfter(Instant.now().plusSeconds(minimum))) {

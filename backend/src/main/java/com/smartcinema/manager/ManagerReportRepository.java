@@ -22,8 +22,13 @@ public class ManagerReportRepository {
         return AdminReportRepository.parameters(query).addValue("actor",actor);
     }
     public Summary summary(long actor,AdminReportQuery query) {
-        return jdbc.queryForObject("WITH "+ManagerReportSql.COMMON+ManagerReportSql.SUMMARY,parameters(actor,query),
+        var result=jdbc.queryForObject("WITH "+ManagerReportSql.COMMON+ManagerReportSql.SUMMARY,parameters(actor,query),
                 (r,n)->new Summary(Period.of(query),AdminReportRepository.metrics(r),activity(r)));
+        if(!Boolean.TRUE.equals(jdbc.getJdbcTemplate().queryForObject("SELECT to_regprocedure(current_schema()||'.staff_confirm_cash(bigint,bigint,bigint,numeric)') IS NOT NULL",Boolean.class)))
+            return new Summary(result.period(),result.metrics(),result.activity(),com.smartcinema.admin.AdminReportResponse.CashTotals.empty());
+        var cash=jdbc.queryForObject("WITH "+com.smartcinema.reporting.ReportSql.cashCommon(true)+com.smartcinema.reporting.ReportSql.SUMMARY,parameters(actor,query),
+            (r,n)->new com.smartcinema.admin.AdminReportResponse.CashTotals(r.getBigDecimal("revenue").setScale(4,RoundingMode.UNNECESSARY).toPlainString(),count(r,"confirmed_bookings"),count(r,"tickets_sold"),count(r,"guests_sold")));
+        return new Summary(result.period(),result.metrics(),result.activity(),cash);
     }
     public List<Day> daily(long actor,AdminReportQuery query) {
         return jdbc.query("WITH "+ManagerReportSql.COMMON+ManagerReportSql.DAILY,parameters(actor,query),

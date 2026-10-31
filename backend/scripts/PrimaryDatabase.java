@@ -4,6 +4,7 @@ import java.nio.file.*;
 import java.nio.file.attribute.*;
 import java.net.URI;
 import java.sql.*;
+import java.security.MessageDigest;
 import java.util.*;
 import java.util.logging.Logger;
 import javax.sql.DataSource;
@@ -17,6 +18,8 @@ public final class PrimaryDatabase {
     private static Properties runtime;
     private static String database;
     private record Status(String installed, int source, int pending, int failed) { }
+    static final String V19_SHA256="E528550DD23B4658D4C457E21032EFA3C16F0AE788659A5788E163202CCA0E1E";
+    record MigrationPlan(List<Integer> versions,Set<String> owners,Set<String> createOwners,boolean userReferences,int target) { }
 
     public static void main(String[] args) {
         try {
@@ -28,7 +31,7 @@ public final class PrimaryDatabase {
             if (args[0].equals("status")) return;
             if (status.pending == 0) { System.out.println("MIGRATION=SKIPPED; schema is current; migration credentials not loaded"); return; }
             if (args[0].equals("check")) throw new IllegalStateException("Pending PRIMARY migrations require a separately approved migration connection. Services were not started. Run pnpm db:status; review docs/development/neon-migration-workflow.md");
-            migrate();
+            migrate(status);
         } catch (Exception failure) {
             System.err.println("PRIMARY STARTUP STOPPED: " + safe(failure.getMessage()));
             for (Throwable cause = failure.getCause(); cause != null; cause = cause.getCause()) System.err.println("CAUSE: " + safe(cause.getMessage()));
@@ -72,7 +75,7 @@ public final class PrimaryDatabase {
     private static Connection connect(String user, String password, boolean readOnly) throws SQLException {
         Properties login = new Properties(); login.setProperty("user", user); login.setProperty("password", password);
         login.setProperty("readOnly", Boolean.toString(readOnly)); login.setProperty("readOnlyMode", "always");
-        login.setProperty("connectTimeout", "10"); login.setProperty("socketTimeout", "30"); login.setProperty("ApplicationName", "smartcinema_primary_dev");
+        login.setProperty("connectTimeout", "10"); login.setProperty("socketTimeout", readOnly?"30":"150"); login.setProperty("ApplicationName", "smartcinema_primary_dev");
         Connection db = DriverManager.getConnection(runtime.getProperty("DB_URL"), login);
         try {
             db.setReadOnly(readOnly);
@@ -150,24 +153,78 @@ public final class PrimaryDatabase {
                 || p.getProperty("user").equals(runtime.getProperty("DB_USERNAME")) || p.getProperty("password", "").isBlank()) throw new IllegalStateException("Separate migration login on the exact PRIMARY target required");
         return p;
     }
-    private static void migrate() throws Exception {
-        Properties p = migrationCredentials();
-        try (var db = connect(p.getProperty("user"), p.getProperty("password"), true); var command = db.createStatement()) {
-            try (var role = command.executeQuery("SELECT NOT rolsuper AND NOT rolcreatedb AND NOT rolcreaterole AND NOT rolbypassrls FROM pg_roles WHERE rolname=current_user")) {
-                if (!role.next() || !role.getBoolean(1)) throw new IllegalStateException("Migration login must have no superuser/CREATEDB/CREATEROLE/BYPASSRLS authority");
-            }
-            for (String owner : List.of("smart_cinema_staff_owner", "smart_cinema_hold_owner", "smart_cinema_configuration_owner")) try (var query = db.prepareStatement("SELECT pg_has_role(current_user,?, 'USAGE') AND pg_has_role(current_user,?, 'SET')")) {
-                query.setString(1, owner); query.setString(2, owner); try (var row = query.executeQuery()) { if (!row.next() || !row.getBoolean(1)) throw new IllegalStateException("Operator-reviewed migration authority missing for " + owner); }
-            }
-            try (var query = command.executeQuery("SELECT has_schema_privilege(current_user,'public','CREATE') AND has_table_privilege(current_user,'public.flyway_schema_history','INSERT') AND has_schema_privilege('smart_cinema_staff_owner','public','CREATE') AND has_schema_privilege('smart_cinema_hold_owner','public','CREATE') AND has_schema_privilege('smart_cinema_configuration_owner','public','CREATE') AND NOT pg_has_role(current_user,'neon_superuser','MEMBER')")) {
-                if (!query.next() || !query.getBoolean(1)) throw new IllegalStateException("Reviewed schema/history privileges required; broad Neon administrator inheritance denied");
-            }
-            try (var query = db.prepareStatement("SELECT NOT pg_has_role(?,current_user,'USAGE') AND NOT pg_has_role(?,current_user,'SET')")) {
-                query.setString(1, runtime.getProperty("DB_USERNAME")); query.setString(2, runtime.getProperty("DB_USERNAME"));
-                try (var row = query.executeQuery()) { if (!row.next() || !row.getBoolean(1)) throw new IllegalStateException("Application runtime must not inherit or SET migration identity"); }
+    static MigrationPlan migrationPlan(int installed,List<Integer> pending) {
+        if(installed<13 || pending.isEmpty())throw new IllegalStateException("No reviewed migration range");
+        var versions=pending.stream().sorted().toList();int expected=installed+1;
+        var owners=new TreeSet<String>();var create=new TreeSet<String>();boolean references=false;
+        for(int version:versions) {
+            if(version!=expected++ || version<14 || version>19)throw new IllegalStateException("Unsupported or noncontiguous migration range");
+            switch(version) {
+                case 14 -> owners.add("smart_cinema_staff_owner");
+                case 15,16 -> {owners.add("smart_cinema_hold_owner");create.add("smart_cinema_hold_owner");}
+                case 17 -> {owners.addAll(Set.of("smart_cinema_staff_owner","smart_cinema_configuration_owner"));create.add("smart_cinema_staff_owner");}
+                case 18 -> {owners.add("smart_cinema_staff_owner");create.add("smart_cinema_staff_owner");}
+                case 19 -> {owners.addAll(Set.of("smart_cinema_hold_owner","smart_cinema_staff_owner"));create.add("smart_cinema_hold_owner");references=true;}
+                default -> throw new IllegalStateException("Unreviewed migration");
             }
         }
-        Flyway f = flyway(p.getProperty("user"), p.getProperty("password"), false);
+        if(references && (installed!=18 || !versions.equals(List.of(19))))throw new IllegalStateException("V19 requires its separately reviewed V18 to V19 operation");
+        return new MigrationPlan(versions,Set.copyOf(owners),Set.copyOf(create),references,versions.getLast());
+    }
+    static void verifyMigrationArtifact(MigrationPlan plan,Path directory)throws Exception {
+        if(plan.versions().contains(19)) {
+            Path file=directory.resolve("V19__enable_staff_counter_sales.sql");
+            if(!Files.isRegularFile(file)||Files.isSymbolicLink(file)
+                ||!HexFormat.of().withUpperCase().formatHex(MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(file))).equals(V19_SHA256))
+                throw new IllegalStateException("V19 artifact differs from the reviewed SHA-256; no migration attempted");
+        }
+    }
+    static boolean check(Connection db,String sql,Object... values)throws SQLException {
+        try(var s=db.prepareStatement(sql)){for(int i=0;i<values.length;i++)s.setObject(i+1,values[i]);try(var r=s.executeQuery()){return r.next()&&r.getBoolean(1);}}
+    }
+    static void validateMigrationAuthority(Connection db,MigrationPlan plan,String runtimeRole,String schema)throws SQLException {
+        if(!schema.matches("[a-z][a-z0-9_]*"))throw new IllegalStateException("Invalid fixed migration schema");
+        if(!check(db,"SELECT current_user=session_user AND current_user<>? AND current_schema()=? AND current_setting('transaction_read_only')='on'",runtimeRole,schema))
+            throw new IllegalStateException("Independent read-only migration preflight identity/schema required");
+        if(!check(db,"SELECT NOT rolsuper AND NOT rolcreatedb AND NOT rolcreaterole AND NOT rolreplication AND NOT rolbypassrls AND rolcanlogin FROM pg_roles WHERE rolname=current_user"))
+            throw new IllegalStateException("Migration login must have no superuser/CREATEDB/CREATEROLE/REPLICATION/BYPASSRLS authority");
+        var actual=new TreeSet<String>();
+        try(var s=db.createStatement();var r=s.executeQuery("SELECT role.rolname,m.admin_option,m.inherit_option,m.set_option FROM pg_auth_members m JOIN pg_roles role ON role.oid=m.roleid JOIN pg_roles member ON member.oid=m.member WHERE member.rolname=current_user")) {
+            while(r.next()){actual.add(r.getString(1));if(r.getBoolean(2)||!r.getBoolean(3)||!r.getBoolean(4))throw new IllegalStateException("Migration owner memberships require INHERIT/SET and no ADMIN OPTION");}
+        }
+        if(!actual.equals(plan.owners()))throw new IllegalStateException("Migration owner memberships must exactly match the reviewed version range");
+        for(String owner:plan.owners())if(!check(db,"SELECT pg_has_role(current_user,?,'USAGE') AND pg_has_role(current_user,?,'SET')",owner,owner))
+            throw new IllegalStateException("Required migration owner authority missing");
+        for(String owner:plan.createOwners())if(!check(db,"SELECT has_schema_privilege(?,?,'CREATE')",owner,schema))
+            throw new IllegalStateException("New protected function owner requires schema CREATE");
+        if(!check(db,"SELECT has_schema_privilege(current_user,?,'USAGE') AND has_schema_privilege(current_user,?,'CREATE') AND has_table_privilege(current_user,?,'SELECT') AND has_table_privilege(current_user,?,'INSERT')",schema,schema,schema+".flyway_schema_history",schema+".flyway_schema_history"))
+            throw new IllegalStateException("Reviewed schema/history privileges required");
+        if(plan.userReferences()&&!check(db,"SELECT has_column_privilege(current_user,?,'id','REFERENCES')",schema+".users"))
+            throw new IllegalStateException("V19 requires users(id) REFERENCES for its selling Staff foreign key");
+        if(check(db,"SELECT EXISTS(SELECT 1 FROM pg_roles WHERE rolname='neon_superuser' AND pg_has_role(current_user,oid,'MEMBER'))"))
+            throw new IllegalStateException("Broad Neon administrator inheritance denied");
+        if(!check(db,"SELECT NOT pg_has_role(?,current_user,'USAGE') AND NOT pg_has_role(?,current_user,'SET')",runtimeRole,runtimeRole))
+            throw new IllegalStateException("Application runtime must not inherit or SET migration identity");
+    }
+    static Flyway migrationFlyway(DataSource data,String schema,MigrationPlan plan,String... locations) {
+        return Flyway.configure().dataSource(data).defaultSchema(schema).schemas(schema).createSchemas(false)
+            .locations(locations).validateMigrationNaming(true).validateOnMigrate(true).target(Integer.toString(plan.target()))
+            .executeInTransaction(true).cleanDisabled(true).baselineOnMigrate(false).outOfOrder(false)
+            .connectRetries(0).skipDefaultCallbacks(true).initSql("SET lock_timeout='5s'; SET statement_timeout='120s'; SET idle_in_transaction_session_timeout='30s'").load();
+    }
+    private static void migrate(Status initial) throws Exception {
+        var pending=Arrays.stream(flyway(runtime.getProperty("DB_USERNAME"),runtime.getProperty("DB_PASSWORD"),true).info().pending())
+            .map(m->Integer.parseInt(m.getVersion().toString())).toList();
+        MigrationPlan plan=migrationPlan(Integer.parseInt(initial.installed()),pending);
+        verifyMigrationArtifact(plan,Path.of("src/main/resources/db/migration"));
+        Properties p = migrationCredentials();
+        try (var db = connect(p.getProperty("user"), p.getProperty("password"), true)) {
+            validateMigrationAuthority(db,plan,runtime.getProperty("DB_USERNAME"),"public");
+        }
+        Flyway f = migrationFlyway(source(p.getProperty("user"),p.getProperty("password"),false),"public",plan,"filesystem:src/main/resources/db/migration");
+        if(!Arrays.stream(f.info().pending()).map(m->Integer.parseInt(m.getVersion().toString())).toList().equals(plan.versions()))
+            throw new IllegalStateException("Pending migrations changed during preflight; no automatic retry");
+        verifyMigrationArtifact(plan,Path.of("src/main/resources/db/migration"));
         var result = f.migrate(); System.out.println("MIGRATIONS_EXECUTED=" + result.migrationsExecuted);
         Status finalStatus = status(); if (finalStatus.pending != 0 || finalStatus.failed != 0) throw new IllegalStateException("Migration did not reach current source");
     }

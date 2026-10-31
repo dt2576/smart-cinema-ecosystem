@@ -27,28 +27,36 @@ public class BookingRepository {
         var parameters = parameters(bookingId, userId).addValue("now", Timestamp.from(now));
         if (!Boolean.TRUE.equals(jdbc.queryForObject("SELECT EXISTS(SELECT 1 FROM users WHERE id=:user AND role='CUSTOMER' AND status='ACTIVE')",
                 parameters, Boolean.class))) { throw new AccessDeniedException("Customer unavailable"); }
-        // Labels/context are live references; only the dictionary's Seat type/price and monetary totals are snapshots.
+        return projection(bookingId,userId,now,"customer_id");
+    }
+    /** POS service authorizes current STAFF/scope before this owner-restricted projection. */
+    public BookingResponse counterDetail(long bookingId,long actor,Instant now) {
+        return projection(bookingId,actor,now,"selling_staff_id");
+    }
+    private BookingResponse projection(long bookingId,long userId,Instant now,String ownerColumn) {
+        var parameters = parameters(bookingId, userId).addValue("now", Timestamp.from(now));
+        // Fixed internal column names only; labels are live and prices are snapshots.
         var lines = jdbc.query("""
                 SELECT bs.*,s.row,s.number,h.id AS hold_id FROM booking_seats bs
                 JOIN bookings b ON b.id=bs.booking_id JOIN seats s ON s.id=bs.seat_id
                 JOIN seat_holds h ON h.booking_id=bs.booking_id AND h.seat_id=bs.seat_id
-                WHERE b.id=:id AND b.customer_id=:user ORDER BY bs.seat_id
-                """, parameters, (row, index) -> new BookingResponse.SeatLine(row.getString("id"), row.getString("seat_id"),
+                WHERE b.id=:id AND b.%s=:user ORDER BY bs.seat_id
+                """.formatted(ownerColumn), parameters, (row, index) -> new BookingResponse.SeatLine(row.getString("id"), row.getString("seat_id"),
                     row.getString("hold_id"), row.getString("row"), row.getString("number"), row.getString("seat_type_snapshot"),
                     "COUPLE".equals(row.getString("seat_type_snapshot")) ? 2 : 1,
                     row.getBigDecimal("unit_price_snapshot").toPlainString(), row.getBigDecimal("final_price").toPlainString()));
         var concessions = jdbc.query("""
                 SELECT bc.* FROM booking_concessions bc JOIN bookings b ON b.id=bc.booking_id
-                WHERE b.id=:id AND b.customer_id=:user ORDER BY bc.id
-                """, parameters, (row, index) -> new BookingResponse.ConcessionLine(row.getString("id"), row.getString("concession_item_id"),
+                WHERE b.id=:id AND b.%s=:user ORDER BY bc.id
+                """.formatted(ownerColumn), parameters, (row, index) -> new BookingResponse.ConcessionLine(row.getString("id"), row.getString("concession_item_id"),
                     row.getString("item_name_snapshot"), row.getString("category_snapshot"), row.getInt("quantity"),
                     row.getBigDecimal("unit_price_snapshot").toPlainString(), row.getBigDecimal("total_price").toPlainString()));
         var result = jdbc.query("""
                 SELECT b.*,s.movie_id,s.hall_id,s.start_time,m.title,h.name AS hall_name,h.cinema_id,c.name AS cinema_name,
                     CASE WHEN b.status='PENDING' AND b.expires_at<=:now THEN 'EXPIRED' ELSE b.status END AS effective_status
                 FROM bookings b JOIN showtimes s ON s.id=b.showtime_id JOIN movies m ON m.id=s.movie_id
-                JOIN halls h ON h.id=s.hall_id JOIN cinemas c ON c.id=h.cinema_id WHERE b.id=:id AND b.customer_id=:user
-                """, parameters, (row, index) -> new BookingResponse(row.getString("id"), row.getString("booking_code"),
+                JOIN halls h ON h.id=s.hall_id JOIN cinemas c ON c.id=h.cinema_id WHERE b.id=:id AND b.%s=:user
+                """.formatted(ownerColumn), parameters, (row, index) -> new BookingResponse(row.getString("id"), row.getString("booking_code"),
                     row.getString("effective_status"), row.getString("showtime_id"), row.getString("movie_id"), row.getString("title"),
                     row.getString("cinema_id"), row.getString("cinema_name"), row.getString("hall_id"), row.getString("hall_name"),
                     row.getTimestamp("start_time").toInstant(), row.getTimestamp("created_at").toInstant(), row.getTimestamp("expires_at").toInstant(),

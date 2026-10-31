@@ -12,7 +12,7 @@ public class AdminReportService {
     public AdminReportService(AdminAccessService access,AdminReportRepository repository) { this.access=access;this.repository=repository; }
     private void authorize(long actor) { repository.timeouts();access.requireAdminReadOnly(actor); }
     public Summary summary(long actor,AdminReportQuery query) {
-        authorize(actor);return new Summary(Period.of(query),repository.summary(query));
+        authorize(actor);return new Summary(Period.of(query),repository.summary(query),repository.cashSummary(query));
     }
     public Daily daily(long actor,AdminReportQuery query) {
         authorize(actor);return new Daily(Period.of(query),repository.daily(query));

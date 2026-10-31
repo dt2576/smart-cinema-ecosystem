@@ -1,5 +1,178 @@
 # Current AI handoff
 
+## Real PRIMARY STAFF account created and verified - 2026-10-31
+
+**CREATED AND VERIFIED.** User explicitly authorized `staff@gmail.com`, then supplied
+the required full name/phone. Account **6**, STAFF/ACTIVE, password setup complete;
+assignment **2**, ACTIVE STAFF at Cinema **1** ([DEMO] Smart Cinema Central).
+[Report](../reports/2026-10-31_primary-neon-staff-account-verification_report.md).
+Never copy its password or authentication tokens into handoffs/reports/source.
+
+Email absence rechecked inside the transaction. Existing protected onboarding
+commands and BCrypt used, invitation consumed/encrypted payload cleared before
+commit; no SMTP or configuration change. Original records/roles/ACLs/functions and
+Flyway preserved; exactly the requested account/assignment plus required onboarding,
+audit, revoked login session and new technical read-rate bucket added.
+
+Root pnpm dev is running with PRIMARY V19/V19, zero pending/failed, valid checksums.
+Real STAFF login/assigned scope/POS read/proxy/401/403/404/logout: **16/16 PASS**.
+Regression: 266 executed PASS, 407 existing opt-in skips, zero failures/errors;
+no DB fixture suites or financial writes. No eligible future Showtime at Cinema 1,
+so positive seat-map/Hold reads NOT RUN. No Hold/Booking/Payment/Ticket/account-other
+than this authorized STAFF created or changed. No next module, commit or push.
+
+## STAFF POS V19 PRIMARY deployment completed - 2026-10-30
+
+**V19 installed; real startup/safe API verification PASS.**
+[Deployment report](../reports/2026-10-30_staff-pos-v19-primary-deployment_report.md).
+The user requested the normal migration workflow without another recovery phase;
+provider recovery remains unverified and is disclosed, not claimed as a backup.
+
+Exact tested V19 moved to main/resources/db/migration; SHA-256 unchanged
+`E528550DD23B4658D4C457E21032EFA3C16F0AE788659A5788E163202CCA0E1E`.
+Migration test path updated and late-failure injection proves execution rather than
+duplicate-file rejection. Full mvn verify rerun: 304 executed PASS, 369 existing
+opt-in skips, zero errors/failures; includes 42/42 V19/POS with zero skips.
+The user explicitly approved the exact V19 operation. The minimum temporary login
+installed V19 once, then its grants/login/private credential file were removed.
+PRIMARY is V19/V19, zero pending/failed, all 19 checksums valid. Post-install full
+regression again passes with the same 304/42 counts. Root pnpm dev now runs normally:
+Spring Boot, Next.js and actual API proxy readiness PASS; migration credentials not
+loaded. Local ports 3000/8080 remain running. Live HTTP smoke **29/29 PASS**, including
+existing ADMIN/MANAGER sessions, management/report reads, scope and 401/403 checks.
+
+All original data/history/users/assignments/financial/audit records preserved;
+original role flags/memberships restored. Exactly two normal smoke login sessions
+were created and logged out; original sessions unchanged. All 16 affected/new
+function definitions match isolated tested V19; narrow permissions verified.
+No STAFF/account/sale created. Positive live STAFF POS remains NOT RUN because no
+ACTIVE STAFF exists; Customer owned-flow credentials and VNPAY interoperability
+remain untested live. No next module, commit, push or deployment beyond approved V19.
+
+## STAFF POS V19 migration blockers resolved in source - 2026-10-30
+
+**Technical implementation/isolated verification PASS; PRIMARY installation
+NO-GO until provider recovery coverage, maintenance window and separate approval.**
+[Resolution report](../reports/2026-10-30_staff-pos-v19-migration-blockers-resolution_report.md),
+[updated exact operator plan](../development/neon-staff-pos-v19-migration-plan.md),
+[read-only recovery checklist](../development/neon-v19-recovery-verification.md).
+This entry supersedes the installation-blocker details below, preserving history.
+
+Installer now uses exact per-version privileges. V19 requires installed V18 and
+only pending [19], Hold/Staff owner authority, Hold CREATE, users(id) REFERENCES,
+schema/history access and database CONNECT; no obsolete Configuration membership
+or Staff/Configuration CREATE. Actual separate minimum LOCAL LOGIN tested using
+production authority validator/Flyway builder; temporary login/grants cleaned up.
+
+Revised V19 replaces all-row audit-column SELECT with protected boolean
+cash_payment_confirmed(bigint); CASH reports use it with existing scope. No audit
+metadata SELECT, financial DML or finalizer EXECUTE is granted to runtime. Revised
+SHA-256 `E528550DD23B4658D4C457E21032EFA3C16F0AE788659A5788E163202CCA0E1E`,
+Flyway checksum 163697808. Proposal remains test-only, normal source V18.
+
+Final mvn verify: 673 discovered, **304 executed PASS**, 369 existing opt-in skips,
+0 failures/errors. Includes **42/42 V19/POS PASS** (installer 6, populated review 9,
+POS PG 23, request 4), no skips/retry masking. CLI guards 4/4 PASS. Full populated
+V18 preservation, late rollback, lock contention, rerun, Customer/VNPAY/Ticket/
+check-in/reporting/CASH coverage retained. Initial new fixture CONNECT/JDBC bool
+assertion failures fixed before affected/full reruns; see report.
+
+PRIMARY read-only V18/V18, 18 valid checksums, pending/failed=0. All 31 fingerprints
+and captured catalog groups unchanged; MANAGER 5/Cinema 1 assignment preserved.
+3 Bookings, zero Payments/Tickets, 8192-byte Booking heap support keeping the
+atomic rewrite with drained maintenance and installer 5s lock/120s statement/30s
+idle timeouts. No timing guarantee; recheck scale/locks immediately before work.
+
+Actual Neon backup/restore-point coverage remains UNVERIFIED; no management
+connection/evidence and no restore rehearsal. Do not claim a backup exists.
+Follow read-only checklist, obtain exact-target recovery evidence/access and a
+maintenance/recovery budget, then request explicit approval for revised hash,
+promotion/setup/install/cleanup. Earlier V14–V18 approval does not authorize V19.
+No PRIMARY writes, role/account changes, source promotion, frontend/other module,
+commit/push/deployment. Stop here; do not install automatically.
+
+## STAFF POS V19 PRIMARY migration review - 2026-10-30
+
+**NO-GO for PRIMARY installation as currently prepared.**
+[Review](../reports/2026-10-30_staff-pos-v19-primary-migration-review_report.md),
+[exact operator/recovery plan](../development/neon-staff-pos-v19-migration-plan.md).
+This review does not approve or execute PRIMARY SQL.
+
+Proposal remains byte-identical in test resources, SHA-256
+`A4CA71A0D0BAB130E8CE16EA8071C86EC5F4AAE7D912576007672663FE0B1197`.
+PRIMARY installed/normal source V18/V18, no pending/failed, 18 valid checksums.
+All 31 before/after PRIMARY data/history/function/ACL/role fingerprints and full
+catalog groups are unchanged; MANAGER 5 and its one Cinema 1 assignment preserved.
+Current legacy data: 3 Bookings (1 CANCELLED, 2 EXPIRED), no Payments/Tickets,
+no ACTIVE STAFF. No account/authentication/business mutation or app startup.
+
+**36/36 isolated review/POS tests PASS**, zero skips/retries. Populated V18 fixtures
+include 10 Bookings, 6 attempts/frozen sales, 2 Tickets (1 CHECKED_IN), Concession/
+Promotion snapshots and reconciliation. Actual PRIMARY matches 13 modified V18
+functions, 85 constraints, 23 indexes and 72 exact column types. Legacy fields and
+sequence heads survive exact V19; early-lock/after-final-GRANT failures roll back;
+Flyway rerun executes zero and raw SQL replay fails safely only inside a transaction.
+
+Blocking installation decisions: generated STORED owner_id physically rewrites
+Booking storage (despite preserving business values); runtime gains five audit
+columns across all rows; restore-point/recovery readiness is not independently
+verified. Current PrimaryDatabase migration gate unnecessarily requires the old
+Configuration-owner/Staff-Configuration CREATE authority. Fix/review a V19-specific
+gate/installer and rehearse its dedicated least-privilege identity; do not grant
+unrelated privileges to pass the old gate. V19 needs Hold/Staff operator authority,
+schema CREATE, users REFERENCES(id) and Flyway history SELECT/INSERT; no new runtime
+owner membership or financial DML. Separate explicit approval remains required.
+
+Only review tests, plan/report and this additive entry were added. Existing POS
+work, proposal, requirements/contracts, frontend and historical files preserved.
+No promotion, PRIMARY owner/grant/membership/function change, commit/push/deploy
+or next module. Stop at review; do not start installation automatically.
+
+## STAFF POS counter ticket sales backend - 2026-10-30
+
+**ISOLATED IMPLEMENTATION/VERIFICATION PASS; PRIMARY ACTIVATION BLOCKED pending
+separate V19 approval.**
+[Report](../reports/2026-10-30_staff-pos-counter-ticket-sales-backend_report.md),
+[API](../api/staff-pos-counter-ticket-sales-contract-v1.0.md).
+Explicit user decision authorizes both CASH and VNPAY Sandbox; current requirements
+for this extension are [BRD v1.3](../brd/brd-v1.3.md) and
+[SRS v1.3](../srs/srs-v1.3.md). Historical v1.2 remains untouched.
+
+Fourteen STAFF-only handlers under `/api/v1/staff/pos` reuse current scope,
+discovery, Holds, Booking snapshots/Promotion/freeze and Payment functions. Walk-in
+ownership uses selling_staff_id separately from customer_id. Authorized CASH
+requires explicit full-total confirmation, immutable evidence/audit and atomic
+shared Ticket/QR finalization; VNPAY verification remains backend-only. Replays,
+concurrency, rollback, expiry and foreign/other-operator access are tested.
+No automatic sale, unverified financial success, new Customer account or POS UI.
+
+V19 proposal is only in `backend/src/test/resources/pos-migration/`, tested in
+fresh isolated schemas in the existing loopback smartcinema_phase4e_test database.
+It is NOT in normal Flyway resources or the packaged application. PRIMARY and
+normal source remain **V18/V18**, no pending/failed migrations, 18 valid checksums.
+Catalog/map reads work on V18; counter sale/receipt commands fail closed 503 until
+the reviewed V19 is separately authorized and installed. No implicit migration.
+
+Reporting contract v1.1 adds separate CASH `cashTotals` to ADMIN/MANAGER summary;
+existing VNPAY metrics, SANDBOX metadata and frontend copy retain their meaning.
+Existing frontend does not yet render the additive field. No CASH daily/shift/
+concession dashboard or reporting UI implementation is claimed.
+
+Verification: **27/27 POS tests PASS**, including 23 actual isolated PostgreSQL
+cases with signed fixture callbacks, Customer VNPAY regression and CASH reporting;
+complete `mvn verify`: **289 executed PASS / 658 discovered / 369 historical
+conditional cases not enabled**, zero failures/errors; frontend unit **328/328**.
+Actual root PRIMARY `pnpm dev` backend/frontend/proxy READY and **19/19 HTTP
+connectivity/anonymous denial checks PASS**. Real PRIMARY STAFF positive flow is
+BLOCKED: no ACTIVE STAFF and V19 uninstalled. No real Sandbox/payment certification.
+
+PRIMARY enforced-read-only before/after fingerprints unchanged, including all
+business/authentication history, functions/owners/ACLs and roles/memberships.
+MANAGER user 5 and its one Cinema 1 assignment remain unchanged. QA services stopped.
+No Neon writes, new database, dependencies, frontend, historical migration/report
+edits, commit/push/deployment. Stop. Next: separately reviewed/approved V19 installation
+and explicit real STAFF verification scope; do not start the next POS module.
+
 ## PRIMARY MANAGER account and authenticated verification - completed 2026-10-30
 
 **ACCOUNT CREATION PASS; REAL AUTHENTICATION PASS; MANAGER FUNCTIONAL PASS;

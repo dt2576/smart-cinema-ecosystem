@@ -39,6 +39,13 @@ public class DiscoveryRepository {
                 new MapSqlParameterSource("id", movieId), Boolean.class));
     }
 
+    /** Same eligibility predicate as Customer discovery, constrained to the selected STAFF Cinema. */
+    public record SaleMovie(String id,String title) { }
+    public List<SaleMovie> saleMovies(long cinema,Instant now) {
+        return jdbc.query("SELECT DISTINCT m.id,m.title "+FROM+" WHERE "+ELIGIBLE+" AND c.id=:cinema ORDER BY m.id",
+            parameters(now).addValue("cinema",cinema),(r,n)->new SaleMovie(r.getString(1),r.getString(2)));
+    }
+
     public List<CinemaResponse> cinemas(Long movieId, Instant now) {
         String sql = "SELECT branch.* FROM cinemas branch WHERE branch.status='ACTIVE'";
         if (movieId != null) {

@@ -7,9 +7,11 @@ import org.springframework.http.*;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.*;
 
-@RestControllerAdvice(assignableTypes={AdminStaffController.class,StaffPasswordSetupController.class,StaffAdmissionController.class})
+@RestControllerAdvice(assignableTypes={AdminStaffController.class,StaffPasswordSetupController.class,StaffAdmissionController.class,StaffPosController.class})
 public class StaffExceptionHandler {
     @ExceptionHandler(StaffFailure.class) ResponseEntity<ProblemDetail> failure(StaffFailure failure) { return problem(failure.status(),failure.retryAfter()); }
+    @ExceptionHandler(com.smartcinema.seat.SeatUnavailableException.class) ResponseEntity<ProblemDetail> missing() {return problem(404);}
+    @ExceptionHandler(com.smartcinema.payment.VnpayConflictException.class) ResponseEntity<ProblemDetail> conflict() {return problem(409);}
     @ExceptionHandler(HttpMessageNotReadableException.class) ResponseEntity<ProblemDetail> malformed() { return problem(400); }
     @ExceptionHandler(org.springframework.web.HttpMediaTypeNotSupportedException.class) ResponseEntity<ProblemDetail> media() { return problem(400); }
     @ExceptionHandler(org.springframework.transaction.TransactionException.class) ResponseEntity<ProblemDetail> transaction() { return problem(503); }
@@ -24,6 +26,7 @@ public class StaffExceptionHandler {
             // RAISE/assertion is infrastructure uncertainty, not client validation.
             if (code.equals("P0001") || code.equals("22001") || code.equals("23502")) return problem(operational?503:400);
             if (code.equals("P0003") || code.equals("23505") || code.equals("23503")) return problem(409);
+            if (operational && (code.equals("P0005") || code.equals("P0006"))) return problem(409);
         }
         return problem(503);
     }

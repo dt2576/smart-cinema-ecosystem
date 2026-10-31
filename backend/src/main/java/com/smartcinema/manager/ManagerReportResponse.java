@@ -14,7 +14,9 @@ public final class ManagerReportResponse {
     public record Activity(List<StatusCount> bookingsByStatus,List<StatusCount> paymentsByStatus,
             List<StatusCount> ticketsByStatus,List<StatusCount> showtimesByStatus,
             String checkedInTickets,String reconciliationAttempts) { }
-    public record Summary(Period period,Metrics metrics,Activity activity) { }
+    public record Summary(Period period,Metrics metrics,Activity activity,com.smartcinema.admin.AdminReportResponse.CashTotals cashTotals) {
+        public Summary(Period period,Metrics metrics,Activity activity) {this(period,metrics,activity,null);}
+    }
     public record Day(LocalDate date,Metrics metrics,Activity activity) { }
     public record Daily(Period period,List<Day> items) { }
     public record Performance(String id,String name,String cinemaId,String movieId,Instant startsAt,

@@ -74,4 +74,13 @@ public final class ReportSql {
     public static String managerCommon() {
         return COMMON_TEMPLATE.formatted(ManagerScope.predicate("h.cinema_id")+" AND ");
     }
+    /** Separate CASH totals: do not relabel existing SANDBOX/VNPAY metrics in legacy clients. */
+    public static String cashCommon(boolean manager) {
+        String original=manager?managerCommon():adminCommon();
+        return original.replace("p.amount>0","p.amount>=0").replace("p.provider='VNPAY'","p.provider='CASH'")
+            .replace("p.environment='SANDBOX'","p.environment='COUNTER'").replace("e.source IN ('IPN','QUERY')","e.source='CASH'")
+            .replace("AND NOT p.reconciliation_required AND EXISTS (","""
+                AND NOT p.reconciliation_required AND cash_payment_confirmed(p.id) AND EXISTS (
+                """);
+    }
 }
